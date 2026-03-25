@@ -13,7 +13,7 @@ export function FormMessage({ message, className }: FormMessageProps) {
   return (
     <p
       className={cn(
-        "rounded-lg border border-[rgba(185,28,28,0.14)] bg-[rgba(185,28,28,0.06)] px-4 py-3 text-sm text-[#991b1b]",
+        "rounded-2xl border border-[rgba(239,68,68,0.22)] bg-[rgba(239,68,68,0.12)] px-4 py-3 text-sm text-[#ffb4b4]",
         className,
       )}
     >

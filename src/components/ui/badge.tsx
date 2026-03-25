@@ -10,11 +10,15 @@ export function Badge({ className, tone = "neutral", ...props }: BadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-md px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em]",
-        tone === "neutral" && "bg-[color:var(--surface-strong)] text-[color:var(--muted-strong)]",
-        tone === "warning" && "bg-[rgba(37,99,235,0.10)] text-[#1d4ed8]",
-        tone === "success" && "bg-[rgba(15,23,42,0.06)] text-[#1e3a8a]",
-        tone === "info" && "bg-[rgba(59,130,246,0.12)] text-[#2563eb]",
+        "inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em]",
+        tone === "neutral" &&
+          "border-[color:var(--border)] bg-[rgba(34,50,74,0.75)] text-[color:var(--muted-strong)]",
+        tone === "warning" &&
+          "border-[rgba(210,167,44,0.26)] bg-[rgba(210,167,44,0.12)] text-[color:var(--warning)]",
+        tone === "success" &&
+          "border-[rgba(35,193,107,0.24)] bg-[rgba(35,193,107,0.12)] text-[color:var(--success)]",
+        tone === "info" &&
+          "border-[rgba(76,195,255,0.24)] bg-[rgba(76,195,255,0.12)] text-[color:var(--info)]",
         className,
       )}
       {...props}

@@ -1,19 +1,28 @@
 @import "tailwindcss";
 
 :root {
-  --background: #edf3f9;
-  --foreground: #0f172a;
-  --surface: rgba(255, 255, 255, 0.86);
-  --surface-strong: #dbe5f0;
-  --surface-muted: #f7fafe;
-  --border: rgba(15, 23, 42, 0.08);
-  --border-strong: rgba(15, 23, 42, 0.14);
-  --accent: #2563eb;
-  --accent-strong: #1d4ed8;
-  --success: #1e3a8a;
-  --info: #2563eb;
-  --muted: #64748b;
-  --muted-strong: #334155;
+  --background: #0b1420;
+  --foreground: #edf4ff;
+  --surface: #162235;
+  --surface-strong: #1b2a3f;
+  --surface-muted: #22324a;
+  --surface-elevated: #273954;
+  --border: rgba(151, 180, 214, 0.14);
+  --border-strong: rgba(151, 180, 214, 0.26);
+  --accent: #37a8ff;
+  --accent-strong: #238dff;
+  --accent-secondary: #4b63ff;
+  --success: #23c16b;
+  --warning: #d2a72c;
+  --danger: #ef4444;
+  --info: #4cc3ff;
+  --muted: #7f93b0;
+  --muted-strong: #b3c3da;
+  --sidebar: #0d1726;
+  --shell: #111c2d;
+  --ring: rgba(55, 168, 255, 0.2);
+  --shadow-lg: 0 18px 48px rgba(3, 10, 21, 0.42);
+  --shadow-md: 0 10px 30px rgba(3, 10, 21, 0.3);
 }
 
 @theme inline {
@@ -22,14 +31,20 @@
   --color-surface: var(--surface);
   --color-surface-strong: var(--surface-strong);
   --color-surface-muted: var(--surface-muted);
+  --color-surface-elevated: var(--surface-elevated);
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
   --color-accent: var(--accent);
   --color-accent-strong: var(--accent-strong);
+  --color-accent-secondary: var(--accent-secondary);
   --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
   --color-info: var(--info);
   --color-muted: var(--muted);
   --color-muted-strong: var(--muted-strong);
+  --color-sidebar: var(--sidebar);
+  --color-shell: var(--shell);
   --font-sans: var(--font-manrope);
   --font-heading: var(--font-manrope);
 }
@@ -46,8 +61,9 @@ body {
   min-height: 100vh;
   background: var(--background);
   background-image:
-    radial-gradient(circle at top left, rgba(37, 99, 235, 0.08), transparent 24%),
-    linear-gradient(180deg, #f8fbff 0%, #eef4fb 100%);
+    radial-gradient(circle at top left, rgba(75, 99, 255, 0.22), transparent 26%),
+    radial-gradient(circle at top right, rgba(55, 168, 255, 0.14), transparent 24%),
+    linear-gradient(180deg, #0a121d 0%, #0d1623 46%, #0b1420 100%);
   color: var(--foreground);
   font-family: var(--font-manrope), sans-serif;
 }
@@ -65,7 +81,7 @@ textarea {
 }
 
 ::selection {
-  background: rgba(36, 88, 198, 0.18);
+  background: rgba(55, 168, 255, 0.24);
 }
 
 .font-heading {
@@ -87,4 +103,9 @@ textarea {
   .data-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
+}
+
+.panel-grid {
+  display: grid;
+  gap: 1.25rem;
 }

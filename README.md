@@ -20,6 +20,11 @@ Documentacion base:
 
 - `docs/architecture.md`
 - `docs/implementation-plan.md`
+- `docs/ui-direction-taller-alpha.md`
+
+Skill local de direccion visual:
+
+- `.codex/skills/mecania-ui-director/SKILL.md`
 
 ## Estructura
 

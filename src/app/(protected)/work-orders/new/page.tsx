@@ -18,23 +18,47 @@ export default async function NewWorkOrderPage({ searchParams }: NewWorkOrderPag
   const [clients, vehicles] = await Promise.all([listClients(), listVehicles()]);
 
   return (
-    <div className="space-y-6">
-      <Card className="rounded-2xl">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--muted)]">
-              Flujo operativo
+    <div className="grid gap-6 xl:grid-cols-[0.78fr_1.22fr]">
+      <Card className="rounded-[22px]">
+        <div>
+          <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--muted)]">
+            Flujo operativo
+          </p>
+          <h1 className="mt-2 font-heading text-3xl font-semibold text-white">
+            Nueva orden de trabajo
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-[color:var(--muted-strong)]">
+            Inicia una OT con contexto completo de cliente, vehiculo, motivo y diagnostico inicial.
+          </p>
+        </div>
+
+        <div className="mt-8 space-y-4">
+          <div className="rounded-[18px] border border-[rgba(55,168,255,0.22)] bg-[rgba(55,168,255,0.08)] p-5">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-[color:var(--accent)]">
+              Flujo sugerido
             </p>
-            <h1 className="mt-2 font-heading text-3xl font-semibold">Nueva orden de trabajo</h1>
+            <p className="mt-3 text-sm leading-6 text-[color:var(--muted-strong)]">
+              Selecciona cliente y vehiculo, registra motivo, luego fija estado y fecha estimada.
+            </p>
           </div>
 
           <Link href="/work-orders">
-            <Button variant="secondary">Volver al listado</Button>
+            <Button className="w-full" variant="secondary">
+              Volver al listado
+            </Button>
           </Link>
         </div>
       </Card>
 
-      <Card className="rounded-2xl">
+      <Card className="rounded-[22px]">
+        <div className="mb-6 border-b border-[color:var(--border)] pb-4">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-[color:var(--accent)]">
+            Formulario
+          </p>
+          <h2 className="mt-2 font-heading text-2xl font-semibold text-white">
+            Apertura de orden
+          </h2>
+        </div>
         <WorkOrderForm
           clients={clients.map((client) => ({
             id: client.id,

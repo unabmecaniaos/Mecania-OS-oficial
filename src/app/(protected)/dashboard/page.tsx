@@ -20,25 +20,34 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       <section className="data-grid">
         {stats.map((stat) => (
-          <Card className="rounded-xl" key={stat.key}>
-            <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--muted)]">
-              {stat.label}
-            </p>
-            <p className="mt-5 font-heading text-4xl font-semibold text-[color:var(--foreground)]">
-              {summary[stat.key]}
-            </p>
+          <Card className="rounded-[18px] p-5" key={stat.key}>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--muted)]">
+                  {stat.label}
+                </p>
+                <p className="mt-4 font-heading text-4xl font-semibold text-white">
+                  {summary[stat.key]}
+                </p>
+              </div>
+              <span className="rounded-full border border-[rgba(55,168,255,0.2)] bg-[rgba(55,168,255,0.1)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[color:var(--accent)]">
+                Hoy
+              </span>
+            </div>
           </Card>
         ))}
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
+      <section className="grid gap-6 xl:grid-cols-[1.35fr_0.65fr]">
         <Card className="rounded-2xl">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--muted)]">
                 Ordenes recientes
               </p>
-              <h3 className="mt-2 font-heading text-2xl font-semibold">Operacion en curso</h3>
+              <h3 className="mt-2 font-heading text-2xl font-semibold text-white">
+                Operacion en curso
+              </h3>
             </div>
 
             <Link href="/work-orders/new">
@@ -49,12 +58,12 @@ export default async function DashboardPage() {
           <div className="mt-6 space-y-4">
             {summary.latestOrders.map((order) => (
               <div
-                className="flex flex-col gap-4 rounded-lg border border-[color:var(--border)] bg-white/[0.65] p-4 md:flex-row md:items-center md:justify-between"
+                className="flex flex-col gap-4 rounded-[18px] border border-[color:var(--border)] bg-[rgba(34,50,74,0.72)] p-4 md:flex-row md:items-center md:justify-between"
                 key={order.id}
               >
                 <div>
                   <div className="flex items-center gap-3">
-                    <p className="font-semibold text-[color:var(--foreground)]">
+                    <p className="font-semibold text-white">
                       {order.orderNumber}
                     </p>
                     <StatusBadge status={order.status} />
@@ -69,7 +78,10 @@ export default async function DashboardPage() {
                   <p className="text-sm text-[color:var(--muted)]">
                     Ingreso {formatDate(order.intakeDate)}
                   </p>
-                  <Link className="text-sm font-semibold text-[#2563eb] hover:text-[#1d4ed8]" href={`/work-orders/${order.id}`}>
+                  <Link
+                    className="text-sm font-semibold text-[color:var(--accent)] hover:text-[color:var(--accent-strong)]"
+                    href={`/work-orders/${order.id}`}
+                  >
                     Ver detalle
                   </Link>
                 </div>
@@ -82,19 +94,31 @@ export default async function DashboardPage() {
           <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--muted)]">
             Foco de hoy
           </p>
-          <h3 className="mt-2 font-heading text-2xl font-semibold">Semaforo operativo</h3>
+          <h3 className="mt-2 font-heading text-2xl font-semibold text-white">
+            Semaforo operativo
+          </h3>
 
           <div className="mt-6 space-y-4">
-            <div className="rounded-lg border border-[#d7e3f4] bg-[#f3f7fd] p-5">
+            <div className="rounded-[18px] border border-[rgba(210,167,44,0.2)] bg-[rgba(210,167,44,0.1)] p-5">
               <p className="text-sm text-[color:var(--muted-strong)]">Ordenes esperando aprobacion</p>
-              <p className="mt-2 font-heading text-4xl font-semibold text-[#2563eb]">
+              <p className="mt-2 font-heading text-4xl font-semibold text-[color:var(--warning)]">
                 {summary.awaitingApproval}
               </p>
             </div>
-            <div className="rounded-lg border border-[#dbe4ef] bg-[#f8fafc] p-5">
+            <div className="rounded-[18px] border border-[rgba(35,193,107,0.2)] bg-[rgba(35,193,107,0.1)] p-5">
               <p className="text-sm text-[color:var(--muted-strong)]">Listas para entrega</p>
-              <p className="mt-2 font-heading text-4xl font-semibold text-[#334155]">
+              <p className="mt-2 font-heading text-4xl font-semibold text-[color:var(--success)]">
                 {summary.readyForDelivery}
+              </p>
+            </div>
+
+            <div className="rounded-[18px] border border-[color:var(--border)] bg-[rgba(34,50,74,0.58)] p-5">
+              <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--muted)]">
+                Prioridad de turno
+              </p>
+              <p className="mt-3 text-sm leading-6 text-[color:var(--muted-strong)]">
+                Mantener aprobaciones y entregas visibles reduce tiempos muertos y mejora el flujo
+                del taller durante la jornada.
               </p>
             </div>
           </div>

@@ -45,6 +45,24 @@ enum WorkOrderStatus {
   CANCELLED
 }
 
+enum QuoteStatus {
+  DRAFT
+  SENT
+  APPROVED
+  REJECTED
+}
+
+enum QuoteRecipientType {
+  CUSTOMER
+  INSURER
+}
+
+enum QuoteItemType {
+  LABOR
+  PART
+  SUPPLY
+}
+
 enum SelfInspectionStatus {
   DRAFT
   IN_PROGRESS
@@ -160,6 +178,12 @@ model User {
   assignedWorkOrders          WorkOrder[]               @relation("WorkOrderAssignedTechnician")
   uploadedWorkOrderEvidences  WorkOrderEvidence[]       @relation("WorkOrderEvidenceUploadedBy")
   statusChanges               WorkOrderStatusLog[]
+  createdQuotes               Quote[]                   @relation("QuoteCreatedBy")
+  updatedQuotes               Quote[]                   @relation("QuoteUpdatedBy")
+  sentQuotes                  Quote[]                   @relation("QuoteSentBy")
+  approvedQuotes              Quote[]                   @relation("QuoteApprovedBy")
+  rejectedQuotes              Quote[]                   @relation("QuoteRejectedBy")
+  quoteStatusChanges          QuoteStatusLog[]
   reviewedSelfInspections     SelfInspection[]          @relation("SelfInspectionReviewer")
   selfInspectionNotes         SelfInspectionNote[]      @relation("SelfInspectionNoteCreatedBy")
   selfInspectionReviews       SelfInspectionReview[]    @relation("SelfInspectionReviewReviewedBy")
@@ -190,6 +214,7 @@ model Client {
   user            User?
   vehicles        Vehicle[]
   workOrders      WorkOrder[]
+  quotes          Quote[]
   selfInspections SelfInspection[]
 
   @@index([fullName])
@@ -212,6 +237,7 @@ model Vehicle {
   updatedAt       DateTime                 @updatedAt
   client          Client                   @relation(fields: [clientId], references: [id], onDelete: Restrict)
   workOrders      WorkOrder[]
+  quotes          Quote[]
   selfInspections SelfInspection[]
 
   @@index([clientId])
@@ -281,6 +307,74 @@ model WorkOrderStatusLog {
   @@index([workOrderId, changedAt])
 }
 
+model Quote {
+  id               String             @id @default(cuid())
+  quoteNumber      String             @unique
+  clientId         String
+  vehicleId        String
+  selfInspectionId String?
+  recipientType    QuoteRecipientType @default(CUSTOMER)
+  status           QuoteStatus        @default(DRAFT)
+  summary          String?
+  internalNotes    String?
+  totalAmount      Decimal            @db.Decimal(12, 2)
+  sentAt           DateTime?
+  sentById         String?
+  approvedAt       DateTime?
+  approvedById     String?
+  rejectedAt       DateTime?
+  rejectedById     String?
+  createdById      String
+  updatedById      String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  client           Client             @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  vehicle          Vehicle            @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+  selfInspection   SelfInspection?    @relation(fields: [selfInspectionId], references: [id], onDelete: SetNull)
+  createdBy        User               @relation("QuoteCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  updatedBy        User?              @relation("QuoteUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  sentBy           User?              @relation("QuoteSentBy", fields: [sentById], references: [id], onDelete: SetNull)
+  approvedBy       User?              @relation("QuoteApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+  rejectedBy       User?              @relation("QuoteRejectedBy", fields: [rejectedById], references: [id], onDelete: SetNull)
+  items            QuoteItem[]
+  statusLogs       QuoteStatusLog[]
+
+  @@index([clientId, createdAt])
+  @@index([vehicleId, createdAt])
+  @@index([selfInspectionId])
+  @@index([status, recipientType])
+}
+
+model QuoteItem {
+  id          String        @id @default(cuid())
+  quoteId     String
+  type        QuoteItemType
+  description String
+  quantity    Decimal       @db.Decimal(10, 2)
+  unitPrice   Decimal       @db.Decimal(12, 2)
+  lineTotal   Decimal       @db.Decimal(12, 2)
+  sortOrder   Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  quote       Quote         @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  @@index([quoteId, sortOrder])
+}
+
+model QuoteStatusLog {
+  id             String       @id @default(cuid())
+  quoteId        String
+  previousStatus QuoteStatus?
+  nextStatus     QuoteStatus
+  note           String?
+  changedById    String
+  changedAt      DateTime     @default(now())
+  quote          Quote        @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  changedBy      User         @relation(fields: [changedById], references: [id], onDelete: Restrict)
+
+  @@index([quoteId, changedAt])
+}
+
 model SelfInspection {
   id                    String                         @id @default(cuid())
   customerId            String
@@ -308,6 +402,7 @@ model SelfInspection {
   vehicle               Vehicle?                       @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
   workOrder             WorkOrder?                     @relation(fields: [workOrderId], references: [id], onDelete: SetNull)
   reviewer              User?                          @relation("SelfInspectionReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  quotes                Quote[]
   vehicleSnapshot       SelfInspectionVehicleSnapshot?
   answers               SelfInspectionAnswer[]
   photos                SelfInspectionPhoto[]

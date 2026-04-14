@@ -1,388 +1,225 @@
-# Sprint 1
+# Sprint 2
 
 - Project: MOS
 - Board ID: 100
 - State: active
-- Synced at: 2026-03-22T23:13:30.925Z
-- Goal: Consolidar el nucleo funcional actual de MecaniaOS, asegurando la gestion basica de clientes, vehiculos y ordenes de trabajo, junto con el flujo inicial de autoinspeccion y la base minima de control de acceso por roles.
+- Synced at: 2026-04-14T13:06:41.372Z
+- Goal: Iniciar el ciclo de presupuestos junto con una base de control de inventario para el taller.
 
 ## Issues
 
-### MOS-1 - Registrar clientes
-- Status: Finalizada
-- Type: Historia
-- Priority: High
-- Jira: https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-1
-
-Description:
-Como administrador, quiero registrar clientes para asociarlos a vehiculos y servicios.
-
-Acceptance Criteria:
-- El formulario solicita al menos nombre completo, telefono y correo electronico.
-- El sistema valida los campos obligatorios antes de guardar.
-- El cliente queda registrado y disponible para asociar vehiculos y ordenes de trabajo.
-- El listado de clientes refleja el nuevo registro luego del guardado.
-
-Acceptance Criteria:
-- El formulario solicita al menos nombre completo, telefono y correo electronico.
-- El sistema valida los campos obligatorios antes de guardar.
-- El cliente queda registrado y disponible para asociar vehiculos y ordenes de trabajo.
-- El listado de clientes refleja el nuevo registro luego del guardado.
-
-### MOS-2 - Registrar vehículos
-- Status: Finalizada
-- Type: Historia
-- Priority: High
-- Jira: https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-2
-
-Description:
-Como mecanico, quiero registrar vehiculos por VIN para mantener historial tecnico.
-
-Acceptance Criteria:
-- El formulario permite asociar el vehiculo a un cliente existente.
-- El sistema solicita al menos VIN, marca, modelo y anio.
-- El VIN debe ser unico y validarse antes de guardar.
-- El vehiculo registrado queda disponible para ordenes de trabajo e historial tecnico.
-
-Acceptance Criteria:
-- El formulario permite asociar el vehiculo a un cliente existente.
-- El sistema solicita al menos VIN, marca, modelo y anio.
-- El VIN debe ser unico y validarse antes de guardar.
-- El vehiculo registrado queda disponible para ordenes de trabajo e historial tecnico.
-
-### MOS-3 - Crear orden de trabajo
-- Status: Finalizada
-- Type: Historia
-- Priority: High
-- Jira: https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-3
-
-Description:
-Como mecanico, quiero crear una orden de trabajo para registrar la mantencion del vehiculo.
-
-Acceptance Criteria:
-- La orden de trabajo se puede crear seleccionando cliente y vehiculo existentes.
-- El sistema solicita al menos motivo de ingreso y fecha de ingreso.
-- Al crear la orden, se genera un numero identificador unico.
-- La orden creada queda visible en el listado general y en el detalle del vehiculo.
-
-Acceptance Criteria:
-- La orden de trabajo se puede crear seleccionando cliente y vehiculo existentes.
-- El sistema solicita al menos motivo de ingreso y fecha de ingreso.
-- Al crear la orden, se genera un numero identificador unico.
-- La orden creada queda visible en el listado general y en el detalle del vehiculo.
-
-### MOS-4 - Actualizar estado de reparación
-- Status: Finalizada
-- Type: Historia
-- Priority: High
-- Jira: https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-4
-
-Description:
-Como mecanico, quiero actualizar el estado del servicio para informar el progreso.
-
-Acceptance Criteria:
-- Una orden de trabajo permite cambiar su estado dentro del flujo definido.
-- Cada cambio de estado queda reflejado inmediatamente en la vista de la orden.
-- El sistema conserva un historial de cambios de estado con fecha.
-- El estado actualizado aparece en los listados y vistas relacionadas.
-
-Acceptance Criteria:
-- Una orden de trabajo permite cambiar su estado dentro del flujo definido.
-- Cada cambio de estado queda reflejado inmediatamente en la vista de la orden.
-- El sistema conserva un historial de cambios de estado con fecha.
-- El estado actualizado aparece en los listados y vistas relacionadas.
-
-### MOS-5 - Consultar historial del vehículo
-- Status: Finalizada
-- Type: Historia
-- Priority: High
-- Jira: https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-5
-
-Description:
-Como mecanico, quiero revisar el historial del vehiculo para diagnosticar mejor.
-
-Acceptance Criteria:
-- Desde el vehiculo se puede consultar el historial de ordenes de trabajo previas.
-- El historial muestra al menos fecha, motivo y estado de cada orden.
-- La informacion se presenta ordenada de la mas reciente a la mas antigua.
-- El historial se puede consultar sin editar registros previos.
-
-Acceptance Criteria:
-- Desde el vehiculo se puede consultar el historial de ordenes de trabajo previas.
-- El historial muestra al menos fecha, motivo y estado de cada orden.
-- La informacion se presenta ordenada de la mas reciente a la mas antigua.
-- El historial se puede consultar sin editar registros previos.
-
-### MOS-46 - Generar enlace seguro de autoinspección
+### MOS-62 - Rechazar presupuesto
 - Status: Finalizada
 - Type: Historia
 - Priority: Medium
-- Jira: https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-46
+- Assignee: Carlos Gonzalez
+- Jira: https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-62
 
 Description:
-Como cliente, quiero recibir un enlace seguro para acceder a mi autoinspeccion, para completar el proceso sin necesidad de credenciales complejas.
+Como cliente, quiero rechazar un presupuesto, para dejar constancia de que el trabajo no fue aprobado.
 
 Acceptance Criteria:
-- El sistema puede generar un enlace unico asociado a una autoinspeccion.
-- El enlace permite acceder al flujo de autoinspeccion sin iniciar sesion tradicional.
-- El enlace queda asociado al cliente o vehiculo correcto.
-- Si el enlace no existe o no es valido, el sistema bloquea el acceso.
+- Un presupuesto enviado puede marcarse como rechazado.
+- El rechazo queda registrado con fecha y actor responsable.
+- El sistema evita convertir en OT un presupuesto rechazado.
+- El estado rechazado queda visible en listados y detalle.
 
 Acceptance Criteria:
-- El sistema puede generar un enlace unico asociado a una autoinspeccion.
-- El enlace permite acceder al flujo de autoinspeccion sin iniciar sesion tradicional.
-- El enlace queda asociado al cliente o vehiculo correcto.
-- Si el enlace no existe o no es valido, el sistema bloquea el acceso.
+- Un presupuesto enviado puede marcarse como rechazado.
+- El rechazo queda registrado con fecha y actor responsable.
+- El sistema evita convertir en OT un presupuesto rechazado.
+- El estado rechazado queda visible en listados y detalle.
 
-### MOS-47 - Completar autoinspección guiada
+### MOS-11 - Aprobar presupuesto
 - Status: Finalizada
 - Type: Historia
 - Priority: Medium
-- Jira: https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-47
+- Assignee: Ignacio Benegas
+- Jira: https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-11
 
 Description:
-Como cliente, quiero completar un formulario guiado de autoinspeccion, para reportar el estado de mi vehiculo de forma clara y estructurada.
+Como cliente, quiero aprobar un presupuesto, para autorizar el inicio del trabajo sin requerir firma avanzada en esta etapa.
 
 Acceptance Criteria:
-- El flujo de autoinspeccion muestra pasos o secciones claramente diferenciadas.
-- El cliente puede responder preguntas clave del estado del vehiculo.
-- El sistema guarda las respuestas estructuradas por seccion o pregunta.
-- El progreso de la autoinspeccion permite identificar el avance actual.
+- El presupuesto puede cambiar a estado aprobado mediante una accion simple en el sistema.
+- La aprobacion queda registrada con fecha y actor responsable.
+- Un presupuesto aprobado queda listo para convertirse en orden de trabajo.
+- El sistema evita aprobar dos veces el mismo presupuesto.
 
 Acceptance Criteria:
-- El flujo de autoinspeccion muestra pasos o secciones claramente diferenciadas.
-- El cliente puede responder preguntas clave del estado del vehiculo.
-- El sistema guarda las respuestas estructuradas por seccion o pregunta.
-- El progreso de la autoinspeccion permite identificar el avance actual.
+- El presupuesto puede cambiar a estado aprobado mediante una accion simple en el sistema.
+- La aprobacion queda registrada con fecha y actor responsable.
+- Un presupuesto aprobado queda listo para convertirse en orden de trabajo.
+- El sistema evita aprobar dos veces el mismo presupuesto.
 
-### MOS-48 - Adjuntar fotos obligatorias del vehículo
+### MOS-61 - Enviar presupuesto al cliente
 - Status: Finalizada
 - Type: Historia
 - Priority: Medium
-- Jira: https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-48
+- Assignee: Martín Andrés Araya Díaz
+- Jira: https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-61
 
 Description:
-Como cliente, quiero subir fotos de mi vehiculo durante la autoinspeccion, para que el taller pueda evaluar visualmente los danos.
+Como usuario interno, quiero enviar un presupuesto, para dejarlo disponible para revision y aprobacion externa.
 
 Acceptance Criteria:
-- El flujo exige cargar las fotos obligatorias definidas por la autoinspeccion.
-- El sistema valida formato y tamano basico de los archivos antes de guardar.
-- Cada foto queda asociada a la autoinspeccion correcta.
-- Las fotos cargadas quedan visibles para revision posterior del taller.
+- Un presupuesto en borrador puede cambiar a estado enviado.
+- El envio registra fecha y actor que realizo la accion.
+- El presupuesto enviado queda disponible para cliente o aseguradora segun corresponda.
+- El sistema evita enviar presupuestos en estados incompatibles.
 
 Acceptance Criteria:
-- El flujo exige cargar las fotos obligatorias definidas por la autoinspeccion.
-- El sistema valida formato y tamano basico de los archivos antes de guardar.
-- Cada foto queda asociada a la autoinspeccion correcta.
-- Las fotos cargadas quedan visibles para revision posterior del taller.
+- Un presupuesto en borrador puede cambiar a estado enviado.
+- El envio registra fecha y actor que realizo la accion.
+- El presupuesto enviado queda disponible para cliente o aseguradora segun corresponda.
+- El sistema evita enviar presupuestos en estados incompatibles.
 
-### MOS-49 - Guardar autoinspección en borrador
+### MOS-7 - Generar presupuesto
 - Status: Finalizada
 - Type: Historia
 - Priority: Medium
-- Jira: https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-49
+- Assignee: Ignacio Benegas
+- Jira: https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-7
 
 Description:
-Como cliente, quiero guardar mi autoinspeccion sin terminar, para poder continuarla posteriormente.
+Como mecanico o supervisor, quiero generar un presupuesto para un vehiculo, para desglosar mano de obra, repuestos y suministros antes de ejecutar el trabajo.
 
 Acceptance Criteria:
-- El cliente puede guardar una autoinspeccion incompleta sin enviarla al taller.
-- El sistema conserva respuestas, fotos y avances ya ingresados.
-- Al reingresar con el enlace, la autoinspeccion se retoma desde el estado guardado.
-- Una autoinspeccion en borrador no debe marcarse como enviada.
+- El presupuesto se puede asociar a un cliente y vehiculo existentes o a una autoinspeccion revisada.
+- El formulario permite registrar items de mano de obra, repuestos y suministros.
+- El presupuesto queda guardado en estado borrador.
+- El presupuesto creado queda disponible para su revision y posterior envio.
 
 Acceptance Criteria:
-- El cliente puede guardar una autoinspeccion incompleta sin enviarla al taller.
-- El sistema conserva respuestas, fotos y avances ya ingresados.
-- Al reingresar con el enlace, la autoinspeccion se retoma desde el estado guardado.
-- Una autoinspeccion en borrador no debe marcarse como enviada.
+- El presupuesto se puede asociar a un cliente y vehiculo existentes o a una autoinspeccion revisada.
+- El formulario permite registrar items de mano de obra, repuestos y suministros.
+- El presupuesto queda guardado en estado borrador.
+- El presupuesto creado queda disponible para su revision y posterior envio.
 
-### MOS-50 - Enviar autoinspección al taller
-- Status: Finalizada
+### MOS-84 - Registrar ingreso de stock de repuestos
+- Status: Tareas por hacer
 - Type: Historia
 - Priority: Medium
-- Jira: https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-50
+- Assignee: Martín Andrés Araya Díaz
+- Jira: https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-84
 
 Description:
-Como cliente, quiero enviar la autoinspeccion completa, para que el taller pueda iniciar el diagnostico del vehiculo.
+Como administrador, quiero registrar el ingreso de nuevas unidades de un repuesto, para actualizar el stock disponible despues de una compra o reposicion.
+Acceptance Criteria:
+- El sistema permite seleccionar un repuesto existente e ingresar una cantidad de unidades nuevas.
+- El stock total del repuesto se actualiza automaticamente despues del ingreso.
+- El movimiento queda registrado con fecha y cantidad ingresada.
+- El ingreso de stock queda disponible para trazabilidad posterior.
 
 Acceptance Criteria:
-- El cliente puede enviar la autoinspeccion solo cuando los datos requeridos estan completos.
-- Al enviar, el estado de la autoinspeccion cambia a enviado o equivalente.
-- Una vez enviada, la autoinspeccion queda disponible para revision interna.
-- El sistema evita envios duplicados accidentales.
+- El sistema permite seleccionar un repuesto existente e ingresar una cantidad de unidades nuevas.
+- El stock total del repuesto se actualiza automaticamente despues del ingreso.
+- El movimiento queda registrado con fecha y cantidad ingresada.
+- El ingreso de stock queda disponible para trazabilidad posterior.
 
-Acceptance Criteria:
-- El cliente puede enviar la autoinspeccion solo cuando los datos requeridos estan completos.
-- Al enviar, el estado de la autoinspeccion cambia a enviado o equivalente.
-- Una vez enviada, la autoinspeccion queda disponible para revision interna.
-- El sistema evita envios duplicados accidentales.
-
-### MOS-51 - Revisar autoinspección internamente
-- Status: Finalizada
+### MOS-6 - Registrar repuestos en inventario
+- Status: Tareas por hacer
 - Type: Historia
 - Priority: Medium
-- Jira: https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-51
+- Assignee: Carlos Gonzalez
+- Jira: https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-6
 
 Description:
-Como mecanico, quiero revisar la autoinspeccion enviada por el cliente, para analizar el estado del vehiculo antes de su ingreso al taller.
+Como administrador, quiero registrar repuestos en el sistema, para mantener un catalogo interno disponible para el taller.
+Acceptance Criteria:
+- El sistema permite crear un repuesto con nombre, codigo o referencia, stock inicial y stock minimo.
+- El repuesto queda visible en el listado de inventario.
+- El sistema evita duplicar el codigo o referencia cuando se define como identificador unico.
+- El registro queda persistido y disponible para movimientos posteriores de stock.
 
 Acceptance Criteria:
-- El usuario interno puede abrir el detalle completo de una autoinspeccion enviada.
-- La revision muestra respuestas, fotos y datos principales del vehiculo.
-- La pantalla permite registrar observaciones o una conclusion inicial.
-- El resultado de la revision queda persistido para consulta posterior.
+- El sistema permite crear un repuesto con nombre, codigo o referencia, stock inicial y stock minimo.
+- El repuesto queda visible en el listado de inventario.
+- El sistema evita duplicar el codigo o referencia cuando se define como identificador unico.
+- El registro queda persistido y disponible para movimientos posteriores de stock.
 
-Acceptance Criteria:
-- El usuario interno puede abrir el detalle completo de una autoinspeccion enviada.
-- La revision muestra respuestas, fotos y datos principales del vehiculo.
-- La pantalla permite registrar observaciones o una conclusion inicial.
-- El resultado de la revision queda persistido para consulta posterior.
-
-### MOS-52 - Adjuntar evidencias a orden de trabajo
-- Status: Finalizada
+### MOS-85 - Descontar repuestos utilizados en una orden de trabajo
+- Status: Tareas por hacer
 - Type: Historia
 - Priority: Medium
-- Jira: https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-52
+- Assignee: Benjamin Yañez Lasalvia
+- Jira: https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-85
 
 Description:
-Como mecanico, quiero adjuntar imagenes a una orden, para documentar la reparacion.
+Como mecanico, quiero registrar los repuestos utilizados en una orden de trabajo, para descontarlos automaticamente del inventario y mantener trazabilidad del consumo.
+Acceptance Criteria:
+- Desde una orden de trabajo se pueden asociar uno o mas repuestos utilizados.
+- El sistema descuenta del stock la cantidad efectivamente usada.
+- El sistema impide registrar una salida mayor al stock disponible.
+- La orden de trabajo conserva el detalle de los repuestos consumidos y sus cantidades.
 
 Acceptance Criteria:
-- Una orden de trabajo permite adjuntar una o mas evidencias visuales.
-- Cada evidencia queda asociada a la orden correcta.
-- El sistema registra al menos archivo, fecha y contexto basico de la evidencia.
-- Las evidencias adjuntas quedan disponibles para visualizacion posterior.
+- Desde una orden de trabajo se pueden asociar uno o mas repuestos utilizados.
+- El sistema descuenta del stock la cantidad efectivamente usada.
+- El sistema impide registrar una salida mayor al stock disponible.
+- La orden de trabajo conserva el detalle de los repuestos consumidos y sus cantidades.
 
-Acceptance Criteria:
-- Una orden de trabajo permite adjuntar una o mas evidencias visuales.
-- Cada evidencia queda asociada a la orden correcta.
-- El sistema registra al menos archivo, fecha y contexto basico de la evidencia.
-- Las evidencias adjuntas quedan disponibles para visualizacion posterior.
-
-### MOS-53 - Adjuntar evidencias a orden de trabajo
-- Status: Finalizada
+### MOS-87 - Ajustar stock manualmente
+- Status: Tareas por hacer
 - Type: Historia
 - Priority: Medium
-- Jira: https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-53
+- Assignee: Ignacio Benegas
+- Jira: https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-87
 
 Description:
-Como usuario interno, quiero ver todas las evidencias, para analizar el historial visual.
+Como administrador, quiero ajustar manualmente el stock de un repuesto, para corregir diferencias entre inventario fisico y sistema.
+Acceptance Criteria:
+- El sistema permite aumentar o disminuir manualmente el stock de un repuesto existente.
+- El ajuste queda registrado con fecha, cantidad y razon o comentario.
+- El stock final se actualiza correctamente luego del ajuste.
+- Solo usuarios autorizados pueden realizar ajustes manuales.
 
 Acceptance Criteria:
-- El usuario interno puede visualizar las evidencias asociadas a una orden o autoinspeccion.
-- La interfaz muestra las evidencias de forma ordenada y accesible.
-- Cada evidencia conserva su contexto de origen.
-- La consulta de evidencias no requiere modificar la informacion almacenada.
+- El sistema permite aumentar o disminuir manualmente el stock de un repuesto existente.
+- El ajuste queda registrado con fecha, cantidad y razon o comentario.
+- El stock final se actualiza correctamente luego del ajuste.
+- Solo usuarios autorizados pueden realizar ajustes manuales.
 
-Acceptance Criteria:
-- El usuario interno puede visualizar las evidencias asociadas a una orden o autoinspeccion.
-- La interfaz muestra las evidencias de forma ordenada y accesible.
-- Cada evidencia conserva su contexto de origen.
-- La consulta de evidencias no requiere modificar la informacion almacenada.
-
-### MOS-54 - Registrar usuarios internos
-- Status: Finalizada
+### MOS-86 - Consultar stock disponible y stock bajo
+- Status: Tareas por hacer
 - Type: Historia
 - Priority: Medium
-- Jira: https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-54
+- Assignee: Carlos Gonzalez
+- Jira: https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-86
 
 Description:
-Como administrador, quiero crear usuarios internos en el sistema, para permitir el acceso controlado de los miembros del taller.
+Como administrador o mecanico, quiero visualizar el stock actual de los repuestos, para saber que materiales hay disponibles antes de ejecutar un trabajo.
+Acceptance Criteria:
+- El sistema muestra nombre, codigo o referencia, stock actual y stock minimo por repuesto.
+- La vista permite identificar rapidamente repuestos con stock bajo.
+- La informacion mostrada corresponde al stock actualizado despues de ingresos y consumos.
+- El listado de inventario se puede consultar sin modificar los registros.
 
 Acceptance Criteria:
-- El administrador puede registrar un usuario interno con nombre, correo y credenciales iniciales.
-- El correo del usuario debe ser unico dentro del sistema.
-- El usuario creado queda habilitado para iniciar sesion segun su estado.
-- El registro de usuarios internos queda disponible para administracion posterior.
+- El sistema muestra nombre, codigo o referencia, stock actual y stock minimo por repuesto.
+- La vista permite identificar rapidamente repuestos con stock bajo.
+- La informacion mostrada corresponde al stock actualizado despues de ingresos y consumos.
+- El listado de inventario se puede consultar sin modificar los registros.
 
-Acceptance Criteria:
-- El administrador puede registrar un usuario interno con nombre, correo y credenciales iniciales.
-- El correo del usuario debe ser unico dentro del sistema.
-- El usuario creado queda habilitado para iniciar sesion segun su estado.
-- El registro de usuarios internos queda disponible para administracion posterior.
-
-### MOS-55 - Asignar roles a usuarios
-- Status: Finalizada
+### MOS-63 - Crear orden de trabajo desde presupuesto aprobado
+- Status: Tareas por hacer
 - Type: Historia
 - Priority: Medium
-- Jira: https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-55
+- Assignee: Carlos Gonzalez
+- Jira: https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-63
 
 Description:
-Como administrador, quiero asignar roles a los usuarios del sistema, para definir sus permisos y responsabilidades dentro de la plataforma.
+Como supervisor o mecanico, quiero crear una orden de trabajo desde un presupuesto aprobado, para iniciar la ejecucion sin duplicar datos.
 
 Acceptance Criteria:
-- Cada usuario interno puede tener un rol valido definido por el sistema.
-- El rol asignado queda persistido y visible en el perfil o listado del usuario.
-- El administrador puede cambiar el rol de un usuario existente.
-- Los cambios de rol impactan los permisos aplicados en la plataforma.
+- Solo un presupuesto aprobado puede convertirse en OT.
+- La OT reutiliza cliente, vehiculo y datos relevantes del presupuesto.
+- El sistema evita crear multiples OT activas desde el mismo presupuesto sin una regla explicita.
+- La relacion entre presupuesto y OT queda persistida.
 
 Acceptance Criteria:
-- Cada usuario interno puede tener un rol valido definido por el sistema.
-- El rol asignado queda persistido y visible en el perfil o listado del usuario.
-- El administrador puede cambiar el rol de un usuario existente.
-- Los cambios de rol impactan los permisos aplicados en la plataforma.
-
-### MOS-56 - Restringir acceso por rol
-- Status: Finalizada
-- Type: Historia
-- Priority: Medium
-- Jira: https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-56
-
-Description:
-Como sistema, quiero restringir el acceso a funcionalidades segun el rol del usuario, para garantizar la seguridad y correcta operacion del sistema.
-
-Acceptance Criteria:
-- Las rutas o acciones protegidas validan la sesion del usuario.
-- El sistema permite o bloquea funcionalidades segun el rol configurado.
-- Un usuario sin permisos recibe una respuesta de acceso denegado.
-- La restriccion aplica tanto a vistas como a operaciones sensibles.
-
-Acceptance Criteria:
-- Las rutas o acciones protegidas validan la sesion del usuario.
-- El sistema permite o bloquea funcionalidades segun el rol configurado.
-- Un usuario sin permisos recibe una respuesta de acceso denegado.
-- La restriccion aplica tanto a vistas como a operaciones sensibles.
-
-### MOS-57 - Acceso de mecánico
-- Status: Finalizada
-- Type: Historia
-- Priority: Medium
-- Jira: https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-57
-
-Description:
-Como mecanico, quiero ver mis ordenes asignadas, para gestionar mi trabajo.
-
-Acceptance Criteria:
-- El mecanico puede acceder a una vista filtrada de ordenes relevantes para su trabajo.
-- La vista muestra al menos numero de orden, vehiculo, estado y fecha.
-- El mecanico no debe ver funcionalidades reservadas a administracion.
-- Desde esa vista puede abrir el detalle de una orden permitida.
-
-Acceptance Criteria:
-- El mecanico puede acceder a una vista filtrada de ordenes relevantes para su trabajo.
-- La vista muestra al menos numero de orden, vehiculo, estado y fecha.
-- El mecanico no debe ver funcionalidades reservadas a administracion.
-- Desde esa vista puede abrir el detalle de una orden permitida.
-
-### MOS-58 - Acceso de jefe de operaciones
-- Status: Finalizada
-- Type: Historia
-- Priority: Medium
-- Jira: https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-58
-
-Description:
-Como jefe de operaciones, quiero ver todas las ordenes, para supervisar el taller.
-
-Acceptance Criteria:
-- El jefe de operaciones puede ver el listado completo de ordenes de trabajo.
-- La vista permite identificar estado, cliente, vehiculo y fechas principales.
-- El acceso incluye supervision global y no solo ordenes individuales.
-- El rol puede entrar al detalle de cualquier orden para seguimiento.
-
-Acceptance Criteria:
-- El jefe de operaciones puede ver el listado completo de ordenes de trabajo.
-- La vista permite identificar estado, cliente, vehiculo y fechas principales.
-- El acceso incluye supervision global y no solo ordenes individuales.
-- El rol puede entrar al detalle de cualquier orden para seguimiento.
+- Solo un presupuesto aprobado puede convertirse en OT.
+- La OT reutiliza cliente, vehiculo y datos relevantes del presupuesto.
+- El sistema evita crear multiples OT activas desde el mismo presupuesto sin una regla explicita.
+- La relacion entre presupuesto y OT queda persistida.
 

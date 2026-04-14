@@ -24,6 +24,9 @@ function hashAccessToken(token: string) {
 }
 
 async function main() {
+  await prisma.quoteStatusLog.deleteMany();
+  await prisma.quoteItem.deleteMany();
+  await prisma.quote.deleteMany();
   await prisma.selfInspectionStatusLog.deleteMany();
   await prisma.selfInspectionReview.deleteMany();
   await prisma.selfInspectionNote.deleteMany();
@@ -516,6 +519,132 @@ async function main() {
             note: "Revision interna registrada",
             changedById: mechanic.id,
             changedAt: new Date("2026-03-12T12:00:00.000Z"),
+          },
+        ],
+      },
+    },
+  });
+
+  await prisma.quote.create({
+    data: {
+      quoteNumber: "PTO-2026-0001",
+      clientId: clientA.id,
+      vehicleId: vehicleA.id,
+      recipientType: "CUSTOMER",
+      status: "DRAFT",
+      summary: "Cambio de pastillas, rectificado y liquido de frenos",
+      internalNotes: "Pendiente validar disponibilidad de discos",
+      totalAmount: "185000",
+      createdById: mechanic.id,
+      updatedById: mechanic.id,
+      items: {
+        create: [
+          {
+            type: "LABOR",
+            description: "Revision y desmontaje de tren delantero",
+            quantity: "1",
+            unitPrice: "45000",
+            lineTotal: "45000",
+            sortOrder: 1,
+          },
+          {
+            type: "PART",
+            description: "Juego de pastillas delanteras",
+            quantity: "1",
+            unitPrice: "82000",
+            lineTotal: "82000",
+            sortOrder: 2,
+          },
+          {
+            type: "SUPPLY",
+            description: "Liquido de frenos DOT 4",
+            quantity: "2",
+            unitPrice: "29000",
+            lineTotal: "58000",
+            sortOrder: 3,
+          },
+        ],
+      },
+      statusLogs: {
+        create: [
+          {
+            previousStatus: null,
+            nextStatus: "DRAFT",
+            note: "Presupuesto creado en borrador",
+            changedById: mechanic.id,
+          },
+        ],
+      },
+    },
+  });
+
+  await prisma.quote.create({
+    data: {
+      quoteNumber: "PTO-2026-0002",
+      clientId: clientB.id,
+      vehicleId: vehicleB.id,
+      selfInspectionId: selfInspectionReviewed.id,
+      recipientType: "INSURER",
+      status: "APPROVED",
+      summary: "Reparacion frontal inicial y alineacion estructural",
+      internalNotes: "Aprobado como caso de seguro para iniciar OT",
+      totalAmount: "680000",
+      sentAt: new Date("2026-03-12T13:00:00.000Z"),
+      sentById: mechanic.id,
+      approvedAt: new Date("2026-03-13T09:30:00.000Z"),
+      approvedById: admin.id,
+      createdById: mechanic.id,
+      updatedById: admin.id,
+      items: {
+        create: [
+          {
+            type: "LABOR",
+            description: "Desarme frontal y diagnostico estructural",
+            quantity: "1",
+            unitPrice: "120000",
+            lineTotal: "120000",
+            sortOrder: 1,
+          },
+          {
+            type: "PART",
+            description: "Soporte frontal y piezas menores",
+            quantity: "1",
+            unitPrice: "410000",
+            lineTotal: "410000",
+            sortOrder: 2,
+          },
+          {
+            type: "SUPPLY",
+            description: "Materiales de montaje y alineacion",
+            quantity: "1",
+            unitPrice: "150000",
+            lineTotal: "150000",
+            sortOrder: 3,
+          },
+        ],
+      },
+      statusLogs: {
+        create: [
+          {
+            previousStatus: null,
+            nextStatus: "DRAFT",
+            note: "Presupuesto creado desde autoinspeccion revisada",
+            changedById: mechanic.id,
+            changedAt: new Date("2026-03-12T12:20:00.000Z"),
+          },
+          {
+            previousStatus: "DRAFT",
+            nextStatus: "SENT",
+            note: "Presupuesto enviado a aseguradora",
+            changedById: mechanic.id,
+            changedAt: new Date("2026-03-12T13:00:00.000Z"),
+          },
+          {
+            previousStatus: "SENT",
+            nextStatus: "APPROVED",
+            note: "Aseguradora aprueba reparacion inicial",
+            changedById: admin.id,
+            changedAt: new Date("2026-03-13T09:30:00.000Z"),
           },
         ],
       },

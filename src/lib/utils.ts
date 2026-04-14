@@ -35,6 +35,24 @@ export function formatDateTime(value?: Date | string | null) {
   }).format(date);
 }
 
+export function formatCurrency(value?: number | string | null) {
+  if (value === undefined || value === null || value === "") {
+    return "-";
+  }
+
+  const amount = typeof value === "number" ? value : Number(value);
+
+  if (!Number.isFinite(amount)) {
+    return "-";
+  }
+
+  return new Intl.NumberFormat("es-CL", {
+    style: "currency",
+    currency: "CLP",
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
 export function parseDateInput(value?: string) {
   if (!value) {
     return undefined;

@@ -1,344 +1,207 @@
 {
-  "syncedAt": "2026-03-22T23:13:30.925Z",
+  "syncedAt": "2026-04-14T13:06:41.372Z",
   "projectKey": "MOS",
   "boardId": 100,
   "sprint": {
-    "id": 100,
-    "self": "https://uandresbello-team-bg7iosbc.atlassian.net/rest/agile/1.0/sprint/100",
+    "id": 133,
+    "self": "https://uandresbello-team-bg7iosbc.atlassian.net/rest/agile/1.0/sprint/133",
     "state": "active",
-    "name": "Sprint 1",
-    "startDate": "2026-03-22T23:05:00.000Z",
-    "endDate": "2026-03-29T23:05:00.000Z",
-    "createdDate": "2026-03-10T17:06:49.252Z",
+    "name": "Sprint 2",
+    "startDate": "2026-04-13T20:21:35.725Z",
+    "endDate": "2026-04-14T21:00:00.000Z",
     "originBoardId": 100,
-    "goal": "Consolidar el nucleo funcional actual de MecaniaOS, asegurando la gestion basica de clientes, vehiculos y ordenes de trabajo, junto con el flujo inicial de autoinspeccion y la base minima de control de acceso por roles."
+    "goal": "Iniciar el ciclo de presupuestos junto con una base de control de inventario para el taller."
   },
   "issues": [
     {
-      "id": "10132",
-      "key": "MOS-1",
-      "summary": "Registrar clientes",
-      "description": "Como administrador, quiero registrar clientes para asociarlos a vehiculos y servicios.\n\nAcceptance Criteria:\n- El formulario solicita al menos nombre completo, telefono y correo electronico.\n- El sistema valida los campos obligatorios antes de guardar.\n- El cliente queda registrado y disponible para asociar vehiculos y ordenes de trabajo.\n- El listado de clientes refleja el nuevo registro luego del guardado.",
+      "id": "10296",
+      "key": "MOS-62",
+      "summary": "Rechazar presupuesto",
+      "description": "Como cliente, quiero rechazar un presupuesto, para dejar constancia de que el trabajo no fue aprobado.\n\nAcceptance Criteria:\n- Un presupuesto enviado puede marcarse como rechazado.\n- El rechazo queda registrado con fecha y actor responsable.\n- El sistema evita convertir en OT un presupuesto rechazado.\n- El estado rechazado queda visible en listados y detalle.",
       "acceptanceCriteria": [
-        "El formulario solicita al menos nombre completo, telefono y correo electronico.",
-        "El sistema valida los campos obligatorios antes de guardar.",
-        "El cliente queda registrado y disponible para asociar vehiculos y ordenes de trabajo.",
-        "El listado de clientes refleja el nuevo registro luego del guardado."
-      ],
-      "status": "Finalizada",
-      "priority": "High",
-      "issueType": "Historia",
-      "labels": [
-        "Alta"
-      ],
-      "sprint": "Sprint 1",
-      "jiraUrl": "https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-1"
-    },
-    {
-      "id": "10133",
-      "key": "MOS-2",
-      "summary": "Registrar vehículos",
-      "description": "Como mecanico, quiero registrar vehiculos por VIN para mantener historial tecnico.\n\nAcceptance Criteria:\n- El formulario permite asociar el vehiculo a un cliente existente.\n- El sistema solicita al menos VIN, marca, modelo y anio.\n- El VIN debe ser unico y validarse antes de guardar.\n- El vehiculo registrado queda disponible para ordenes de trabajo e historial tecnico.",
-      "acceptanceCriteria": [
-        "El formulario permite asociar el vehiculo a un cliente existente.",
-        "El sistema solicita al menos VIN, marca, modelo y anio.",
-        "El VIN debe ser unico y validarse antes de guardar.",
-        "El vehiculo registrado queda disponible para ordenes de trabajo e historial tecnico."
-      ],
-      "status": "Finalizada",
-      "priority": "High",
-      "issueType": "Historia",
-      "labels": [],
-      "sprint": "Sprint 1",
-      "jiraUrl": "https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-2"
-    },
-    {
-      "id": "10134",
-      "key": "MOS-3",
-      "summary": "Crear orden de trabajo",
-      "description": "Como mecanico, quiero crear una orden de trabajo para registrar la mantencion del vehiculo.\n\nAcceptance Criteria:\n- La orden de trabajo se puede crear seleccionando cliente y vehiculo existentes.\n- El sistema solicita al menos motivo de ingreso y fecha de ingreso.\n- Al crear la orden, se genera un numero identificador unico.\n- La orden creada queda visible en el listado general y en el detalle del vehiculo.",
-      "acceptanceCriteria": [
-        "La orden de trabajo se puede crear seleccionando cliente y vehiculo existentes.",
-        "El sistema solicita al menos motivo de ingreso y fecha de ingreso.",
-        "Al crear la orden, se genera un numero identificador unico.",
-        "La orden creada queda visible en el listado general y en el detalle del vehiculo."
-      ],
-      "status": "Finalizada",
-      "priority": "High",
-      "issueType": "Historia",
-      "labels": [],
-      "sprint": "Sprint 1",
-      "jiraUrl": "https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-3"
-    },
-    {
-      "id": "10135",
-      "key": "MOS-4",
-      "summary": "Actualizar estado de reparación",
-      "description": "Como mecanico, quiero actualizar el estado del servicio para informar el progreso.\n\nAcceptance Criteria:\n- Una orden de trabajo permite cambiar su estado dentro del flujo definido.\n- Cada cambio de estado queda reflejado inmediatamente en la vista de la orden.\n- El sistema conserva un historial de cambios de estado con fecha.\n- El estado actualizado aparece en los listados y vistas relacionadas.",
-      "acceptanceCriteria": [
-        "Una orden de trabajo permite cambiar su estado dentro del flujo definido.",
-        "Cada cambio de estado queda reflejado inmediatamente en la vista de la orden.",
-        "El sistema conserva un historial de cambios de estado con fecha.",
-        "El estado actualizado aparece en los listados y vistas relacionadas."
-      ],
-      "status": "Finalizada",
-      "priority": "High",
-      "issueType": "Historia",
-      "labels": [],
-      "sprint": "Sprint 1",
-      "jiraUrl": "https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-4"
-    },
-    {
-      "id": "10136",
-      "key": "MOS-5",
-      "summary": "Consultar historial del vehículo",
-      "description": "Como mecanico, quiero revisar el historial del vehiculo para diagnosticar mejor.\n\nAcceptance Criteria:\n- Desde el vehiculo se puede consultar el historial de ordenes de trabajo previas.\n- El historial muestra al menos fecha, motivo y estado de cada orden.\n- La informacion se presenta ordenada de la mas reciente a la mas antigua.\n- El historial se puede consultar sin editar registros previos.",
-      "acceptanceCriteria": [
-        "Desde el vehiculo se puede consultar el historial de ordenes de trabajo previas.",
-        "El historial muestra al menos fecha, motivo y estado de cada orden.",
-        "La informacion se presenta ordenada de la mas reciente a la mas antigua.",
-        "El historial se puede consultar sin editar registros previos."
-      ],
-      "status": "Finalizada",
-      "priority": "High",
-      "issueType": "Historia",
-      "labels": [],
-      "sprint": "Sprint 1",
-      "jiraUrl": "https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-5"
-    },
-    {
-      "id": "10238",
-      "key": "MOS-46",
-      "summary": "Generar enlace seguro de autoinspección",
-      "description": "Como cliente, quiero recibir un enlace seguro para acceder a mi autoinspeccion, para completar el proceso sin necesidad de credenciales complejas.\n\nAcceptance Criteria:\n- El sistema puede generar un enlace unico asociado a una autoinspeccion.\n- El enlace permite acceder al flujo de autoinspeccion sin iniciar sesion tradicional.\n- El enlace queda asociado al cliente o vehiculo correcto.\n- Si el enlace no existe o no es valido, el sistema bloquea el acceso.",
-      "acceptanceCriteria": [
-        "El sistema puede generar un enlace unico asociado a una autoinspeccion.",
-        "El enlace permite acceder al flujo de autoinspeccion sin iniciar sesion tradicional.",
-        "El enlace queda asociado al cliente o vehiculo correcto.",
-        "Si el enlace no existe o no es valido, el sistema bloquea el acceso."
+        "Un presupuesto enviado puede marcarse como rechazado.",
+        "El rechazo queda registrado con fecha y actor responsable.",
+        "El sistema evita convertir en OT un presupuesto rechazado.",
+        "El estado rechazado queda visible en listados y detalle."
       ],
       "status": "Finalizada",
       "priority": "Medium",
       "issueType": "Historia",
       "labels": [],
-      "sprint": "Sprint 1",
-      "jiraUrl": "https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-46"
+      "assignee": "Carlos Gonzalez",
+      "sprint": "Sprint 2",
+      "jiraUrl": "https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-62"
     },
     {
-      "id": "10240",
-      "key": "MOS-47",
-      "summary": "Completar autoinspección guiada",
-      "description": "Como cliente, quiero completar un formulario guiado de autoinspeccion, para reportar el estado de mi vehiculo de forma clara y estructurada.\n\nAcceptance Criteria:\n- El flujo de autoinspeccion muestra pasos o secciones claramente diferenciadas.\n- El cliente puede responder preguntas clave del estado del vehiculo.\n- El sistema guarda las respuestas estructuradas por seccion o pregunta.\n- El progreso de la autoinspeccion permite identificar el avance actual.",
+      "id": "10142",
+      "key": "MOS-11",
+      "summary": "Aprobar presupuesto",
+      "description": "Como cliente, quiero aprobar un presupuesto, para autorizar el inicio del trabajo sin requerir firma avanzada en esta etapa.\n\nAcceptance Criteria:\n- El presupuesto puede cambiar a estado aprobado mediante una accion simple en el sistema.\n- La aprobacion queda registrada con fecha y actor responsable.\n- Un presupuesto aprobado queda listo para convertirse en orden de trabajo.\n- El sistema evita aprobar dos veces el mismo presupuesto.",
       "acceptanceCriteria": [
-        "El flujo de autoinspeccion muestra pasos o secciones claramente diferenciadas.",
-        "El cliente puede responder preguntas clave del estado del vehiculo.",
-        "El sistema guarda las respuestas estructuradas por seccion o pregunta.",
-        "El progreso de la autoinspeccion permite identificar el avance actual."
+        "El presupuesto puede cambiar a estado aprobado mediante una accion simple en el sistema.",
+        "La aprobacion queda registrada con fecha y actor responsable.",
+        "Un presupuesto aprobado queda listo para convertirse en orden de trabajo.",
+        "El sistema evita aprobar dos veces el mismo presupuesto."
       ],
       "status": "Finalizada",
       "priority": "Medium",
       "issueType": "Historia",
       "labels": [],
-      "sprint": "Sprint 1",
-      "jiraUrl": "https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-47"
+      "assignee": "Ignacio Benegas",
+      "sprint": "Sprint 2",
+      "jiraUrl": "https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-11"
     },
     {
-      "id": "10242",
-      "key": "MOS-48",
-      "summary": "Adjuntar fotos obligatorias del vehículo",
-      "description": "Como cliente, quiero subir fotos de mi vehiculo durante la autoinspeccion, para que el taller pueda evaluar visualmente los danos.\n\nAcceptance Criteria:\n- El flujo exige cargar las fotos obligatorias definidas por la autoinspeccion.\n- El sistema valida formato y tamano basico de los archivos antes de guardar.\n- Cada foto queda asociada a la autoinspeccion correcta.\n- Las fotos cargadas quedan visibles para revision posterior del taller.",
+      "id": "10294",
+      "key": "MOS-61",
+      "summary": "Enviar presupuesto al cliente",
+      "description": "Como usuario interno, quiero enviar un presupuesto, para dejarlo disponible para revision y aprobacion externa.\n\nAcceptance Criteria:\n- Un presupuesto en borrador puede cambiar a estado enviado.\n- El envio registra fecha y actor que realizo la accion.\n- El presupuesto enviado queda disponible para cliente o aseguradora segun corresponda.\n- El sistema evita enviar presupuestos en estados incompatibles.",
       "acceptanceCriteria": [
-        "El flujo exige cargar las fotos obligatorias definidas por la autoinspeccion.",
-        "El sistema valida formato y tamano basico de los archivos antes de guardar.",
-        "Cada foto queda asociada a la autoinspeccion correcta.",
-        "Las fotos cargadas quedan visibles para revision posterior del taller."
+        "Un presupuesto en borrador puede cambiar a estado enviado.",
+        "El envio registra fecha y actor que realizo la accion.",
+        "El presupuesto enviado queda disponible para cliente o aseguradora segun corresponda.",
+        "El sistema evita enviar presupuestos en estados incompatibles."
       ],
       "status": "Finalizada",
       "priority": "Medium",
       "issueType": "Historia",
       "labels": [],
-      "sprint": "Sprint 1",
-      "jiraUrl": "https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-48"
+      "assignee": "Martín Andrés Araya Díaz",
+      "sprint": "Sprint 2",
+      "jiraUrl": "https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-61"
     },
     {
-      "id": "10244",
-      "key": "MOS-49",
-      "summary": "Guardar autoinspección en borrador",
-      "description": "Como cliente, quiero guardar mi autoinspeccion sin terminar, para poder continuarla posteriormente.\n\nAcceptance Criteria:\n- El cliente puede guardar una autoinspeccion incompleta sin enviarla al taller.\n- El sistema conserva respuestas, fotos y avances ya ingresados.\n- Al reingresar con el enlace, la autoinspeccion se retoma desde el estado guardado.\n- Una autoinspeccion en borrador no debe marcarse como enviada.",
+      "id": "10138",
+      "key": "MOS-7",
+      "summary": "Generar presupuesto",
+      "description": "Como mecanico o supervisor, quiero generar un presupuesto para un vehiculo, para desglosar mano de obra, repuestos y suministros antes de ejecutar el trabajo.\n\nAcceptance Criteria:\n- El presupuesto se puede asociar a un cliente y vehiculo existentes o a una autoinspeccion revisada.\n- El formulario permite registrar items de mano de obra, repuestos y suministros.\n- El presupuesto queda guardado en estado borrador.\n- El presupuesto creado queda disponible para su revision y posterior envio.",
       "acceptanceCriteria": [
-        "El cliente puede guardar una autoinspeccion incompleta sin enviarla al taller.",
-        "El sistema conserva respuestas, fotos y avances ya ingresados.",
-        "Al reingresar con el enlace, la autoinspeccion se retoma desde el estado guardado.",
-        "Una autoinspeccion en borrador no debe marcarse como enviada."
+        "El presupuesto se puede asociar a un cliente y vehiculo existentes o a una autoinspeccion revisada.",
+        "El formulario permite registrar items de mano de obra, repuestos y suministros.",
+        "El presupuesto queda guardado en estado borrador.",
+        "El presupuesto creado queda disponible para su revision y posterior envio."
       ],
       "status": "Finalizada",
       "priority": "Medium",
       "issueType": "Historia",
       "labels": [],
-      "sprint": "Sprint 1",
-      "jiraUrl": "https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-49"
+      "assignee": "Ignacio Benegas",
+      "sprint": "Sprint 2",
+      "jiraUrl": "https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-7"
     },
     {
-      "id": "10246",
-      "key": "MOS-50",
-      "summary": "Enviar autoinspección al taller",
-      "description": "Como cliente, quiero enviar la autoinspeccion completa, para que el taller pueda iniciar el diagnostico del vehiculo.\n\nAcceptance Criteria:\n- El cliente puede enviar la autoinspeccion solo cuando los datos requeridos estan completos.\n- Al enviar, el estado de la autoinspeccion cambia a enviado o equivalente.\n- Una vez enviada, la autoinspeccion queda disponible para revision interna.\n- El sistema evita envios duplicados accidentales.",
+      "id": "10368",
+      "key": "MOS-84",
+      "summary": "Registrar ingreso de stock de repuestos",
+      "description": "Como administrador, quiero registrar el ingreso de nuevas unidades de un repuesto, para actualizar el stock disponible despues de una compra o reposicion.\nAcceptance Criteria:\n- El sistema permite seleccionar un repuesto existente e ingresar una cantidad de unidades nuevas.\n- El stock total del repuesto se actualiza automaticamente despues del ingreso.\n- El movimiento queda registrado con fecha y cantidad ingresada.\n- El ingreso de stock queda disponible para trazabilidad posterior.",
       "acceptanceCriteria": [
-        "El cliente puede enviar la autoinspeccion solo cuando los datos requeridos estan completos.",
-        "Al enviar, el estado de la autoinspeccion cambia a enviado o equivalente.",
-        "Una vez enviada, la autoinspeccion queda disponible para revision interna.",
-        "El sistema evita envios duplicados accidentales."
+        "El sistema permite seleccionar un repuesto existente e ingresar una cantidad de unidades nuevas.",
+        "El stock total del repuesto se actualiza automaticamente despues del ingreso.",
+        "El movimiento queda registrado con fecha y cantidad ingresada.",
+        "El ingreso de stock queda disponible para trazabilidad posterior."
       ],
-      "status": "Finalizada",
+      "status": "Tareas por hacer",
       "priority": "Medium",
       "issueType": "Historia",
       "labels": [],
-      "sprint": "Sprint 1",
-      "jiraUrl": "https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-50"
+      "assignee": "Martín Andrés Araya Díaz",
+      "sprint": "Sprint 2",
+      "jiraUrl": "https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-84"
     },
     {
-      "id": "10248",
-      "key": "MOS-51",
-      "summary": "Revisar autoinspección internamente",
-      "description": "Como mecanico, quiero revisar la autoinspeccion enviada por el cliente, para analizar el estado del vehiculo antes de su ingreso al taller.\n\nAcceptance Criteria:\n- El usuario interno puede abrir el detalle completo de una autoinspeccion enviada.\n- La revision muestra respuestas, fotos y datos principales del vehiculo.\n- La pantalla permite registrar observaciones o una conclusion inicial.\n- El resultado de la revision queda persistido para consulta posterior.",
+      "id": "10137",
+      "key": "MOS-6",
+      "summary": "Registrar repuestos en inventario",
+      "description": "Como administrador, quiero registrar repuestos en el sistema, para mantener un catalogo interno disponible para el taller.\nAcceptance Criteria:\n- El sistema permite crear un repuesto con nombre, codigo o referencia, stock inicial y stock minimo.\n- El repuesto queda visible en el listado de inventario.\n- El sistema evita duplicar el codigo o referencia cuando se define como identificador unico.\n- El registro queda persistido y disponible para movimientos posteriores de stock.",
       "acceptanceCriteria": [
-        "El usuario interno puede abrir el detalle completo de una autoinspeccion enviada.",
-        "La revision muestra respuestas, fotos y datos principales del vehiculo.",
-        "La pantalla permite registrar observaciones o una conclusion inicial.",
-        "El resultado de la revision queda persistido para consulta posterior."
+        "El sistema permite crear un repuesto con nombre, codigo o referencia, stock inicial y stock minimo.",
+        "El repuesto queda visible en el listado de inventario.",
+        "El sistema evita duplicar el codigo o referencia cuando se define como identificador unico.",
+        "El registro queda persistido y disponible para movimientos posteriores de stock."
       ],
-      "status": "Finalizada",
+      "status": "Tareas por hacer",
       "priority": "Medium",
       "issueType": "Historia",
       "labels": [],
-      "sprint": "Sprint 1",
-      "jiraUrl": "https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-51"
+      "assignee": "Carlos Gonzalez",
+      "sprint": "Sprint 2",
+      "jiraUrl": "https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-6"
     },
     {
-      "id": "10249",
-      "key": "MOS-52",
-      "summary": "Adjuntar evidencias a orden de trabajo",
-      "description": "Como mecanico, quiero adjuntar imagenes a una orden, para documentar la reparacion.\n\nAcceptance Criteria:\n- Una orden de trabajo permite adjuntar una o mas evidencias visuales.\n- Cada evidencia queda asociada a la orden correcta.\n- El sistema registra al menos archivo, fecha y contexto basico de la evidencia.\n- Las evidencias adjuntas quedan disponibles para visualizacion posterior.",
+      "id": "10369",
+      "key": "MOS-85",
+      "summary": "Descontar repuestos utilizados en una orden de trabajo",
+      "description": "Como mecanico, quiero registrar los repuestos utilizados en una orden de trabajo, para descontarlos automaticamente del inventario y mantener trazabilidad del consumo.\nAcceptance Criteria:\n- Desde una orden de trabajo se pueden asociar uno o mas repuestos utilizados.\n- El sistema descuenta del stock la cantidad efectivamente usada.\n- El sistema impide registrar una salida mayor al stock disponible.\n- La orden de trabajo conserva el detalle de los repuestos consumidos y sus cantidades.",
       "acceptanceCriteria": [
-        "Una orden de trabajo permite adjuntar una o mas evidencias visuales.",
-        "Cada evidencia queda asociada a la orden correcta.",
-        "El sistema registra al menos archivo, fecha y contexto basico de la evidencia.",
-        "Las evidencias adjuntas quedan disponibles para visualizacion posterior."
+        "Desde una orden de trabajo se pueden asociar uno o mas repuestos utilizados.",
+        "El sistema descuenta del stock la cantidad efectivamente usada.",
+        "El sistema impide registrar una salida mayor al stock disponible.",
+        "La orden de trabajo conserva el detalle de los repuestos consumidos y sus cantidades."
       ],
-      "status": "Finalizada",
+      "status": "Tareas por hacer",
       "priority": "Medium",
       "issueType": "Historia",
       "labels": [],
-      "sprint": "Sprint 1",
-      "jiraUrl": "https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-52"
+      "assignee": "Benjamin Yañez Lasalvia",
+      "sprint": "Sprint 2",
+      "jiraUrl": "https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-85"
     },
     {
-      "id": "10250",
-      "key": "MOS-53",
-      "summary": "Adjuntar evidencias a orden de trabajo",
-      "description": "Como usuario interno, quiero ver todas las evidencias, para analizar el historial visual.\n\nAcceptance Criteria:\n- El usuario interno puede visualizar las evidencias asociadas a una orden o autoinspeccion.\n- La interfaz muestra las evidencias de forma ordenada y accesible.\n- Cada evidencia conserva su contexto de origen.\n- La consulta de evidencias no requiere modificar la informacion almacenada.",
+      "id": "10371",
+      "key": "MOS-87",
+      "summary": "Ajustar stock manualmente",
+      "description": "Como administrador, quiero ajustar manualmente el stock de un repuesto, para corregir diferencias entre inventario fisico y sistema.\nAcceptance Criteria:\n- El sistema permite aumentar o disminuir manualmente el stock de un repuesto existente.\n- El ajuste queda registrado con fecha, cantidad y razon o comentario.\n- El stock final se actualiza correctamente luego del ajuste.\n- Solo usuarios autorizados pueden realizar ajustes manuales.",
       "acceptanceCriteria": [
-        "El usuario interno puede visualizar las evidencias asociadas a una orden o autoinspeccion.",
-        "La interfaz muestra las evidencias de forma ordenada y accesible.",
-        "Cada evidencia conserva su contexto de origen.",
-        "La consulta de evidencias no requiere modificar la informacion almacenada."
+        "El sistema permite aumentar o disminuir manualmente el stock de un repuesto existente.",
+        "El ajuste queda registrado con fecha, cantidad y razon o comentario.",
+        "El stock final se actualiza correctamente luego del ajuste.",
+        "Solo usuarios autorizados pueden realizar ajustes manuales."
       ],
-      "status": "Finalizada",
+      "status": "Tareas por hacer",
       "priority": "Medium",
       "issueType": "Historia",
       "labels": [],
-      "sprint": "Sprint 1",
-      "jiraUrl": "https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-53"
+      "assignee": "Ignacio Benegas",
+      "sprint": "Sprint 2",
+      "jiraUrl": "https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-87"
     },
     {
-      "id": "10252",
-      "key": "MOS-54",
-      "summary": "Registrar usuarios internos",
-      "description": "Como administrador, quiero crear usuarios internos en el sistema, para permitir el acceso controlado de los miembros del taller.\n\nAcceptance Criteria:\n- El administrador puede registrar un usuario interno con nombre, correo y credenciales iniciales.\n- El correo del usuario debe ser unico dentro del sistema.\n- El usuario creado queda habilitado para iniciar sesion segun su estado.\n- El registro de usuarios internos queda disponible para administracion posterior.",
+      "id": "10370",
+      "key": "MOS-86",
+      "summary": "Consultar stock disponible y stock bajo",
+      "description": "Como administrador o mecanico, quiero visualizar el stock actual de los repuestos, para saber que materiales hay disponibles antes de ejecutar un trabajo.\nAcceptance Criteria:\n- El sistema muestra nombre, codigo o referencia, stock actual y stock minimo por repuesto.\n- La vista permite identificar rapidamente repuestos con stock bajo.\n- La informacion mostrada corresponde al stock actualizado despues de ingresos y consumos.\n- El listado de inventario se puede consultar sin modificar los registros.",
       "acceptanceCriteria": [
-        "El administrador puede registrar un usuario interno con nombre, correo y credenciales iniciales.",
-        "El correo del usuario debe ser unico dentro del sistema.",
-        "El usuario creado queda habilitado para iniciar sesion segun su estado.",
-        "El registro de usuarios internos queda disponible para administracion posterior."
+        "El sistema muestra nombre, codigo o referencia, stock actual y stock minimo por repuesto.",
+        "La vista permite identificar rapidamente repuestos con stock bajo.",
+        "La informacion mostrada corresponde al stock actualizado despues de ingresos y consumos.",
+        "El listado de inventario se puede consultar sin modificar los registros."
       ],
-      "status": "Finalizada",
+      "status": "Tareas por hacer",
       "priority": "Medium",
       "issueType": "Historia",
       "labels": [],
-      "sprint": "Sprint 1",
-      "jiraUrl": "https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-54"
+      "assignee": "Carlos Gonzalez",
+      "sprint": "Sprint 2",
+      "jiraUrl": "https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-86"
     },
     {
-      "id": "10254",
-      "key": "MOS-55",
-      "summary": "Asignar roles a usuarios",
-      "description": "Como administrador, quiero asignar roles a los usuarios del sistema, para definir sus permisos y responsabilidades dentro de la plataforma.\n\nAcceptance Criteria:\n- Cada usuario interno puede tener un rol valido definido por el sistema.\n- El rol asignado queda persistido y visible en el perfil o listado del usuario.\n- El administrador puede cambiar el rol de un usuario existente.\n- Los cambios de rol impactan los permisos aplicados en la plataforma.",
+      "id": "10298",
+      "key": "MOS-63",
+      "summary": "Crear orden de trabajo desde presupuesto aprobado",
+      "description": "Como supervisor o mecanico, quiero crear una orden de trabajo desde un presupuesto aprobado, para iniciar la ejecucion sin duplicar datos.\n\nAcceptance Criteria:\n- Solo un presupuesto aprobado puede convertirse en OT.\n- La OT reutiliza cliente, vehiculo y datos relevantes del presupuesto.\n- El sistema evita crear multiples OT activas desde el mismo presupuesto sin una regla explicita.\n- La relacion entre presupuesto y OT queda persistida.",
       "acceptanceCriteria": [
-        "Cada usuario interno puede tener un rol valido definido por el sistema.",
-        "El rol asignado queda persistido y visible en el perfil o listado del usuario.",
-        "El administrador puede cambiar el rol de un usuario existente.",
-        "Los cambios de rol impactan los permisos aplicados en la plataforma."
+        "Solo un presupuesto aprobado puede convertirse en OT.",
+        "La OT reutiliza cliente, vehiculo y datos relevantes del presupuesto.",
+        "El sistema evita crear multiples OT activas desde el mismo presupuesto sin una regla explicita.",
+        "La relacion entre presupuesto y OT queda persistida."
       ],
-      "status": "Finalizada",
+      "status": "Tareas por hacer",
       "priority": "Medium",
       "issueType": "Historia",
       "labels": [],
-      "sprint": "Sprint 1",
-      "jiraUrl": "https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-55"
-    },
-    {
-      "id": "10256",
-      "key": "MOS-56",
-      "summary": "Restringir acceso por rol",
-      "description": "Como sistema, quiero restringir el acceso a funcionalidades segun el rol del usuario, para garantizar la seguridad y correcta operacion del sistema.\n\nAcceptance Criteria:\n- Las rutas o acciones protegidas validan la sesion del usuario.\n- El sistema permite o bloquea funcionalidades segun el rol configurado.\n- Un usuario sin permisos recibe una respuesta de acceso denegado.\n- La restriccion aplica tanto a vistas como a operaciones sensibles.",
-      "acceptanceCriteria": [
-        "Las rutas o acciones protegidas validan la sesion del usuario.",
-        "El sistema permite o bloquea funcionalidades segun el rol configurado.",
-        "Un usuario sin permisos recibe una respuesta de acceso denegado.",
-        "La restriccion aplica tanto a vistas como a operaciones sensibles."
-      ],
-      "status": "Finalizada",
-      "priority": "Medium",
-      "issueType": "Historia",
-      "labels": [],
-      "sprint": "Sprint 1",
-      "jiraUrl": "https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-56"
-    },
-    {
-      "id": "10257",
-      "key": "MOS-57",
-      "summary": "Acceso de mecánico",
-      "description": "Como mecanico, quiero ver mis ordenes asignadas, para gestionar mi trabajo.\n\nAcceptance Criteria:\n- El mecanico puede acceder a una vista filtrada de ordenes relevantes para su trabajo.\n- La vista muestra al menos numero de orden, vehiculo, estado y fecha.\n- El mecanico no debe ver funcionalidades reservadas a administracion.\n- Desde esa vista puede abrir el detalle de una orden permitida.",
-      "acceptanceCriteria": [
-        "El mecanico puede acceder a una vista filtrada de ordenes relevantes para su trabajo.",
-        "La vista muestra al menos numero de orden, vehiculo, estado y fecha.",
-        "El mecanico no debe ver funcionalidades reservadas a administracion.",
-        "Desde esa vista puede abrir el detalle de una orden permitida."
-      ],
-      "status": "Finalizada",
-      "priority": "Medium",
-      "issueType": "Historia",
-      "labels": [],
-      "sprint": "Sprint 1",
-      "jiraUrl": "https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-57"
-    },
-    {
-      "id": "10258",
-      "key": "MOS-58",
-      "summary": "Acceso de jefe de operaciones",
-      "description": "Como jefe de operaciones, quiero ver todas las ordenes, para supervisar el taller.\n\nAcceptance Criteria:\n- El jefe de operaciones puede ver el listado completo de ordenes de trabajo.\n- La vista permite identificar estado, cliente, vehiculo y fechas principales.\n- El acceso incluye supervision global y no solo ordenes individuales.\n- El rol puede entrar al detalle de cualquier orden para seguimiento.",
-      "acceptanceCriteria": [
-        "El jefe de operaciones puede ver el listado completo de ordenes de trabajo.",
-        "La vista permite identificar estado, cliente, vehiculo y fechas principales.",
-        "El acceso incluye supervision global y no solo ordenes individuales.",
-        "El rol puede entrar al detalle de cualquier orden para seguimiento."
-      ],
-      "status": "Finalizada",
-      "priority": "Medium",
-      "issueType": "Historia",
-      "labels": [],
-      "sprint": "Sprint 1",
-      "jiraUrl": "https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-58"
+      "assignee": "Carlos Gonzalez",
+      "sprint": "Sprint 2",
+      "jiraUrl": "https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-63"
     }
   ]
 }

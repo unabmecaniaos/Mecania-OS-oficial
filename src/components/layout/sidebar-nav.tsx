@@ -11,6 +11,7 @@ const baseLinks = [
   { href: "/clients", label: "Clientes" },
   { href: "/vehicles", label: "Vehiculos" },
   { href: "/self-inspections", label: "Autoinspecciones" },
+  { href: "/quotes", label: "Presupuestos" },
   { href: "/work-orders", label: "Ordenes" },
 ];
 

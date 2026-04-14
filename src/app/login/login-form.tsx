@@ -20,7 +20,6 @@ export function LoginForm() {
         <Input
           autoComplete="email"
           className="min-h-12 rounded-2xl border-[rgba(95,127,168,0.18)] bg-[rgba(248,251,255,0.92)] px-4 shadow-none focus:border-[#2563eb] focus:ring-[rgba(37,99,235,0.14)]"
-          defaultValue="admin@mecaniaos.local"
           id="email"
           name="email"
           placeholder="correo@empresa.com"
@@ -35,7 +34,6 @@ export function LoginForm() {
         <Input
           autoComplete="current-password"
           className="min-h-12 rounded-2xl border-[rgba(95,127,168,0.18)] bg-[rgba(248,251,255,0.92)] px-4 shadow-none focus:border-[#2563eb] focus:ring-[rgba(37,99,235,0.14)]"
-          defaultValue="Admin1234!"
           id="password"
           name="password"
           placeholder="Tu contrasena"

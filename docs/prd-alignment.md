@@ -16,7 +16,6 @@ La base actual ya se parece a un sistema operativo de taller y no a un CRUD acad
 
 La desalineacion principal hoy no es conceptual, sino de cobertura funcional. Todavia faltan modulos que en tu PRD son centrales:
 
-- presupuestos y aprobacion.
 - progreso por tareas.
 - portal cliente.
 - portal aseguradora.
@@ -66,8 +65,6 @@ El repo ya refleja bien estas ideas del PRD:
 
 No aparecen aun estas entidades del PRD:
 
-- `Quote`
-- `QuoteItem`
 - `WorkOrderTask`
 - `InsuranceCompany`
 - `InsuranceAdjuster`
@@ -102,8 +99,8 @@ Faltan roles operativos y externos del PRD:
 | Evidencia fotografica | Implementado parcialmente |
 | Dashboard basico | Implementado parcialmente |
 | Autoinspeccion remota | Implementado |
-| Presupuestos | No implementado |
-| Aprobacion de presupuestos | No implementado |
+| Presupuestos | Implementado parcialmente |
+| Aprobacion de presupuestos | Implementado parcialmente |
 | Tareas en OT | No implementado |
 | Progreso automatico | No implementado |
 | Portal cliente | No implementado |
@@ -116,13 +113,12 @@ Faltan roles operativos y externos del PRD:
 Desde ahora la documentacion del repo deberia describir MecaniaOS como:
 
 - sistema de gestion operativa de taller mecanico.
-- demo funcional de un solo taller.
-- producto con nucleo ya implementado y roadmap claro hacia presupuestos, progreso por tareas y portales externos.
+- producto operativo para gestion de taller.
+- plataforma con nucleo ya implementado y roadmap claro hacia progreso por tareas y portales externos.
 
 No deberia seguir describirse como:
 
 - sistema generico de mantenciones.
-- MVP ya completo.
 - proyecto donde cotizaciones, evidencia o portal cliente son solo ideas futuras, porque parte de esa base ya existe y otra parte ya es compromiso del PRD.
 
 ## Siguiente corte recomendado

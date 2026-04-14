@@ -137,7 +137,7 @@ El flujo de cliente es wizard multipaso:
 
 El seed agrega:
 
-- una autoinspeccion `in_progress` con enlace seguro demo.
+- una autoinspeccion `in_progress` con enlace seguro activo.
 - una autoinspeccion `reviewed` con fotos, revision interna y alertas criticas.
 
 ## Integraciones futuras previstas

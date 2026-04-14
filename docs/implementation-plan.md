@@ -62,14 +62,14 @@ Llevar MecaniaOS desde la base operativa actual hacia el producto definido en el
 - agregar filtros por estado, responsable y atraso.
 - resaltar ordenes atrasadas y carga por tecnico.
 
-### Fase 5. Cierre del MVP demo
+### Fase 5. Cierre operativo y endurecimiento
 
-- revisar consistencia de datos demo.
-- preparar recorrido demostrable end-to-end.
+- revisar consistencia de datos iniciales.
+- preparar validacion end-to-end de los flujos criticos.
 - asegurar despliegue limpio en `Vercel`.
-- documentar credenciales, flujos y limites del MVP.
+- documentar configuracion, flujos y criterios operativos.
 
-## Prioridad realista para MVP
+## Prioridad operativa
 
 ### Obligatorio
 

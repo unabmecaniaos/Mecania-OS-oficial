@@ -6,7 +6,7 @@ Sistema web responsive para la gestion operativa de un taller mecanico pequeno o
 
 MecaniaOS busca centralizar el flujo completo del taller desde el ingreso del vehiculo hasta su entrega. El producto apunta a ordenar la operacion interna, dar trazabilidad sobre cada intervencion y ofrecer visibilidad tanto al cliente como a aseguradoras en los casos derivados.
 
-Esta etapa del proyecto corresponde a una demo funcional universitaria desplegable en `Vercel`, pensada inicialmente para un solo taller, con arquitectura realista y datos demo consistentes.
+El proyecto esta preparado para operar como plataforma web de gestion de taller, con despliegue en `Vercel`, arquitectura modular y soporte para evolucionar por dominios.
 
 ## Estado actual del proyecto
 
@@ -21,10 +21,10 @@ La base actual ya cubre parte importante del nucleo operativo:
 - historial tecnico por vehiculo y VIN.
 - dashboard operativo basico.
 - autoinspeccion remota por enlace seguro.
+- presupuestos con ciclo de borrador, envio, aprobacion y rechazo.
 
-Todavia no estan implementados los modulos clave que el PRD define para el MVP funcional completo:
+Todavia quedan lineas de evolucion relevantes del PRD:
 
-- presupuestos y aprobacion de presupuestos.
 - tareas dentro de la OT y progreso calculado automaticamente.
 - portal cliente.
 - portal aseguradora y modelo organizacional para liquidadores.
@@ -123,7 +123,7 @@ pnpm db:generate
 pnpm db:push
 ```
 
-5. Cargar datos de prueba:
+5. Cargar datos iniciales del entorno local:
 
 ```bash
 pnpm db:seed
@@ -134,11 +134,6 @@ pnpm db:seed
 ```bash
 pnpm dev
 ```
-
-## Credenciales seed
-
-- Administrador: `admin@mecaniaos.local` / `Admin1234!`
-- Mecanico: `mecanico@mecaniaos.local` / `Mechanic1234!`
 
 ## Scripts
 

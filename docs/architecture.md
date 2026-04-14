@@ -2,7 +2,7 @@
 
 ## Decision principal
 
-MecaniaOS usa un **monolito modular** con `Next.js` como frontend y backend de la demo. Esta decision prioriza velocidad de entrega, coherencia funcional y menor complejidad operativa, manteniendo separacion clara por dominios para evolucionar el sistema despues.
+MecaniaOS usa un **monolito modular** con `Next.js` como frontend y backend del sistema. Esta decision prioriza velocidad de entrega, coherencia funcional y menor complejidad operativa, manteniendo separacion clara por dominios para evolucionar el producto despues.
 
 ## Enfoque de producto soportado por la arquitectura
 
@@ -17,7 +17,6 @@ La arquitectura actual esta pensada para cubrir estos flujos del taller:
 
 La arquitectura todavia debe crecer para soportar de forma completa:
 
-- presupuestos y su ciclo de aprobacion.
 - tareas y progreso calculado por OT.
 - portales externos de cliente y aseguradora.
 - notificaciones por correo.
@@ -41,6 +40,7 @@ La arquitectura todavia debe crecer para soportar de forma completa:
 - `work-orders`
 - `service-history`
 - `dashboard`
+- `quotes`
 - `self-inspections`
 
 ## Principios
@@ -63,11 +63,10 @@ El modelo actual cubre bien la base operativa del taller:
 - evidencia de OT.
 - historial de estados de OT.
 - autoinspecciones y sus tablas satelite.
+- presupuestos, items y bitacora de estado.
 
 Todavia faltan agregados centrales para el PRD 1.0:
 
-- `Quote`
-- `QuoteItem`
 - `WorkOrderTask`
 - `WorkOrderAssignment` separado si se quiere historial de responsables
 - `InsuranceCompany`
@@ -98,6 +97,7 @@ Todavia faltan agregados centrales para el PRD 1.0:
 |       |-- work-orders/
 |       |-- service-history/
 |       |-- dashboard/
+|       |-- quotes/
 |       `-- self-inspections/
 |-- .env.example
 `-- README.md
@@ -107,7 +107,6 @@ Todavia faltan agregados centrales para el PRD 1.0:
 
 Los siguientes modulos son la continuacion natural del diseno actual:
 
-- `quotes`
 - `work-order-tasks`
 - `customer-portal`
 - `insurance-portal`

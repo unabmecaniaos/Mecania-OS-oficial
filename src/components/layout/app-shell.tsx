@@ -70,7 +70,7 @@ export function AppShell({ children, user, onLogout }: AppShellProps) {
               Workspace interno
             </p>
             <h2 className="mt-2 font-heading text-3xl font-semibold text-[color:var(--foreground)]">
-              MecaniaOS MVP
+              MecaniaOS
             </h2>
             <p className="mt-2 max-w-2xl text-sm text-[color:var(--muted-strong)]">
               Operacion, trazabilidad y seguimiento tecnico desde una interfaz mas limpia y

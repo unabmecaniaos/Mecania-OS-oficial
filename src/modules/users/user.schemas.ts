@@ -3,17 +3,26 @@ import { z } from "zod";
 
 import { optionalText, requiredText } from "@/lib/validation";
 
-const internalRoleSchema = z.enum([UserRole.ADMIN, UserRole.MECHANIC]);
+const managedRoleSchema = z.enum([UserRole.ADMIN, UserRole.MECHANIC, UserRole.CUSTOMER]);
 
-export const createInternalUserSchema = z.object({
+export const listUsersFiltersSchema = z.object({
+  q: optionalText(120),
+  role: managedRoleSchema.optional(),
+});
+
+export const createManagedUserSchema = z.object({
   name: requiredText(3, 120),
   email: z.string().trim().email(),
   password: requiredText(8, 128),
-  role: internalRoleSchema,
+  role: managedRoleSchema,
+  clientId: optionalText(40),
 });
 
-export const updateInternalUserSchema = z.object({
-  role: internalRoleSchema,
+export const updateManagedUserSchema = z.object({
+  name: requiredText(3, 120),
+  email: z.string().trim().email(),
+  role: managedRoleSchema,
   active: z.boolean(),
   password: optionalText(128),
+  clientId: optionalText(40),
 });

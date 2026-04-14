@@ -3,11 +3,48 @@ import { UserRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export const userRepository = {
-  listInternalUsers() {
+  listUsers(filters?: { search?: string; role?: UserRole }) {
     return prisma.user.findMany({
       where: {
-        role: {
-          in: [UserRole.ADMIN, UserRole.MECHANIC],
+        ...(filters?.role
+          ? {
+              role: filters.role,
+            }
+          : {}),
+        ...(filters?.search
+          ? {
+              OR: [
+                {
+                  name: {
+                    contains: filters.search,
+                    mode: "insensitive",
+                  },
+                },
+                {
+                  email: {
+                    contains: filters.search,
+                    mode: "insensitive",
+                  },
+                },
+                {
+                  client: {
+                    fullName: {
+                      contains: filters.search,
+                      mode: "insensitive",
+                    },
+                  },
+                },
+              ],
+            }
+          : {}),
+      },
+      include: {
+        client: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+          },
         },
       },
       orderBy: [
@@ -49,6 +86,21 @@ export const userRepository = {
   findById(id: string) {
     return prisma.user.findUnique({
       where: { id },
+      include: {
+        client: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+          },
+        },
+      },
+    });
+  },
+
+  findByClientId(clientId: string) {
+    return prisma.user.findUnique({
+      where: { clientId },
     });
   },
 
@@ -94,14 +146,83 @@ export const userRepository = {
   update(
     id: string,
     data: {
+      name: string;
+      email: string;
       role: UserRole;
       active: boolean;
       passwordHash?: string;
+      clientId?: string | null;
     },
   ) {
     return prisma.user.update({
       where: { id },
-      data,
+      data: {
+        name: data.name,
+        email: data.email,
+        role: data.role,
+        active: data.active,
+        ...(data.passwordHash ? { passwordHash: data.passwordHash } : {}),
+        ...(data.clientId === undefined
+          ? {}
+          : data.clientId
+            ? {
+                client: {
+                  connect: {
+                    id: data.clientId,
+                  },
+                },
+              }
+            : {
+                client: {
+                  disconnect: true,
+                },
+              }),
+      },
+    });
+  },
+
+  async getDeletionImpact(id: string) {
+    const [
+      createdWorkOrders,
+      uploadedWorkOrderEvidences,
+      workOrderStatusChanges,
+      createdQuotes,
+      quoteStatusChanges,
+      selfInspectionReviews,
+    ] = await prisma.$transaction([
+      prisma.workOrder.count({
+        where: { createdById: id },
+      }),
+      prisma.workOrderEvidence.count({
+        where: { uploadedById: id },
+      }),
+      prisma.workOrderStatusLog.count({
+        where: { changedById: id },
+      }),
+      prisma.quote.count({
+        where: { createdById: id },
+      }),
+      prisma.quoteStatusLog.count({
+        where: { changedById: id },
+      }),
+      prisma.selfInspectionReview.count({
+        where: { reviewedById: id },
+      }),
+    ]);
+
+    return {
+      createdWorkOrders,
+      uploadedWorkOrderEvidences,
+      workOrderStatusChanges,
+      createdQuotes,
+      quoteStatusChanges,
+      selfInspectionReviews,
+    };
+  },
+
+  delete(id: string) {
+    return prisma.user.delete({
+      where: { id },
     });
   },
 };

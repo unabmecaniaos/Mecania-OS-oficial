@@ -80,6 +80,24 @@ export const clientRepository = {
     });
   },
 
+  listForUserAssignment() {
+    return prisma.client.findMany({
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        user: {
+          select: {
+            id: true,
+          },
+        },
+      },
+      orderBy: {
+        fullName: "asc",
+      },
+    });
+  },
+
   create(data: Prisma.ClientCreateInput) {
     return prisma.client.create({ data });
   },

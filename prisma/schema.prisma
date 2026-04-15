@@ -248,6 +248,7 @@ model WorkOrder {
   id               String               @id @default(cuid())
   clientId         String
   vehicleId        String
+  quoteId          String?              @unique
   orderNumber      String               @unique
   reason           String
   initialDiagnosis String?
@@ -263,6 +264,7 @@ model WorkOrder {
   updatedAt        DateTime             @updatedAt
   client           Client               @relation(fields: [clientId], references: [id], onDelete: Restrict)
   vehicle          Vehicle              @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+  quote            Quote?               @relation(fields: [quoteId], references: [id], onDelete: SetNull)
   createdBy        User                 @relation("WorkOrderCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
   updatedBy        User?                @relation("WorkOrderUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
   assignedTechnician User?              @relation("WorkOrderAssignedTechnician", fields: [assignedTechnicianId], references: [id], onDelete: SetNull)
@@ -338,6 +340,7 @@ model Quote {
   rejectedBy       User?              @relation("QuoteRejectedBy", fields: [rejectedById], references: [id], onDelete: SetNull)
   items            QuoteItem[]
   statusLogs       QuoteStatusLog[]
+  workOrder        WorkOrder?
 
   @@index([clientId, createdAt])
   @@index([vehicleId, createdAt])

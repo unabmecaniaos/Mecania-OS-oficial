@@ -3,13 +3,13 @@
 - Project: MOS
 - Board ID: 100
 - State: active
-- Synced at: 2026-04-14T13:06:41.372Z
+- Synced at: 2026-04-14T16:38:37.510Z
 - Goal: Iniciar el ciclo de presupuestos junto con una base de control de inventario para el taller.
 
 ## Issues
 
 ### MOS-62 - Rechazar presupuesto
-- Status: Finalizada
+- Status: En curso
 - Type: Historia
 - Priority: Medium
 - Assignee: Carlos Gonzalez
@@ -31,7 +31,7 @@ Acceptance Criteria:
 - El estado rechazado queda visible en listados y detalle.
 
 ### MOS-11 - Aprobar presupuesto
-- Status: Finalizada
+- Status: En curso
 - Type: Historia
 - Priority: Medium
 - Assignee: Ignacio Benegas
@@ -52,30 +52,8 @@ Acceptance Criteria:
 - Un presupuesto aprobado queda listo para convertirse en orden de trabajo.
 - El sistema evita aprobar dos veces el mismo presupuesto.
 
-### MOS-61 - Enviar presupuesto al cliente
-- Status: Finalizada
-- Type: Historia
-- Priority: Medium
-- Assignee: Martín Andrés Araya Díaz
-- Jira: https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-61
-
-Description:
-Como usuario interno, quiero enviar un presupuesto, para dejarlo disponible para revision y aprobacion externa.
-
-Acceptance Criteria:
-- Un presupuesto en borrador puede cambiar a estado enviado.
-- El envio registra fecha y actor que realizo la accion.
-- El presupuesto enviado queda disponible para cliente o aseguradora segun corresponda.
-- El sistema evita enviar presupuestos en estados incompatibles.
-
-Acceptance Criteria:
-- Un presupuesto en borrador puede cambiar a estado enviado.
-- El envio registra fecha y actor que realizo la accion.
-- El presupuesto enviado queda disponible para cliente o aseguradora segun corresponda.
-- El sistema evita enviar presupuestos en estados incompatibles.
-
 ### MOS-7 - Generar presupuesto
-- Status: Finalizada
+- Status: En curso
 - Type: Historia
 - Priority: Medium
 - Assignee: Ignacio Benegas
@@ -96,8 +74,52 @@ Acceptance Criteria:
 - El presupuesto queda guardado en estado borrador.
 - El presupuesto creado queda disponible para su revision y posterior envio.
 
+### MOS-61 - Enviar presupuesto al cliente
+- Status: En curso
+- Type: Historia
+- Priority: Medium
+- Assignee: Martín Andrés Araya Díaz
+- Jira: https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-61
+
+Description:
+Como usuario interno, quiero enviar un presupuesto, para dejarlo disponible para revision y aprobacion externa.
+
+Acceptance Criteria:
+- Un presupuesto en borrador puede cambiar a estado enviado.
+- El envio registra fecha y actor que realizo la accion.
+- El presupuesto enviado queda disponible para cliente o aseguradora segun corresponda.
+- El sistema evita enviar presupuestos en estados incompatibles.
+
+Acceptance Criteria:
+- Un presupuesto en borrador puede cambiar a estado enviado.
+- El envio registra fecha y actor que realizo la accion.
+- El presupuesto enviado queda disponible para cliente o aseguradora segun corresponda.
+- El sistema evita enviar presupuestos en estados incompatibles.
+
+### MOS-63 - Crear orden de trabajo desde presupuesto aprobado
+- Status: En curso
+- Type: Historia
+- Priority: Medium
+- Assignee: Carlos Gonzalez
+- Jira: https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-63
+
+Description:
+Como supervisor o mecanico, quiero crear una orden de trabajo desde un presupuesto aprobado, para iniciar la ejecucion sin duplicar datos.
+
+Acceptance Criteria:
+- Solo un presupuesto aprobado puede convertirse en OT.
+- La OT reutiliza cliente, vehiculo y datos relevantes del presupuesto.
+- El sistema evita crear multiples OT activas desde el mismo presupuesto sin una regla explicita.
+- La relacion entre presupuesto y OT queda persistida.
+
+Acceptance Criteria:
+- Solo un presupuesto aprobado puede convertirse en OT.
+- La OT reutiliza cliente, vehiculo y datos relevantes del presupuesto.
+- El sistema evita crear multiples OT activas desde el mismo presupuesto sin una regla explicita.
+- La relacion entre presupuesto y OT queda persistida.
+
 ### MOS-84 - Registrar ingreso de stock de repuestos
-- Status: Tareas por hacer
+- Status: En curso
 - Type: Historia
 - Priority: Medium
 - Assignee: Martín Andrés Araya Díaz
@@ -118,7 +140,7 @@ Acceptance Criteria:
 - El ingreso de stock queda disponible para trazabilidad posterior.
 
 ### MOS-6 - Registrar repuestos en inventario
-- Status: Tareas por hacer
+- Status: En curso
 - Type: Historia
 - Priority: Medium
 - Assignee: Carlos Gonzalez
@@ -200,26 +222,4 @@ Acceptance Criteria:
 - La vista permite identificar rapidamente repuestos con stock bajo.
 - La informacion mostrada corresponde al stock actualizado despues de ingresos y consumos.
 - El listado de inventario se puede consultar sin modificar los registros.
-
-### MOS-63 - Crear orden de trabajo desde presupuesto aprobado
-- Status: Tareas por hacer
-- Type: Historia
-- Priority: Medium
-- Assignee: Carlos Gonzalez
-- Jira: https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-63
-
-Description:
-Como supervisor o mecanico, quiero crear una orden de trabajo desde un presupuesto aprobado, para iniciar la ejecucion sin duplicar datos.
-
-Acceptance Criteria:
-- Solo un presupuesto aprobado puede convertirse en OT.
-- La OT reutiliza cliente, vehiculo y datos relevantes del presupuesto.
-- El sistema evita crear multiples OT activas desde el mismo presupuesto sin una regla explicita.
-- La relacion entre presupuesto y OT queda persistida.
-
-Acceptance Criteria:
-- Solo un presupuesto aprobado puede convertirse en OT.
-- La OT reutiliza cliente, vehiculo y datos relevantes del presupuesto.
-- El sistema evita crear multiples OT activas desde el mismo presupuesto sin una regla explicita.
-- La relacion entre presupuesto y OT queda persistida.
 

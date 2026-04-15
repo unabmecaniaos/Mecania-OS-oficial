@@ -27,6 +27,14 @@ const quoteListInclude = {
 const quoteDetailInclude = {
   client: true,
   vehicle: true,
+  workOrder: {
+    select: {
+      id: true,
+      orderNumber: true,
+      status: true,
+      createdAt: true,
+    },
+  },
   selfInspection: {
     include: {
       customer: true,

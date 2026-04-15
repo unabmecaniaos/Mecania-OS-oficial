@@ -139,7 +139,8 @@ export async function getQuoteById(id: string) {
     canSend: quote.status === QuoteStatus.DRAFT,
     canApprove: quote.status === QuoteStatus.SENT,
     canReject: quote.status === QuoteStatus.SENT,
-    readyForWorkOrder: quote.status === QuoteStatus.APPROVED,
+    canCreateWorkOrder: quote.status === QuoteStatus.APPROVED && !quote.workOrder,
+    readyForWorkOrder: quote.status === QuoteStatus.APPROVED && !quote.workOrder,
   };
 }
 

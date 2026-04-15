@@ -1,5 +1,5 @@
 {
-  "syncedAt": "2026-04-14T13:06:41.372Z",
+  "syncedAt": "2026-04-14T16:38:37.510Z",
   "projectKey": "MOS",
   "boardId": 100,
   "sprint": {
@@ -24,7 +24,7 @@
         "El sistema evita convertir en OT un presupuesto rechazado.",
         "El estado rechazado queda visible en listados y detalle."
       ],
-      "status": "Finalizada",
+      "status": "En curso",
       "priority": "Medium",
       "issueType": "Historia",
       "labels": [],
@@ -43,32 +43,13 @@
         "Un presupuesto aprobado queda listo para convertirse en orden de trabajo.",
         "El sistema evita aprobar dos veces el mismo presupuesto."
       ],
-      "status": "Finalizada",
+      "status": "En curso",
       "priority": "Medium",
       "issueType": "Historia",
       "labels": [],
       "assignee": "Ignacio Benegas",
       "sprint": "Sprint 2",
       "jiraUrl": "https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-11"
-    },
-    {
-      "id": "10294",
-      "key": "MOS-61",
-      "summary": "Enviar presupuesto al cliente",
-      "description": "Como usuario interno, quiero enviar un presupuesto, para dejarlo disponible para revision y aprobacion externa.\n\nAcceptance Criteria:\n- Un presupuesto en borrador puede cambiar a estado enviado.\n- El envio registra fecha y actor que realizo la accion.\n- El presupuesto enviado queda disponible para cliente o aseguradora segun corresponda.\n- El sistema evita enviar presupuestos en estados incompatibles.",
-      "acceptanceCriteria": [
-        "Un presupuesto en borrador puede cambiar a estado enviado.",
-        "El envio registra fecha y actor que realizo la accion.",
-        "El presupuesto enviado queda disponible para cliente o aseguradora segun corresponda.",
-        "El sistema evita enviar presupuestos en estados incompatibles."
-      ],
-      "status": "Finalizada",
-      "priority": "Medium",
-      "issueType": "Historia",
-      "labels": [],
-      "assignee": "Martín Andrés Araya Díaz",
-      "sprint": "Sprint 2",
-      "jiraUrl": "https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-61"
     },
     {
       "id": "10138",
@@ -81,13 +62,51 @@
         "El presupuesto queda guardado en estado borrador.",
         "El presupuesto creado queda disponible para su revision y posterior envio."
       ],
-      "status": "Finalizada",
+      "status": "En curso",
       "priority": "Medium",
       "issueType": "Historia",
       "labels": [],
       "assignee": "Ignacio Benegas",
       "sprint": "Sprint 2",
       "jiraUrl": "https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-7"
+    },
+    {
+      "id": "10294",
+      "key": "MOS-61",
+      "summary": "Enviar presupuesto al cliente",
+      "description": "Como usuario interno, quiero enviar un presupuesto, para dejarlo disponible para revision y aprobacion externa.\n\nAcceptance Criteria:\n- Un presupuesto en borrador puede cambiar a estado enviado.\n- El envio registra fecha y actor que realizo la accion.\n- El presupuesto enviado queda disponible para cliente o aseguradora segun corresponda.\n- El sistema evita enviar presupuestos en estados incompatibles.",
+      "acceptanceCriteria": [
+        "Un presupuesto en borrador puede cambiar a estado enviado.",
+        "El envio registra fecha y actor que realizo la accion.",
+        "El presupuesto enviado queda disponible para cliente o aseguradora segun corresponda.",
+        "El sistema evita enviar presupuestos en estados incompatibles."
+      ],
+      "status": "En curso",
+      "priority": "Medium",
+      "issueType": "Historia",
+      "labels": [],
+      "assignee": "Martín Andrés Araya Díaz",
+      "sprint": "Sprint 2",
+      "jiraUrl": "https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-61"
+    },
+    {
+      "id": "10298",
+      "key": "MOS-63",
+      "summary": "Crear orden de trabajo desde presupuesto aprobado",
+      "description": "Como supervisor o mecanico, quiero crear una orden de trabajo desde un presupuesto aprobado, para iniciar la ejecucion sin duplicar datos.\n\nAcceptance Criteria:\n- Solo un presupuesto aprobado puede convertirse en OT.\n- La OT reutiliza cliente, vehiculo y datos relevantes del presupuesto.\n- El sistema evita crear multiples OT activas desde el mismo presupuesto sin una regla explicita.\n- La relacion entre presupuesto y OT queda persistida.",
+      "acceptanceCriteria": [
+        "Solo un presupuesto aprobado puede convertirse en OT.",
+        "La OT reutiliza cliente, vehiculo y datos relevantes del presupuesto.",
+        "El sistema evita crear multiples OT activas desde el mismo presupuesto sin una regla explicita.",
+        "La relacion entre presupuesto y OT queda persistida."
+      ],
+      "status": "En curso",
+      "priority": "Medium",
+      "issueType": "Historia",
+      "labels": [],
+      "assignee": "Carlos Gonzalez",
+      "sprint": "Sprint 2",
+      "jiraUrl": "https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-63"
     },
     {
       "id": "10368",
@@ -100,7 +119,7 @@
         "El movimiento queda registrado con fecha y cantidad ingresada.",
         "El ingreso de stock queda disponible para trazabilidad posterior."
       ],
-      "status": "Tareas por hacer",
+      "status": "En curso",
       "priority": "Medium",
       "issueType": "Historia",
       "labels": [],
@@ -119,7 +138,7 @@
         "El sistema evita duplicar el codigo o referencia cuando se define como identificador unico.",
         "El registro queda persistido y disponible para movimientos posteriores de stock."
       ],
-      "status": "Tareas por hacer",
+      "status": "En curso",
       "priority": "Medium",
       "issueType": "Historia",
       "labels": [],
@@ -183,25 +202,6 @@
       "assignee": "Carlos Gonzalez",
       "sprint": "Sprint 2",
       "jiraUrl": "https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-86"
-    },
-    {
-      "id": "10298",
-      "key": "MOS-63",
-      "summary": "Crear orden de trabajo desde presupuesto aprobado",
-      "description": "Como supervisor o mecanico, quiero crear una orden de trabajo desde un presupuesto aprobado, para iniciar la ejecucion sin duplicar datos.\n\nAcceptance Criteria:\n- Solo un presupuesto aprobado puede convertirse en OT.\n- La OT reutiliza cliente, vehiculo y datos relevantes del presupuesto.\n- El sistema evita crear multiples OT activas desde el mismo presupuesto sin una regla explicita.\n- La relacion entre presupuesto y OT queda persistida.",
-      "acceptanceCriteria": [
-        "Solo un presupuesto aprobado puede convertirse en OT.",
-        "La OT reutiliza cliente, vehiculo y datos relevantes del presupuesto.",
-        "El sistema evita crear multiples OT activas desde el mismo presupuesto sin una regla explicita.",
-        "La relacion entre presupuesto y OT queda persistida."
-      ],
-      "status": "Tareas por hacer",
-      "priority": "Medium",
-      "issueType": "Historia",
-      "labels": [],
-      "assignee": "Carlos Gonzalez",
-      "sprint": "Sprint 2",
-      "jiraUrl": "https://uandresbello-team-bg7iosbc.atlassian.net/browse/MOS-63"
     }
   ]
 }

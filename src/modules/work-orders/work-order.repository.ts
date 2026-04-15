@@ -60,6 +60,14 @@ export const workOrderRepository = {
       include: {
         client: true,
         vehicle: true,
+        quote: {
+          select: {
+            id: true,
+            quoteNumber: true,
+            status: true,
+            totalAmount: true,
+          },
+        },
         createdBy: {
           select: {
             id: true,

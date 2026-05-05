@@ -34,9 +34,6 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
               Repuestos y stock
             </p>
             <h1 className="mt-2 font-heading text-3xl font-semibold">Inventario</h1>
-            <p className="mt-2 text-sm text-[color:var(--muted-strong)]">
-              Vista rapida de repuestos, stock, precios y alertas del taller.
-            </p>
           </div>
 
           <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">

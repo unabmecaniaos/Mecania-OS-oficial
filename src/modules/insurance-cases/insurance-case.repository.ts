@@ -185,18 +185,100 @@ export const insuranceCaseRepository = {
     });
   },
 
+  findLatestByVehicle(vehicleId: string) {
+    return prisma.insuranceCase.findFirst({
+      where: {
+        vehicleId,
+      },
+      select: {
+        id: true,
+        caseNumber: true,
+        liquidatorId: true,
+      },
+      orderBy: [{ incidentDate: "desc" }, { createdAt: "desc" }],
+    });
+  },
+
   listForLiquidator(liquidatorId: string) {
     return prisma.insuranceCase.findMany({
       where: {
         liquidatorId,
+        createdFromLiquidatorPortal: true,
       },
       include: insuranceCaseListInclude,
       orderBy: [{ incidentDate: "desc" }, { createdAt: "desc" }],
     });
   },
 
-  listForInternal() {
+  listForInternal(search?: string) {
     return prisma.insuranceCase.findMany({
+      where: {
+        createdFromLiquidatorPortal: true,
+        ...(search
+          ? {
+              OR: [
+                {
+                  caseNumber: {
+                    contains: search,
+                    mode: "insensitive",
+                  },
+                },
+                {
+                  claimNumber: {
+                    contains: search,
+                    mode: "insensitive",
+                  },
+                },
+                {
+                  ownerFullName: {
+                    contains: search,
+                    mode: "insensitive",
+                  },
+                },
+                {
+                  vehicle: {
+                    plate: {
+                      contains: search,
+                      mode: "insensitive",
+                    },
+                  },
+                },
+                {
+                  vehicle: {
+                    vin: {
+                      contains: search,
+                      mode: "insensitive",
+                    },
+                  },
+                },
+                {
+                  vehicle: {
+                    make: {
+                      contains: search,
+                      mode: "insensitive",
+                    },
+                  },
+                },
+                {
+                  vehicle: {
+                    model: {
+                      contains: search,
+                      mode: "insensitive",
+                    },
+                  },
+                },
+                {
+                  liquidator: {
+                    name: {
+                      contains: search,
+                      mode: "insensitive",
+                    },
+                  },
+                },
+              ],
+            }
+          : {}),
+      },
       include: insuranceCaseListInclude,
       orderBy: [{ incidentDate: "desc" }, { createdAt: "desc" }],
     });
@@ -207,6 +289,7 @@ export const insuranceCaseRepository = {
       where: {
         id,
         liquidatorId,
+        createdFromLiquidatorPortal: true,
       },
       include: insuranceCaseDetailInclude,
     });
@@ -226,6 +309,11 @@ export const insuranceCaseRepository = {
     clientId: string;
     vehicleId: string;
     liquidatorId: string;
+    createdFromLiquidatorPortal: boolean;
+    ownerFullName: string;
+    ownerPhone: string;
+    ownerEmail?: string;
+    ownerAddress?: string;
     claimNumber?: string;
     policyNumber?: string;
     incidentDate: Date;
@@ -298,7 +386,10 @@ export const insuranceCaseRepository = {
         status: input.nextStatus,
         updatedById: input.changedById,
         approvedAt:
-          input.nextStatus === BudgetStatus.APPROVED ? input.changedAt : undefined,
+          input.nextStatus === BudgetStatus.APPROVED ||
+          input.nextStatus === BudgetStatus.PARTIALLY_APPROVED
+            ? input.changedAt
+            : undefined,
         rejectedAt:
           input.nextStatus === BudgetStatus.REJECTED ? input.changedAt : undefined,
         statusLogs: {

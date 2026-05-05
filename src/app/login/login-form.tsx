@@ -48,10 +48,6 @@ export function LoginForm() {
         label="Entrar"
         pendingLabel="Ingresando..."
       />
-
-      <p className="text-xs leading-5 text-[#5f7fa8]">
-        Usa tu cuenta para acceder al panel interno o al portal de seguimiento de tu vehiculo.
-      </p>
     </form>
   );
 }

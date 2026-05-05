@@ -27,9 +27,6 @@ export default async function NewInventoryStockPage() {
               Movimiento de inventario
             </p>
             <h1 className="mt-2 font-heading text-3xl font-semibold">Ajuste de stock</h1>
-            <p className="mt-2 max-w-3xl text-sm text-[color:var(--muted-strong)]">
-              Registra ingresos de mercaderia o corrige diferencias de conteo desde un solo lugar.
-            </p>
           </div>
 
           <Link href="/inventory">
@@ -44,9 +41,6 @@ export default async function NewInventoryStockPage() {
             Sumar stock
           </p>
           <h2 className="mt-2 font-heading text-2xl font-semibold">Ingreso de stock</h2>
-          <p className="mt-2 text-sm text-[color:var(--muted-strong)]">
-            Usa esta opcion cuando entren repuestos nuevos o reposicion de proveedor.
-          </p>
 
           <div className="mt-6">
             <StockEntryForm repuestos={repuestos} />
@@ -58,9 +52,6 @@ export default async function NewInventoryStockPage() {
             Corregir stock
           </p>
           <h2 className="mt-2 font-heading text-2xl font-semibold">Ajuste manual</h2>
-          <p className="mt-2 text-sm text-[color:var(--muted-strong)]">
-            Usa valores positivos o negativos para corregir diferencias por conteo, merma o error.
-          </p>
 
           <div className="mt-6">
             <StockAdjustmentForm repuestos={repuestos} />

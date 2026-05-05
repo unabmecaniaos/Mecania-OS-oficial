@@ -11,6 +11,7 @@ async function assertClientExists(clientId: string) {
     where: {
       id: clientId,
       deletedAt: null,
+      isWorkshopClient: true,
     },
     select: { id: true },
   });

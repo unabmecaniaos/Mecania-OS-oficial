@@ -11,7 +11,8 @@ import type { ActionState } from "@/lib/form-state";
 import { requireApiUser } from "@/modules/auth/auth.service";
 import {
   createWorkOrderFromBudget,
-  createBudgetDraft,
+  createLiquidatorBudgetDraft,
+  createWorkshopBudgetDraft,
   transitionBudgetStatus,
   updateBudgetDraft,
 } from "@/modules/budgets/budget.service";
@@ -245,14 +246,14 @@ function parseLineUpdates(formData: FormData) {
   }));
 }
 
-export async function createBudgetDraftAction(
+export async function createWorkshopBudgetDraftAction(
   _previousState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
   try {
     const session = await requireApiUser([UserRole.ADMIN, UserRole.MECHANIC]);
 
-    const budget = await createBudgetDraft(
+    const budget = await createWorkshopBudgetDraft(
       {
         clientId: String(formData.get("clientId") ?? ""),
         vehicleId: String(formData.get("vehicleId") ?? ""),
@@ -268,6 +269,42 @@ export async function createBudgetDraftAction(
     revalidatePath("/budgets");
     await setFlashMessage({
       message: "Presupuesto creado correctamente.",
+      tone: "success",
+    });
+    redirect(`/budgets/${budget.id}`);
+  } catch (error) {
+    if (isRedirectError(error)) {
+      throw error;
+    }
+
+    return {
+      error: getErrorMessage(error),
+    };
+  }
+}
+
+export async function createLiquidatorBudgetDraftAction(
+  _previousState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    const session = await requireApiUser([UserRole.ADMIN, UserRole.MECHANIC]);
+
+    const budget = await createLiquidatorBudgetDraft(
+      {
+        insuranceCaseId: String(formData.get("insuranceCaseId") ?? ""),
+        title: String(formData.get("title") ?? ""),
+        summary: String(formData.get("summary") ?? ""),
+      },
+      parseCatalogSelections(formData),
+      parseManualSelections(formData),
+      session.user.id,
+    );
+
+    revalidatePath("/budgets");
+    revalidatePath("/work-orders");
+    await setFlashMessage({
+      message: "Presupuesto de liquidadora creado correctamente.",
       tone: "success",
     });
     redirect(`/budgets/${budget.id}`);

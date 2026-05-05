@@ -121,11 +121,12 @@ export const budgetRepository = {
       include: budgetDetailInclude,
     });
   },
-  listCreateContext() {
+  listWorkshopCreateContext() {
     return Promise.all([
       prisma.client.findMany({
         where: {
           deletedAt: null,
+          isWorkshopClient: true,
         },
         include: {
           vehicles: {
@@ -172,6 +173,52 @@ export const budgetRepository = {
         orderBy: {
           reviewedAt: "desc",
         },
+      }),
+    ]);
+  },
+  listLiquidatorCreateContext() {
+    return Promise.all([
+      prisma.budgetReferenceCatalog.findMany({
+        where: {
+          active: true,
+        },
+        orderBy: [{ itemType: "asc" }, { name: "asc" }],
+      }),
+      prisma.repuesto.findMany({
+        where: {
+          deletedAt: null,
+        },
+        orderBy: [{ name: "asc" }],
+      }),
+      prisma.insuranceCase.findMany({
+        where: {
+          createdFromLiquidatorPortal: true,
+        },
+        include: {
+          liquidator: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          vehicle: true,
+          photos: {
+            orderBy: {
+              createdAt: "asc",
+            },
+            take: 1,
+          },
+          budgets: {
+            where: {
+              deletedAt: null,
+            },
+            orderBy: {
+              createdAt: "desc",
+            },
+            take: 1,
+          },
+        },
+        orderBy: [{ incidentDate: "desc" }, { createdAt: "desc" }],
       }),
     ]);
   },
@@ -305,7 +352,10 @@ export const budgetRepository = {
         updatedById: input.changedById,
         sentAt: input.nextStatus === BudgetStatus.SENT ? input.changedAt : undefined,
         approvedAt:
-          input.nextStatus === BudgetStatus.APPROVED ? input.changedAt : undefined,
+          input.nextStatus === BudgetStatus.APPROVED ||
+          input.nextStatus === BudgetStatus.PARTIALLY_APPROVED
+            ? input.changedAt
+            : undefined,
         rejectedAt:
           input.nextStatus === BudgetStatus.REJECTED ? input.changedAt : undefined,
         statusLogs: {

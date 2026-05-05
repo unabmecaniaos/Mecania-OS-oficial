@@ -32,10 +32,6 @@ export default async function DashboardPage() {
             <h1 className="mt-2 font-heading text-3xl font-semibold">
               Bienvenido, {session?.user.name}
             </h1>
-            <p className="mt-3 max-w-2xl text-sm text-[color:var(--muted-strong)]">
-              Resumen operativo pensado para revisar rapido el taller desde escritorio, tablet o
-              celular sin perder contexto.
-            </p>
           </div>
 
           <Link href="/work-orders/new">
@@ -56,6 +52,30 @@ export default async function DashboardPage() {
           </Card>
         ))}
       </section>
+
+      <Card className="rounded-2xl">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--muted)]">
+              Accesos del panel
+            </p>
+            <h2 className="mt-2 font-heading text-2xl font-semibold">Clientes y vehiculos</h2>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Link href="/clients">
+              <Button className="w-full sm:w-auto" variant="secondary">
+                Clientes
+              </Button>
+            </Link>
+            <Link href="/vehicles">
+              <Button className="w-full sm:w-auto" variant="secondary">
+                Vehiculos
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </Card>
 
       <section className="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
         <Card className="rounded-2xl">

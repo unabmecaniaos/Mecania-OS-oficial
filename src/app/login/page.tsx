@@ -36,20 +36,6 @@ export default async function LoginPage() {
             <h1 className="font-heading text-2xl font-semibold text-[color:var(--foreground)] sm:text-3xl">
               Iniciar sesion
             </h1>
-            <p className="mt-3 text-sm leading-6 text-[color:var(--muted-strong)]">
-              Accede con tu cuenta autorizada para gestionar operaciones del taller o revisar el
-              seguimiento de tu vehiculo.
-            </p>
-          </div>
-
-          <div className="mt-6 rounded-[24px] border border-[rgba(37,99,235,0.12)] bg-[linear-gradient(180deg,rgba(236,244,255,0.88),rgba(247,250,254,0.92))] p-4">
-            <p className="text-[11px] uppercase tracking-[0.22em] text-[#5f7fa8]">
-              Plataforma MecaniaOS
-            </p>
-            <p className="mt-3 text-sm leading-6 text-[color:var(--muted-strong)]">
-              El acceso esta reservado para usuarios registrados. Si necesitas habilitacion o
-              soporte de ingreso, contacta al administrador del taller.
-            </p>
           </div>
 
           <div className="mt-8 border-t border-[rgba(95,127,168,0.16)] pt-8">

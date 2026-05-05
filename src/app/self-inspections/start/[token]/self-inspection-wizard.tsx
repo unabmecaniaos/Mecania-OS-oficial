@@ -315,10 +315,6 @@ export function SelfInspectionWizard({ token, initialData }: WizardProps) {
               Paso 1 de 3
             </p>
             <h2 className="font-heading text-3xl font-semibold">Tus datos y tu vehiculo</h2>
-            <p className="text-sm leading-7 text-[color:var(--muted-strong)]">
-              Solo necesitamos la informacion basica para identificarte y saber con que vehiculo
-              llegara el problema al taller.
-            </p>
           </div>
 
           <div className="mt-6 grid gap-5 md:grid-cols-2">
@@ -336,11 +332,7 @@ export function SelfInspectionWizard({ token, initialData }: WizardProps) {
                 value={data.form.customerVehicle.phone}
               />
             </QuestionField>
-            <QuestionField
-              className="md:col-span-2"
-              helpText="Si prefieres otro correo de contacto para esta solicitud, puedes cambiarlo aqui."
-              label="Correo"
-            >
+            <QuestionField className="md:col-span-2" label="Correo">
               <Input
                 disabled={isReadOnly}
                 onChange={(event) => updateCustomerVehicleField("email", event.target.value)}
@@ -415,9 +407,6 @@ export function SelfInspectionWizard({ token, initialData }: WizardProps) {
               Paso 2 de 3
             </p>
             <h2 className="font-heading text-3xl font-semibold">Cuentanos que esta pasando</h2>
-            <p className="text-sm leading-7 text-[color:var(--muted-strong)]">
-              Queremos entender rapido el problema principal y si el vehiculo puede seguir en uso.
-            </p>
           </div>
 
           <div className="mt-6 space-y-5">
@@ -474,10 +463,7 @@ export function SelfInspectionWizard({ token, initialData }: WizardProps) {
               </QuestionField>
             </div>
 
-            <QuestionField
-              helpText="Describe el sintoma principal con tus palabras. No necesitas usar terminos tecnicos."
-              label="Descripcion breve del problema"
-            >
+            <QuestionField label="Descripcion breve del problema">
               <Textarea
                 disabled={isReadOnly}
                 onChange={(event) => updateProblemField("description", event.target.value)}
@@ -511,16 +497,6 @@ export function SelfInspectionWizard({ token, initialData }: WizardProps) {
               Paso 3 de 3
             </p>
             <h2 className="font-heading text-3xl font-semibold">Sube tu evidencia</h2>
-            <p className="text-sm leading-7 text-[color:var(--muted-strong)]">
-              Sube entre 1 y 5 imagenes. Prioriza una foto clara del problema y, si aplica, del
-              tablero con testigos encendidos.
-            </p>
-          </div>
-
-          <div className="mt-6 rounded-[24px] border border-[rgba(14,79,82,0.14)] bg-[rgba(14,79,82,0.06)] p-4 text-sm text-[color:var(--muted-strong)]">
-            <p>Sugerencias rapidas:</p>
-            <p className="mt-2">Foto del tablero si hay testigos encendidos.</p>
-            <p className="mt-1">Foto de la zona afectada si el problema es visible.</p>
           </div>
 
           <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -537,10 +513,7 @@ export function SelfInspectionWizard({ token, initialData }: WizardProps) {
           </div>
 
           <div className="mt-6">
-            <QuestionField
-              helpText="Opcional. Agrega cualquier detalle final que ayude al taller a revisar mejor el vehiculo."
-              label="Comentario final"
-            >
+            <QuestionField label="Comentario final">
               <Textarea
                 disabled={isReadOnly}
                 onChange={(event) => updateEvidenceField(event.target.value)}
@@ -582,10 +555,6 @@ export function SelfInspectionWizard({ token, initialData }: WizardProps) {
               Enviado
             </p>
             <h2 className="font-heading text-3xl font-semibold">Autoinspeccion enviada</h2>
-            <p className="max-w-3xl text-sm leading-7 text-[color:var(--muted-strong)]">
-              El taller ya puede revisar tus datos, el problema reportado y la evidencia visual para
-              preparar mejor la revision presencial.
-            </p>
           </div>
 
           <div className="mt-6 grid gap-4 md:grid-cols-2">

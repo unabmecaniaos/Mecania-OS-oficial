@@ -63,9 +63,6 @@ export default async function CustomerBudgetDetailPage({
                 Resumen
               </p>
               <h2 className="mt-2 font-heading text-2xl font-semibold">Detalle del presupuesto</h2>
-              <p className="mt-2 text-sm text-[color:var(--muted-strong)]">
-                Revisa cada repuesto, servicio y subtotal antes de responder al taller.
-              </p>
             </div>
 
             <div className="mt-5 space-y-4">
@@ -200,17 +197,6 @@ export default async function CustomerBudgetDetailPage({
                         ? "Presupuesto rechazado"
                         : "Presupuesto convertido en orden"}
                 </h2>
-                <p className="mt-2 text-sm text-[color:var(--muted-strong)]">
-                  {budget.insuranceCase
-                    ? `Este caso esta asociado a la solicitud ${budget.insuranceCase.caseNumber}. El liquidador de la aseguradora es quien aprueba o rechaza este presupuesto.`
-                    : budget.status === BudgetStatus.SENT
-                      ? "Si estas de acuerdo, apruebalo para que el taller pueda continuar. Si no, puedes rechazarlo desde aqui."
-                    : budget.status === BudgetStatus.APPROVED
-                      ? "Ya aprobaste este presupuesto desde tu portal."
-                      : budget.status === BudgetStatus.REJECTED
-                        ? "Este presupuesto fue rechazado desde tu cuenta."
-                        : "El taller ya transformo este presupuesto en una orden de trabajo."}
-                </p>
               </div>
 
               {budget.insuranceCase ? null : (
@@ -221,9 +207,6 @@ export default async function CustomerBudgetDetailPage({
                 <div className="rounded-xl border border-[rgba(22,163,74,0.18)] bg-[rgba(22,163,74,0.06)] p-4">
                   <p className="text-sm font-semibold text-[#166534]">
                     Orden vinculada: {budget.workOrder.orderNumber}
-                  </p>
-                  <p className="mt-1 text-sm text-[#166534]">
-                    El taller ya continuo el caso con una orden de trabajo activa.
                   </p>
                 </div>
               ) : null}

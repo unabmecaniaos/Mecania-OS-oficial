@@ -6,6 +6,9 @@ export const vehicleRepository = {
   list(search?: string) {
     const where: Prisma.VehicleWhereInput = {
       deletedAt: null,
+      client: {
+        isWorkshopClient: true,
+      },
       ...(search
         ? {
             OR: [
@@ -71,6 +74,9 @@ export const vehicleRepository = {
       where: {
         id,
         deletedAt: null,
+        client: {
+          isWorkshopClient: true,
+        },
       },
       include: {
         client: true,
@@ -102,6 +108,9 @@ export const vehicleRepository = {
     return prisma.vehicle.findFirst({
       where: {
         deletedAt: null,
+        client: {
+          isWorkshopClient: true,
+        },
         OR: [
           input.vin
             ? {

@@ -39,7 +39,7 @@ export function LiquidatorBudgetResponseForm({
         <Textarea
           id="liquidatorBudgetResponseNote"
           name="note"
-          placeholder="Ej. Presupuesto aprobado segun detalle tecnico revisado."
+          placeholder="Ej. Aprobado, ajustar mano de obra, o dejar fuera un item especifico."
         />
       </div>
 
@@ -54,6 +54,22 @@ export function LiquidatorBudgetResponseForm({
           variant="secondary"
         >
           Rechazar presupuesto
+        </Button>
+        <Button
+          name="nextStatus"
+          type="submit"
+          value={BudgetStatus.REQUEST_CHANGES}
+          variant="secondary"
+        >
+          Pedir cambios
+        </Button>
+        <Button
+          name="nextStatus"
+          type="submit"
+          value={BudgetStatus.PARTIALLY_APPROVED}
+          variant="secondary"
+        >
+          Aprobar parcial
         </Button>
       </div>
 

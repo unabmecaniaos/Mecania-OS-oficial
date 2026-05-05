@@ -50,7 +50,7 @@ export default async function LiquidatorCaseDetailPage({
               {insuranceCase.vehicle.make} {insuranceCase.vehicle.model}
             </h1>
             <p className="mt-3 text-sm text-[color:var(--muted-strong)]">
-              {insuranceCase.client.fullName} /{" "}
+              {insuranceCase.ownerFullName} /{" "}
               {insuranceCase.vehicle.plate ?? insuranceCase.vehicle.vin}
             </p>
             <p className="mt-1 text-sm text-[color:var(--muted)]">
@@ -76,6 +76,10 @@ export default async function LiquidatorCaseDetailPage({
               Registro del siniestro
             </p>
             <div className="mt-4 space-y-3 text-sm text-[color:var(--muted-strong)]">
+              <p>
+                <span className="font-semibold text-[color:var(--foreground)]">Titular:</span>{" "}
+                {insuranceCase.ownerFullName}
+              </p>
               <p>
                 <span className="font-semibold text-[color:var(--foreground)]">Numero de caso:</span>{" "}
                 {insuranceCase.caseNumber}
@@ -167,11 +171,6 @@ export default async function LiquidatorCaseDetailPage({
               <h2 className="mt-2 font-heading text-2xl font-semibold">
                 {latestBudget ? latestBudget.title : "Aun sin presupuesto enviado"}
               </h2>
-              <p className="mt-2 text-sm text-[color:var(--muted-strong)]">
-                {latestBudget
-                  ? "Revisa el total, el detalle de items y responde para habilitar el trabajo del taller."
-                  : "Cuando el taller termine la evaluacion tecnica, el presupuesto aparecera aqui automaticamente."}
-              </p>
             </div>
 
             {latestBudget ? (
@@ -238,17 +237,7 @@ export default async function LiquidatorCaseDetailPage({
                     caseId={insuranceCase.id}
                     status={latestBudget.status}
                   />
-                ) : (
-                  <p className="text-sm text-[color:var(--muted)]">
-                    {latestBudget.status === BudgetStatus.APPROVED
-                      ? "Ya aprobaste este presupuesto y el taller puede avanzar."
-                      : latestBudget.status === BudgetStatus.REJECTED
-                        ? "Este presupuesto fue rechazado desde tu portal."
-                        : latestBudget.status === BudgetStatus.CONVERTED_TO_WORK_ORDER
-                          ? "El presupuesto ya se convirtio en una orden de trabajo activa."
-                          : "El taller aun esta preparando este presupuesto."}
-                  </p>
-                )}
+                ) : null}
               </div>
             ) : null}
           </Card>
@@ -315,17 +304,9 @@ export default async function LiquidatorCaseDetailPage({
                       ))}
                     </div>
                   </div>
-                ) : (
-                  <p className="text-sm text-[color:var(--muted)]">
-                    La galeria final se habilitara cuando el taller marque el auto como listo.
-                  </p>
-                )}
+                ) : null}
               </div>
-            ) : (
-              <p className="mt-4 text-sm text-[color:var(--muted)]">
-                Este caso aun no tiene una orden de trabajo creada desde el presupuesto aprobado.
-              </p>
-            )}
+            ) : null}
           </Card>
         </div>
       </div>

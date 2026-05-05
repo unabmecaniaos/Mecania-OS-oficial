@@ -103,10 +103,6 @@ export function SelfInspectionAccessScreen({
             <h2 className="mt-3 font-heading text-3xl font-semibold">
               Entra para comenzar la autoinspeccion
             </h2>
-            <p className="mt-3 text-sm leading-7 text-[color:var(--muted-strong)]">
-              Usa tu cuenta si ya eres cliente. Si todavia no tienes acceso, crea uno en segundos y
-              luego completa el formulario corto del vehiculo.
-            </p>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
@@ -128,10 +124,6 @@ export function SelfInspectionAccessScreen({
             </div>
           </div>
 
-          <div className="rounded-[24px] border border-[rgba(14,79,82,0.14)] bg-[rgba(14,79,82,0.07)] p-4 text-sm text-[color:var(--muted-strong)]">
-            El taller ya no necesita cargarte antes para enviarte este enlace. Cuando entres, la
-            solicitud quedara asociada a tu cuenta.
-          </div>
         </div>
 
         <div className="rounded-[28px] border border-[rgba(200,92,42,0.12)] bg-white/90 p-5 shadow-[0_20px_60px_rgba(15,23,42,0.06)] sm:p-6">

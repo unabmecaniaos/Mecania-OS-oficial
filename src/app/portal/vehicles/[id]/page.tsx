@@ -109,11 +109,7 @@ export default async function CustomerVehicleDetailPage({
                   </p>
                 </div>
               </div>
-            ) : (
-              <p className="mt-5 text-sm text-[color:var(--muted)]">
-                No hay una orden activa para este vehiculo en este momento.
-              </p>
-            )}
+            ) : null}
           </Card>
         </div>
 
@@ -121,9 +117,6 @@ export default async function CustomerVehicleDetailPage({
           <Card className="rounded-2xl">
             <div>
               <h2 className="font-heading text-2xl font-semibold">Historial y progreso</h2>
-              <p className="mt-2 text-sm text-[color:var(--muted)]">
-                Revisa el avance del caso y los cambios de estado registrados por el taller.
-              </p>
             </div>
 
             {vehicle.featuredOrder ? (
@@ -155,19 +148,12 @@ export default async function CustomerVehicleDetailPage({
                   </div>
                 ))}
               </div>
-            ) : (
-              <p className="mt-5 text-sm text-[color:var(--muted)]">
-                Este vehiculo todavia no registra historial de ordenes.
-              </p>
-            )}
+            ) : null}
           </Card>
 
           <Card className="rounded-2xl">
             <div>
               <h2 className="font-heading text-2xl font-semibold">Evidencia visible</h2>
-              <p className="mt-2 text-sm text-[color:var(--muted)]">
-                Imagenes compartidas en la orden mas reciente del vehiculo.
-              </p>
             </div>
 
             {vehicle.featuredOrder && vehicle.featuredOrder.evidences.length > 0 ? (
@@ -195,20 +181,13 @@ export default async function CustomerVehicleDetailPage({
                   </div>
                 ))}
               </div>
-            ) : (
-              <p className="mt-5 text-sm text-[color:var(--muted)]">
-                La orden mas reciente aun no tiene evidencias visibles.
-              </p>
-            )}
+            ) : null}
           </Card>
 
           <Card className="rounded-2xl">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <h2 className="font-heading text-2xl font-semibold">Ordenes del vehiculo</h2>
-                <p className="mt-2 text-sm text-[color:var(--muted)]">
-                  Historial completo de ingresos y servicios registrados.
-                </p>
               </div>
               <div className="rounded-md bg-[color:var(--surface-strong)] px-4 py-2 text-sm">
                 {vehicle.workOrders.length} ordenes

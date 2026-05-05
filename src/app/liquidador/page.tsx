@@ -21,10 +21,6 @@ export default async function LiquidatorPortalPage() {
             <h1 className="mt-2 font-heading text-3xl font-semibold">
               Casos asignados a {portal.liquidator.name}
             </h1>
-            <p className="mt-3 max-w-3xl text-sm text-[color:var(--muted-strong)]">
-              Aqui puedes registrar siniestros, revisar presupuestos del taller y seguir el avance
-              de cada reparacion hasta el resultado final.
-            </p>
           </div>
 
           <Link href="/liquidador/new">
@@ -74,9 +70,7 @@ export default async function LiquidatorPortalPage() {
 
         {portal.cases.length === 0 ? (
           <Card className="rounded-2xl">
-            <p className="text-sm text-[color:var(--muted)]">
-              Todavia no tienes casos asignados. Puedes crear el primero desde este portal.
-            </p>
+            <p className="text-sm text-[color:var(--muted)]">Todavia no tienes casos asignados.</p>
           </Card>
         ) : (
           <div className="grid gap-4 lg:grid-cols-2">
@@ -91,7 +85,7 @@ export default async function LiquidatorPortalPage() {
                       {insuranceCase.vehicle.make} {insuranceCase.vehicle.model}
                     </h3>
                     <p className="mt-2 text-sm text-[color:var(--muted-strong)]">
-                      {insuranceCase.client.fullName} /{" "}
+                      {insuranceCase.ownerFullName} /{" "}
                       {insuranceCase.vehicle.plate ?? insuranceCase.vehicle.vin}
                     </p>
                   </div>
@@ -139,9 +133,6 @@ export default async function LiquidatorPortalPage() {
                         {insuranceCase.currentWorkOrder.orderNumber}
                       </p>
                     </div>
-                    <p className="mt-2 text-sm text-[color:var(--muted-strong)]">
-                      El taller ya se encuentra trabajando este caso y puedes revisar su avance.
-                    </p>
                   </div>
                 ) : null}
 

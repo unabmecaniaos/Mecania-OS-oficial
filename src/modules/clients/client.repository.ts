@@ -6,6 +6,7 @@ export const clientRepository = {
   list(search?: string) {
     const where: Prisma.ClientWhereInput = {
       deletedAt: null,
+      isWorkshopClient: true,
       ...(search
         ? {
             OR: [
@@ -61,6 +62,7 @@ export const clientRepository = {
       where: {
         id,
         deletedAt: null,
+        isWorkshopClient: true,
       },
       include: {
         vehicles: {
@@ -90,6 +92,7 @@ export const clientRepository = {
     return prisma.client.findFirst({
       where: {
         deletedAt: null,
+        isWorkshopClient: true,
         email: {
           equals: email,
           mode: "insensitive",

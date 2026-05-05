@@ -157,6 +157,10 @@ export async function seedDemoData() {
       clientId: clientA.id,
       vehicleId: vehicleA.id,
       liquidatorId: liquidator.id,
+      ownerFullName: clientA.fullName,
+      ownerPhone: clientA.phone,
+      ownerEmail: clientA.email,
+      ownerAddress: clientA.address,
       incidentDate: new Date("2026-03-08T12:00:00.000Z"),
       incidentLocation: "Av. Macul con Quilin, Santiago",
       description:
@@ -190,6 +194,10 @@ export async function seedDemoData() {
       clientId: clientB.id,
       vehicleId: vehicleB.id,
       liquidatorId: liquidator.id,
+      ownerFullName: clientB.fullName,
+      ownerPhone: clientB.phone,
+      ownerEmail: clientB.email,
+      ownerAddress: clientB.address,
       incidentDate: new Date("2026-03-06T15:30:00.000Z"),
       incidentLocation: "Ruta 68, km 17",
       description:

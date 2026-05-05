@@ -41,10 +41,6 @@ export default async function SelfInspectionsPage({ searchParams }: SelfInspecti
             <h1 className="mt-2 font-heading text-3xl font-semibold">
               Autoinspecciones del vehiculo
             </h1>
-            <p className="mt-2 max-w-3xl text-sm text-[color:var(--muted-strong)]">
-              Flujo previo al ingreso al taller para levantar sintomas, danos visibles,
-              kilometraje y evidencia fotografica antes del diagnostico.
-            </p>
           </div>
 
           <form className="flex flex-col gap-3 md:flex-row" method="get">
@@ -79,10 +75,6 @@ export default async function SelfInspectionsPage({ searchParams }: SelfInspecti
               Acceso guiado
             </p>
             <h2 className="mt-3 font-heading text-3xl font-semibold">Generar enlace seguro</h2>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-white/90">
-              Crea una autoinspeccion nueva y comparte un acceso limpio para que el cliente cargue
-              sintomas, datos del vehiculo y evidencia antes de ingresar al taller.
-            </p>
           </div>
 
           <div className="flex justify-start lg:justify-end">
@@ -99,10 +91,6 @@ export default async function SelfInspectionsPage({ searchParams }: SelfInspecti
                 Bandeja activa
               </p>
               <h2 className="mt-2 font-heading text-3xl font-semibold">Autoinspecciones recibidas</h2>
-              <p className="mt-2 max-w-3xl text-sm text-[color:var(--muted-strong)]">
-                Casos en curso para revisar, derivar o convertir en orden de trabajo segun el
-                avance y el riesgo detectado.
-              </p>
             </div>
 
             <div className="rounded-2xl border border-[color:var(--border)] bg-white/90 px-5 py-4 text-right">

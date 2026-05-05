@@ -28,9 +28,6 @@ export default async function UsersPage() {
               Control de acceso
             </p>
             <h1 className="mt-2 font-heading text-3xl font-semibold">Usuarios internos</h1>
-            <p className="mt-2 max-w-2xl text-sm text-[color:var(--muted-strong)]">
-              Crea usuarios del taller y ajusta su rol o estado sin salir del panel.
-            </p>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-3">

@@ -29,9 +29,6 @@ export function PublicLinkPanel({ publicUrl }: PublicLinkPanelProps) {
       <p className="mt-2 break-all text-sm font-semibold text-[color:var(--foreground)]">
         {publicUrl}
       </p>
-      <p className="mt-2 text-xs text-[color:var(--muted-strong)]">
-        Puedes abrirlo tu mismo para simular al cliente o copiarlo y enviarlo.
-      </p>
 
       <div className="mt-4 flex flex-wrap gap-3">
         <a href={publicUrl} rel="noreferrer" target="_blank">

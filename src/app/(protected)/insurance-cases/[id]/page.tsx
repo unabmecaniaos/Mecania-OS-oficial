@@ -37,13 +37,21 @@ export default async function InternalInsuranceCaseDetailPage({
               {insuranceCase.vehicle.make} {insuranceCase.vehicle.model}
             </h1>
             <p className="mt-3 text-sm text-[color:var(--muted-strong)]">
-              {insuranceCase.client.fullName} / Liquidador {insuranceCase.liquidator.name}
+              Titular: {insuranceCase.ownerFullName}
+            </p>
+            <p className="mt-1 text-sm text-[color:var(--muted)]">
+              Liquidadora: {insuranceCase.liquidator.name}
             </p>
           </div>
 
-          <Link href="/insurance-cases">
-            <Button variant="secondary">Volver a siniestros</Button>
-          </Link>
+          <div className="flex flex-wrap gap-3">
+            <Link href={`/budgets/new?kind=liquidator&insuranceCaseId=${insuranceCase.id}`}>
+              <Button>Crear presupuesto</Button>
+            </Link>
+            <Link href="/insurance-cases">
+              <Button variant="secondary">Volver a siniestros</Button>
+            </Link>
+          </div>
         </div>
       </Card>
 
@@ -158,9 +166,6 @@ export default async function InternalInsuranceCaseDetailPage({
                     Abrir {insuranceCase.currentWorkOrder.orderNumber}
                   </Link>
                 </div>
-                <p className="text-sm text-[color:var(--muted-strong)]">
-                  Estado actual: {WORK_ORDER_STATUS_LABELS[insuranceCase.currentWorkOrder.status]}
-                </p>
                 <div className="space-y-3">
                   {insuranceCase.currentWorkOrder.statusLogs.map((log) => (
                     <div
@@ -180,11 +185,7 @@ export default async function InternalInsuranceCaseDetailPage({
                   ))}
                 </div>
               </div>
-            ) : (
-              <p className="mt-4 text-sm text-[color:var(--muted)]">
-                Este caso aun no tiene una OT creada desde presupuesto aprobado.
-              </p>
-            )}
+            ) : null}
           </Card>
         </div>
       </div>

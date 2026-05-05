@@ -1,9 +1,12 @@
 "use client";
 
 import { BudgetItemType } from "@prisma/client";
-import { ChangeEvent, useActionState, useMemo, useState } from "react";
+import { ChangeEvent, useActionState, useEffect, useMemo, useState } from "react";
 
-import { createBudgetDraftAction } from "@/app/(protected)/budgets/actions";
+import {
+  createLiquidatorBudgetDraftAction,
+  createWorkshopBudgetDraftAction,
+} from "@/app/(protected)/budgets/actions";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { FormMessage } from "@/components/ui/form-message";
@@ -15,7 +18,27 @@ import { initialActionState } from "@/lib/form-state";
 import { formatCurrency } from "@/lib/utils";
 import { BUDGET_ITEM_TYPE_LABELS } from "@/modules/budgets/budget.constants";
 
-type BudgetCreateFormProps = {
+type ReferenceOption = {
+  id: string;
+  itemType: BudgetItemType;
+  name: string;
+  referenceCode: string | null;
+  unitPrice: number;
+  sourceLabel: string;
+  sourceUrl: string | null;
+  vehicleCompatibility: string | null;
+};
+
+type InventoryPartOption = {
+  id: string;
+  name: string;
+  code: string;
+  unitPrice: number;
+  currentStock: number;
+  minimumStock: number;
+};
+
+type WorkshopBudgetCreateFormProps = {
   clients: Array<{
     id: string;
     fullName: string;
@@ -26,7 +49,6 @@ type BudgetCreateFormProps = {
     customerName: string;
     vehicleId: string | null;
     vehicleLabel: string;
-    reviewedAt: Date | null;
   }>;
   vehicles: Array<{
     id: string;
@@ -35,43 +57,436 @@ type BudgetCreateFormProps = {
     make: string;
     model: string;
     clientId: string;
-    clientName: string;
   }>;
-  inventoryParts: Array<{
-    id: string;
-    name: string;
-    code: string;
-    unitPrice: number;
-    currentStock: number;
-    minimumStock: number;
-  }>;
-  references: Array<{
-    id: string;
-    itemType: BudgetItemType;
-    name: string;
-    referenceCode: string | null;
-    unitPrice: number;
-    sourceLabel: string;
-    sourceUrl: string | null;
-    vehicleCompatibility: string | null;
-  }>;
+  inventoryParts: InventoryPartOption[];
+  references: ReferenceOption[];
+  defaultClientId?: string;
+  defaultSelfInspectionId?: string;
 };
 
-export function BudgetCreateForm({
+type LiquidatorBudgetCreateFormProps = {
+  insuranceCases: Array<{
+    id: string;
+    caseNumber: string;
+    ownerFullName: string;
+    ownerPhone: string;
+    ownerEmail: string | null;
+    ownerAddress: string | null;
+    claimNumber: string | null;
+    policyNumber: string | null;
+    incidentDateLabel: string;
+    incidentLocation: string | null;
+    description: string;
+    vehicleName: string;
+    vehicleLabel: string;
+    vehicleIdentifier: string;
+    liquidatorName: string;
+    hasInitialPhotos: boolean;
+  }>;
+  inventoryParts: InventoryPartOption[];
+  references: ReferenceOption[];
+  defaultInsuranceCaseId?: string;
+};
+
+export function WorkshopBudgetCreateForm({
   clients,
   selfInspections,
   vehicles,
   inventoryParts,
   references,
-}: BudgetCreateFormProps) {
-  const [state, formAction] = useActionState(createBudgetDraftAction, initialActionState);
+  defaultClientId,
+  defaultSelfInspectionId,
+}: WorkshopBudgetCreateFormProps) {
+  const [state, formAction] = useActionState(
+    createWorkshopBudgetDraftAction,
+    initialActionState,
+  );
+  const initialInspection = selfInspections.find(
+    (inspection) => inspection.id === defaultSelfInspectionId,
+  );
+  const [selectedSelfInspectionId, setSelectedSelfInspectionId] = useState(
+    defaultSelfInspectionId ?? "",
+  );
+  const [selectedClientId, setSelectedClientId] = useState(
+    initialInspection?.customerId ?? defaultClientId ?? "",
+  );
+  const [selectedVehicleId, setSelectedVehicleId] = useState(
+    initialInspection?.vehicleId ?? "",
+  );
+  const selectedInspection = selfInspections.find(
+    (inspection) => inspection.id === selectedSelfInspectionId,
+  );
+  const selectedClient = clients.find((client) => client.id === selectedClientId);
+  const selectedVehicle = vehicles.find((vehicle) => vehicle.id === selectedVehicleId);
+  const availableVehicles = selectedClientId
+    ? vehicles.filter((vehicle) => vehicle.clientId === selectedClientId)
+    : [];
+
+  function handleClientChange(event: ChangeEvent<HTMLSelectElement>) {
+    const nextClientId = event.target.value;
+    setSelectedSelfInspectionId("");
+    setSelectedClientId(nextClientId);
+
+    const currentVehicleBelongsToNextClient = vehicles.some(
+      (vehicle) => vehicle.id === selectedVehicleId && vehicle.clientId === nextClientId,
+    );
+
+    if (!nextClientId || !currentVehicleBelongsToNextClient) {
+      setSelectedVehicleId("");
+    }
+  }
+
+  function handleSelfInspectionChange(event: ChangeEvent<HTMLSelectElement>) {
+    const nextInspectionId = event.target.value;
+    setSelectedSelfInspectionId(nextInspectionId);
+
+    const inspection = selfInspections.find((entry) => entry.id === nextInspectionId);
+
+    if (!inspection) {
+      setSelectedClientId(defaultClientId ?? "");
+      setSelectedVehicleId("");
+      return;
+    }
+
+    setSelectedClientId(inspection.customerId);
+    setSelectedVehicleId(inspection.vehicleId ?? "");
+  }
+
+  return (
+    <form action={formAction} className="space-y-6">
+      <input name="clientId" type="hidden" value={selectedClientId} />
+      <input name="vehicleId" type="hidden" value={selectedVehicleId} />
+
+      <Card className="overflow-hidden rounded-2xl bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(247,250,254,0.96))]">
+        <div className="space-y-6">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <SelectionStat label="Cliente taller" value={selectedClient?.fullName ?? "Pendiente"} />
+            <SelectionStat
+              label="Vehiculo"
+              value={
+                selectedVehicle ? `${selectedVehicle.make} ${selectedVehicle.model}` : "Pendiente"
+              }
+            />
+            <SelectionStat
+              label="Origen"
+              value={selectedInspection ? "Autoinspeccion revisada" : "Registro manual"}
+            />
+            <SelectionStat label="Contexto" value={selectedInspection ? "Autocompletado" : "Editable"} />
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className="space-y-2 lg:col-span-2">
+              <SectionHeading eyebrow="Contexto del cliente taller" title="Origen y vinculacion" />
+            </div>
+
+            <div className="space-y-2 lg:col-span-2">
+              <label
+                className="text-sm font-medium text-[color:var(--muted-strong)]"
+                htmlFor="selfInspectionId"
+              >
+                Autoinspeccion revisada
+              </label>
+              <Select
+                id="selfInspectionId"
+                name="selfInspectionId"
+                onChange={handleSelfInspectionChange}
+                value={selectedSelfInspectionId}
+              >
+                <option value="">Sin autoinspeccion asociada</option>
+                {selfInspections.map((inspection) => (
+                  <option key={inspection.id} value={inspection.id}>
+                    {inspection.customerName} / {inspection.vehicleLabel}
+                  </option>
+                ))}
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-[color:var(--muted-strong)]" htmlFor="title">
+                Titulo del presupuesto
+              </label>
+              <Input
+                id="title"
+                name="title"
+                placeholder="Ej. Reparacion frenos delanteros y mantencion"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-[color:var(--muted-strong)]" htmlFor="clientId">
+                Cliente taller
+              </label>
+              <Select
+                disabled={Boolean(selectedInspection)}
+                id="clientId"
+                onChange={handleClientChange}
+                value={selectedClientId}
+              >
+                <option value="">Selecciona un cliente del taller</option>
+                {clients.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.fullName}
+                  </option>
+                ))}
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-[color:var(--muted-strong)]" htmlFor="vehicleId">
+                Vehiculo
+              </label>
+              <Select
+                disabled={!selectedClientId || Boolean(selectedInspection)}
+                id="vehicleId"
+                onChange={(event) => setSelectedVehicleId(event.target.value)}
+                value={selectedVehicleId}
+              >
+                <option value="">
+                  {selectedClientId
+                    ? "Selecciona un vehiculo del cliente"
+                    : "Selecciona primero un cliente"}
+                </option>
+                {availableVehicles.map((vehicle) => (
+                  <option key={vehicle.id} value={vehicle.id}>
+                    {vehicle.make} {vehicle.model} / {vehicle.plate ?? vehicle.vin}
+                  </option>
+                ))}
+              </Select>
+            </div>
+
+            <div className="space-y-2 lg:col-span-2">
+              <label className="text-sm font-medium text-[color:var(--muted-strong)]" htmlFor="summary">
+                Resumen tecnico
+              </label>
+              <Textarea
+                id="summary"
+                name="summary"
+                placeholder="Describe el motivo del presupuesto, el diagnostico base y cualquier alcance relevante."
+              />
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      <BudgetItemsBuilder inventoryParts={inventoryParts} references={references} />
+      <BudgetSubmitCard
+        error={state.error}
+        heading="Presupuesto de cliente taller listo para continuar"
+        submitLabel="Crear presupuesto taller"
+      />
+    </form>
+  );
+}
+
+export function LiquidatorBudgetCreateForm({
+  insuranceCases,
+  inventoryParts,
+  references,
+  defaultInsuranceCaseId,
+}: LiquidatorBudgetCreateFormProps) {
+  const [state, formAction] = useActionState(
+    createLiquidatorBudgetDraftAction,
+    initialActionState,
+  );
+  const [selectedInsuranceCaseId, setSelectedInsuranceCaseId] = useState(
+    defaultInsuranceCaseId ?? "",
+  );
+  const selectedInsuranceCase = insuranceCases.find(
+    (insuranceCase) => insuranceCase.id === selectedInsuranceCaseId,
+  );
+  const [title, setTitle] = useState(
+    selectedInsuranceCase ? buildLiquidatorBudgetTitle(selectedInsuranceCase) : "",
+  );
+  const [summary, setSummary] = useState(
+    selectedInsuranceCase ? buildLiquidatorBudgetSummary(selectedInsuranceCase) : "",
+  );
+
+  useEffect(() => {
+    if (!selectedInsuranceCase) {
+      setTitle("");
+      setSummary("");
+      return;
+    }
+
+    setTitle(buildLiquidatorBudgetTitle(selectedInsuranceCase));
+    setSummary(buildLiquidatorBudgetSummary(selectedInsuranceCase));
+  }, [selectedInsuranceCase]);
+
+  return (
+    <form action={formAction} className="space-y-6">
+      <Card className="overflow-hidden rounded-2xl bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(247,250,254,0.96))]">
+        <div className="space-y-6">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <SelectionStat
+              label="Titular"
+              value={selectedInsuranceCase?.ownerFullName ?? "Selecciona un caso"}
+            />
+            <SelectionStat
+              label="Liquidadora"
+              value={selectedInsuranceCase?.liquidatorName ?? "Pendiente"}
+            />
+            <SelectionStat
+              label="Vehiculo"
+              value={selectedInsuranceCase?.vehicleName ?? "Pendiente"}
+            />
+            <SelectionStat
+              label="Caso"
+              value={selectedInsuranceCase?.caseNumber ?? "Sin vincular"}
+            />
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className="space-y-2 lg:col-span-2">
+              <SectionHeading
+                eyebrow="Contexto del cliente liquidadora"
+                title="Caso y contexto autocompletado"
+              />
+            </div>
+
+            <div className="space-y-2 lg:col-span-2">
+              <label
+                className="text-sm font-medium text-[color:var(--muted-strong)]"
+                htmlFor="insuranceCaseId"
+              >
+                Caso de liquidadora
+              </label>
+              <Select
+                id="insuranceCaseId"
+                name="insuranceCaseId"
+                onChange={(event) => setSelectedInsuranceCaseId(event.target.value)}
+                value={selectedInsuranceCaseId}
+              >
+                <option value="">Selecciona un caso de liquidadora</option>
+                {insuranceCases.map((insuranceCase) => (
+                  <option key={insuranceCase.id} value={insuranceCase.id}>
+                    {insuranceCase.caseNumber} / {insuranceCase.vehicleLabel} /{" "}
+                    {insuranceCase.liquidatorName}
+                  </option>
+                ))}
+              </Select>
+            </div>
+
+            <ReadonlyContextCard
+              label="Titular"
+              value={selectedInsuranceCase?.ownerFullName ?? "Pendiente"}
+            />
+            <ReadonlyContextCard
+              label="Contacto"
+              value={selectedInsuranceCase?.ownerPhone ?? "Pendiente"}
+            />
+            <ReadonlyContextCard
+              label="Vehiculo"
+              value={selectedInsuranceCase?.vehicleLabel ?? "Pendiente"}
+            />
+            <ReadonlyContextCard
+              label="Liquidadora"
+              value={selectedInsuranceCase?.liquidatorName ?? "Pendiente"}
+            />
+            <ReadonlyContextCard
+              label="Siniestro"
+              value={selectedInsuranceCase?.claimNumber ?? "Sin numero informado"}
+            />
+            <ReadonlyContextCard
+              label="Poliza"
+              value={selectedInsuranceCase?.policyNumber ?? "Sin poliza informada"}
+            />
+            <ReadonlyContextCard
+              label="Fecha del choque"
+              value={selectedInsuranceCase?.incidentDateLabel ?? "Pendiente"}
+            />
+            <ReadonlyContextCard
+              label="Lugar"
+              value={selectedInsuranceCase?.incidentLocation ?? "Sin ubicacion informada"}
+            />
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-[color:var(--muted-strong)]" htmlFor="title">
+                Titulo del presupuesto
+              </label>
+              <Input
+                id="title"
+                name="title"
+                onChange={(event) => setTitle(event.target.value)}
+                placeholder="Titulo del presupuesto"
+                value={title}
+              />
+            </div>
+
+            <div className="rounded-2xl border border-[rgba(37,99,235,0.12)] bg-white/85 px-4 py-3 shadow-[0_10px_24px_rgba(37,99,235,0.05)]">
+              <p className="text-[11px] uppercase tracking-[0.18em] text-[color:var(--muted)]">
+                Evidencia inicial
+              </p>
+              <p className="mt-2 text-sm font-semibold text-[color:var(--foreground)]">
+                {selectedInsuranceCase
+                  ? selectedInsuranceCase.hasInitialPhotos
+                    ? "Fotos iniciales cargadas por liquidadora"
+                    : "Caso sin fotos iniciales"
+                  : "Selecciona un caso para ver el estado"}
+              </p>
+            </div>
+
+            <div className="space-y-2 lg:col-span-2">
+              <label className="text-sm font-medium text-[color:var(--muted-strong)]" htmlFor="summary">
+                Resumen tecnico inicial
+              </label>
+              <Textarea
+                id="summary"
+                name="summary"
+                onChange={(event) => setSummary(event.target.value)}
+                placeholder="Resumen tecnico inicial"
+                value={summary}
+              />
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      <BudgetItemsBuilder inventoryParts={inventoryParts} references={references} />
+      <BudgetSubmitCard
+        error={state.error}
+        heading="Presupuesto de cliente liquidadora listo para revision"
+        submitLabel="Crear presupuesto liquidadora"
+      />
+    </form>
+  );
+}
+
+function buildLiquidatorBudgetTitle(insuranceCase: LiquidatorBudgetCreateFormProps["insuranceCases"][number]) {
+  return `Presupuesto ${insuranceCase.vehicleName} ${insuranceCase.vehicleIdentifier}`;
+}
+
+function buildLiquidatorBudgetSummary(
+  insuranceCase: LiquidatorBudgetCreateFormProps["insuranceCases"][number],
+) {
+  return [
+    `Caso ${insuranceCase.caseNumber}`,
+    `Liquidadora: ${insuranceCase.liquidatorName}`,
+    `Titular: ${insuranceCase.ownerFullName}`,
+    `Vehiculo: ${insuranceCase.vehicleLabel}`,
+    insuranceCase.claimNumber ? `Numero de siniestro: ${insuranceCase.claimNumber}` : null,
+    insuranceCase.policyNumber ? `Poliza: ${insuranceCase.policyNumber}` : null,
+    `Fecha del choque: ${insuranceCase.incidentDateLabel}`,
+    insuranceCase.incidentLocation ? `Lugar: ${insuranceCase.incidentLocation}` : null,
+    insuranceCase.ownerEmail ? `Correo del titular: ${insuranceCase.ownerEmail}` : null,
+    insuranceCase.ownerAddress ? `Direccion: ${insuranceCase.ownerAddress}` : null,
+    "",
+    `Danos reportados por liquidadora: ${insuranceCase.description}`,
+  ]
+    .filter((line): line is string => line !== null)
+    .join("\n");
+}
+
+function BudgetItemsBuilder({
+  inventoryParts,
+  references,
+}: {
+  inventoryParts: InventoryPartOption[];
+  references: ReferenceOption[];
+}) {
   const manualSlots = [1, 2] as const;
   const partSlots = [1, 2, 3, 4] as const;
   const laborSlots = [1, 2, 3] as const;
   const supplySlots = [1, 2] as const;
-  const [selectedClientId, setSelectedClientId] = useState("");
-  const [selectedVehicleId, setSelectedVehicleId] = useState("");
-  const [selectedSelfInspectionId, setSelectedSelfInspectionId] = useState("");
   const [selectedPartIds, setSelectedPartIds] = useState<Record<string, string>>({});
   const [selectedReferenceIds, setSelectedReferenceIds] = useState<Record<string, string>>({});
   const [visiblePartSlots, setVisiblePartSlots] = useState(1);
@@ -95,44 +510,6 @@ export function BudgetCreateForm({
     }),
     [references],
   );
-  const selectedInspection = selfInspections.find(
-    (inspection) => inspection.id === selectedSelfInspectionId,
-  );
-  const availableVehicles = selectedClientId
-    ? vehicles.filter((vehicle) => vehicle.clientId === selectedClientId)
-    : [];
-  const selectedClient = clients.find((client) => client.id === selectedClientId);
-  const selectedVehicle = vehicles.find((vehicle) => vehicle.id === selectedVehicleId);
-  const activePartSlots = partSlots.slice(0, visiblePartSlots).length;
-  const activeLaborSlots = laborSlots.slice(0, visibleLaborSlots).length;
-  const activeSupplySlots = supplySlots.slice(0, visibleSupplySlots).length;
-
-  function handleClientChange(event: ChangeEvent<HTMLSelectElement>) {
-    const nextClientId = event.target.value;
-    setSelectedClientId(nextClientId);
-
-    const currentVehicleBelongsToNextClient = vehicles.some(
-      (vehicle) => vehicle.id === selectedVehicleId && vehicle.clientId === nextClientId,
-    );
-
-    if (!nextClientId || !currentVehicleBelongsToNextClient) {
-      setSelectedVehicleId("");
-    }
-  }
-
-  function handleSelfInspectionChange(event: ChangeEvent<HTMLSelectElement>) {
-    const nextInspectionId = event.target.value;
-    setSelectedSelfInspectionId(nextInspectionId);
-
-    const inspection = selfInspections.find((entry) => entry.id === nextInspectionId);
-
-    if (!inspection) {
-      return;
-    }
-
-    setSelectedClientId(inspection.customerId);
-    setSelectedVehicleId(inspection.vehicleId ?? "");
-  }
 
   function findSelectedPart(slot: number) {
     return inventoryParts.find((part) => part.id === selectedPartIds[String(slot)]);
@@ -145,149 +522,10 @@ export function BudgetCreateForm({
   }
 
   return (
-    <form action={formAction} className="space-y-6">
-      <input name="clientId" type="hidden" value={selectedClientId} />
-      <input name="vehicleId" type="hidden" value={selectedVehicleId} />
-
-      <Card className="overflow-hidden rounded-2xl bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(247,250,254,0.96))]">
-        <div className="space-y-6">
-          <div className="grid gap-3 lg:grid-cols-3">
-            <SourceModeCard
-              description="Selecciona una inspeccion revisada y el sistema completa cliente y vehiculo."
-              isActive={Boolean(selectedInspection)}
-              title="Desde autoinspeccion"
-            />
-            <SourceModeCard
-              description="Si el caso llego directo al taller, completa cliente, vehiculo y resumen manualmente."
-              isActive={!selectedInspection}
-              title="Desde registro manual"
-            />
-            <SourceModeCard
-              description="El borrador sigue editable y despues se puede enviar al cliente o liquidador segun corresponda."
-              isActive={Boolean(selectedClientId && selectedVehicleId)}
-              title="Flujo conectado"
-            />
-          </div>
-
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            <SelectionStat label="Cliente" value={selectedClient?.fullName ?? "Pendiente"} />
-            <SelectionStat
-              label="Vehiculo"
-              value={
-                selectedVehicle ? `${selectedVehicle.make} ${selectedVehicle.model}` : "Pendiente"
-              }
-            />
-            <SelectionStat label="Repuestos activos" value={String(activePartSlots)} />
-            <SelectionStat
-              label="Items referenciales"
-              value={String(activeLaborSlots + activeSupplySlots)}
-            />
-          </div>
-
-          <div className="grid gap-4 lg:grid-cols-2">
-            <div className="space-y-2 lg:col-span-2">
-              <SectionHeading
-                description="Puedes iniciar desde una autoinspeccion ya revisada o dejarlo vacio y trabajar el caso manualmente."
-                eyebrow="Contexto del caso"
-                title="Origen y vinculacion"
-              />
-            <label
-              className="text-sm font-medium text-[color:var(--muted-strong)]"
-              htmlFor="selfInspectionId"
-            >
-              Autoinspeccion revisada
-            </label>
-            <Select
-              id="selfInspectionId"
-              name="selfInspectionId"
-              onChange={handleSelfInspectionChange}
-              value={selectedSelfInspectionId}
-            >
-              <option value="">Sin autoinspeccion asociada</option>
-              {selfInspections.map((inspection) => (
-                <option key={inspection.id} value={inspection.id}>
-                  {inspection.customerName} / {inspection.vehicleLabel}
-                </option>
-              ))}
-            </Select>
-            <p className="text-sm text-[color:var(--muted)]">
-              Si eliges una autoinspeccion revisada, el sistema completa desde ahi el cliente y el
-              vehiculo del presupuesto.
-            </p>
-            {selectedInspection ? (
-              <p className="rounded-xl border border-[rgba(37,99,235,0.14)] bg-[rgba(37,99,235,0.08)] px-4 py-3 text-sm font-medium text-[#1d4ed8]">
-                Cliente y vehiculo completados automaticamente desde la autoinspeccion.
-              </p>
-            ) : null}
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-[color:var(--muted-strong)]" htmlFor="title">
-              Titulo del presupuesto
-            </label>
-            <Input id="title" name="title" placeholder="Ej. Reparacion frenos delanteros y mantencion" />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-[color:var(--muted-strong)]" htmlFor="clientId">
-              Cliente
-            </label>
-            <Select
-              disabled={Boolean(selectedInspection)}
-              id="clientId"
-              onChange={handleClientChange}
-              value={selectedClientId}
-            >
-              <option value="">Selecciona un cliente si no usaras autoinspeccion</option>
-              {clients.map((client) => (
-                <option key={client.id} value={client.id}>
-                  {client.fullName}
-                </option>
-              ))}
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-[color:var(--muted-strong)]" htmlFor="vehicleId">
-              Vehiculo
-            </label>
-            <Select
-              disabled={!selectedClientId || Boolean(selectedInspection)}
-              id="vehicleId"
-              onChange={(event) => setSelectedVehicleId(event.target.value)}
-              value={selectedVehicleId}
-            >
-              <option value="">
-                {selectedClientId
-                  ? "Selecciona un vehiculo del cliente"
-                  : "Selecciona primero un cliente"}
-              </option>
-              {availableVehicles.map((vehicle) => (
-                <option key={vehicle.id} value={vehicle.id}>
-                  {vehicle.make} {vehicle.model} / {vehicle.plate ?? vehicle.vin}
-                </option>
-              ))}
-            </Select>
-          </div>
-
-          <div className="space-y-2 lg:col-span-2">
-            <label className="text-sm font-medium text-[color:var(--muted-strong)]" htmlFor="summary">
-              Resumen tecnico
-            </label>
-            <Textarea
-              id="summary"
-              name="summary"
-              placeholder="Describe el motivo del presupuesto, el diagnostico base y cualquier alcance relevante."
-            />
-          </div>
-        </div>
-        </div>
-      </Card>
-
+    <>
       <Card className="rounded-2xl bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(247,250,254,0.96))]">
         <div className="space-y-4">
           <SectionHeading
-            description="Selecciona repuestos reales del inventario. El valor unitario se completa automaticamente y solo ajustas la cantidad."
             eyebrow="Repuestos conectados a inventario"
             title={BUDGET_ITEM_TYPE_LABELS[BudgetItemType.PART]}
           />
@@ -346,9 +584,6 @@ export function BudgetCreateForm({
                       readOnly
                       value={selectedPart ? String(selectedPart.unitPrice) : ""}
                     />
-                    <p className="text-xs text-[color:var(--muted)]">
-                      {selectedPart ? formatCurrency(selectedPart.unitPrice) : "Se completa al elegir"}
-                    </p>
                   </div>
 
                   <div className="space-y-2">
@@ -397,16 +632,11 @@ export function BudgetCreateForm({
             key={type}
           >
             <div className="space-y-4">
-              <SectionHeading
-                description="Selecciona un item del catalogo y el valor unitario se completa automaticamente."
-                eyebrow="Catalogo referencial"
-                title={BUDGET_ITEM_TYPE_LABELS[type]}
-              />
+              <SectionHeading eyebrow="Catalogo referencial" title={BUDGET_ITEM_TYPE_LABELS[type]} />
 
               {groupedReferences[type].length === 0 ? (
                 <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-                  No hay items cargados en esta categoria. Puedes usar la opcion manual si la
-                  necesitas.
+                  No hay items cargados en esta categoria.
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -463,11 +693,6 @@ export function BudgetCreateForm({
                             readOnly
                             value={selectedReference ? String(selectedReference.unitPrice) : ""}
                           />
-                          <p className="text-xs text-[color:var(--muted)]">
-                            {selectedReference
-                              ? formatCurrency(selectedReference.unitPrice)
-                              : "Se completa al elegir"}
-                          </p>
                         </div>
 
                         <div className="space-y-2">
@@ -563,7 +788,6 @@ export function BudgetCreateForm({
         <Card className="rounded-2xl bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(247,250,254,0.96))]">
           <div className="space-y-4">
             <SectionHeading
-              description="Usa este bloque solo si el repuesto aun no esta cargado en inventario."
               eyebrow="Respaldo manual"
               title={`${BUDGET_ITEM_TYPE_LABELS[BudgetItemType.PART]} fuera del inventario`}
             />
@@ -594,33 +818,46 @@ export function BudgetCreateForm({
           Agregar repuesto manual
         </Button>
       )}
+    </>
+  );
+}
 
-      <Card className="sticky bottom-4 rounded-2xl border-[rgba(37,99,235,0.14)] bg-[linear-gradient(180deg,rgba(255,255,255,0.97),rgba(239,246,255,0.96))] shadow-[0_18px_40px_rgba(15,23,42,0.10)]">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--muted)]">
-              Guardado del borrador
-            </p>
-            <h2 className="mt-2 font-heading text-2xl font-semibold">
-              Presupuesto listo para continuar el flujo
-            </h2>
-            <p className="mt-2 max-w-2xl text-sm text-[color:var(--muted-strong)]">
-              Al guardar, quedara disponible para seguir editando, enviarlo a cliente o derivarlo
-              a aseguradora cuando corresponda.
-            </p>
-          </div>
-
-          <div className="flex w-full flex-col gap-3 lg:w-auto lg:min-w-[280px]">
-            <FormMessage message={state.error} />
-            <SubmitButton
-              className="w-full"
-              label="Crear presupuesto borrador"
-              pendingLabel="Creando presupuesto..."
-            />
-          </div>
+function BudgetSubmitCard({
+  error,
+  heading,
+  submitLabel,
+}: {
+  error?: string;
+  heading: string;
+  submitLabel: string;
+}) {
+  return (
+    <Card className="sticky bottom-4 rounded-2xl border-[rgba(37,99,235,0.14)] bg-[linear-gradient(180deg,rgba(255,255,255,0.97),rgba(239,246,255,0.96))] shadow-[0_18px_40px_rgba(15,23,42,0.10)]">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--muted)]">
+            Guardado del borrador
+          </p>
+          <h2 className="mt-2 font-heading text-2xl font-semibold">{heading}</h2>
         </div>
-      </Card>
-    </form>
+
+        <div className="flex w-full flex-col gap-3 lg:w-auto lg:min-w-[280px]">
+          <FormMessage message={error} />
+          <SubmitButton className="w-full" label={submitLabel} pendingLabel="Creando presupuesto..." />
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function ReadonlyContextCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-[rgba(37,99,235,0.12)] bg-white/85 px-4 py-3 shadow-[0_10px_24px_rgba(37,99,235,0.05)]">
+      <p className="text-[11px] uppercase tracking-[0.18em] text-[color:var(--muted)]">{label}</p>
+      <p className="mt-2 min-h-[2.75rem] text-sm font-semibold leading-5 text-[color:var(--foreground)]">
+        {value}
+      </p>
+    </div>
   );
 }
 
@@ -646,9 +883,6 @@ function ManualFallbackSection({
           Respaldo manual
         </p>
         <h3 className="mt-2 text-lg font-semibold text-[color:var(--foreground)]">{title}</h3>
-        <p className="mt-1 text-sm text-[color:var(--muted)]">
-          Usa esta opcion solo si el item aun no existe cargado en inventario o catalogo.
-        </p>
       </div>
 
       <div className="mt-4">
@@ -756,11 +990,9 @@ function ManualFallbackRows({
 }
 
 function SectionHeading({
-  description,
   eyebrow,
   title,
 }: {
-  description: string;
   eyebrow: string;
   title: string;
 }) {
@@ -770,41 +1002,6 @@ function SectionHeading({
       <h2 className="mt-2 font-heading text-2xl font-semibold text-[color:var(--foreground)]">
         {title}
       </h2>
-      <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">{description}</p>
-    </div>
-  );
-}
-
-function SourceModeCard({
-  description,
-  isActive,
-  title,
-}: {
-  description: string;
-  isActive: boolean;
-  title: string;
-}) {
-  return (
-    <div
-      className={
-        isActive
-          ? "rounded-2xl border border-[rgba(37,99,235,0.20)] bg-[linear-gradient(180deg,rgba(37,99,235,0.10),rgba(255,255,255,0.94))] p-4 shadow-[0_14px_28px_rgba(37,99,235,0.08)]"
-          : "rounded-2xl border border-[color:var(--border)] bg-white/78 p-4"
-      }
-    >
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="font-heading text-lg font-semibold text-[color:var(--foreground)]">{title}</h2>
-        <span
-          className={
-            isActive
-              ? "rounded-full bg-[#2563eb] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-white"
-              : "rounded-full bg-[color:var(--surface-strong)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[color:var(--muted-strong)]"
-          }
-        >
-          {isActive ? "Activo" : "Disponible"}
-        </span>
-      </div>
-      <p className="mt-3 text-sm leading-6 text-[color:var(--muted-strong)]">{description}</p>
     </div>
   );
 }

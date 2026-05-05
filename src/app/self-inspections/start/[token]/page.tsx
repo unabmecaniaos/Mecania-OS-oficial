@@ -33,10 +33,6 @@ export default async function PublicWizardPage({ params }: PublicWizardPageProps
         <h1 className="mt-3 font-heading text-4xl font-semibold">
           Diagnostico previo simple y rapido
         </h1>
-        <p className="mt-3 max-w-3xl text-sm leading-7 text-[color:var(--muted-strong)]">
-          Completa solo lo necesario para que el taller entienda el problema principal, vea tu
-          vehiculo con contexto y llegue mejor preparado a la revision presencial.
-        </p>
       </Card>
 
       {pageData.wizardData ? (

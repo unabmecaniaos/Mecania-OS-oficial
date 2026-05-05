@@ -116,21 +116,82 @@ function summarizeInsuranceCaseDetail(record: InsuranceCaseDetailRecord) {
   };
 }
 
-async function assertClientVehicleMatch(clientId: string, vehicleId: string) {
-  const vehicle = await prisma.vehicle.findFirst({
+async function findVehicleForClaim(input: { vin: string; plate?: string | null }) {
+  const normalizedVin = input.vin.trim().toUpperCase();
+  const normalizedPlate = input.plate?.trim().toUpperCase();
+
+  return prisma.vehicle.findFirst({
     where: {
-      id: vehicleId,
-      clientId,
       deletedAt: null,
+      OR: [
+        {
+          vin: normalizedVin,
+        },
+        normalizedPlate
+          ? {
+              plate: normalizedPlate,
+            }
+          : undefined,
+      ].filter(Boolean) as Array<{ vin?: string; plate?: string }>,
     },
     select: {
       id: true,
+      clientId: true,
     },
   });
+}
 
-  if (!vehicle) {
-    throw new AppError("El vehiculo seleccionado no pertenece al cliente indicado", 422);
-  }
+async function createClaimClientAndVehicle(input: {
+  liquidatorName: string;
+  ownerPhone: string;
+  ownerEmail?: string;
+  ownerAddress?: string;
+  existingVehicleId?: string;
+  plate?: string;
+  vin: string;
+  make: string;
+  model: string;
+  year: number;
+  color?: string;
+}) {
+  return prisma.$transaction(async (tx) => {
+    const client = await tx.client.create({
+      data: {
+        fullName: `Titular resguardado por ${input.liquidatorName}`,
+        phone: input.ownerPhone,
+        email:
+          input.ownerEmail?.toLowerCase() ??
+          `claim-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@mecaniaos.local`,
+        address: input.ownerAddress,
+        isWorkshopClient: false,
+      },
+    });
+
+    if (input.existingVehicleId) {
+      return {
+        id: input.existingVehicleId,
+        clientId: client.id,
+      };
+    }
+
+    const vehicle = await tx.vehicle.create({
+      data: {
+        clientId: client.id,
+        plate: input.plate?.trim().toUpperCase() || null,
+        vin: input.vin.trim().toUpperCase(),
+        make: input.make,
+        model: input.model,
+        year: input.year,
+        color: input.color,
+      },
+      select: {
+        id: true,
+        clientId: true,
+      },
+    });
+
+    return vehicle;
+  });
 }
 
 export async function findLatestInsuranceCaseLink(clientId: string, vehicleId: string) {
@@ -151,11 +212,39 @@ export async function createInsuranceCaseByLiquidator(
     );
   }
 
-  await assertClientVehicleMatch(data.clientId, data.vehicleId);
-  const matchingCase = await insuranceCaseRepository.findLatestByClientVehicle(
-    data.clientId,
-    data.vehicleId,
-  );
+  const liquidator = await prisma.user.findUnique({
+    where: {
+      id: liquidatorId,
+    },
+    select: {
+      id: true,
+      name: true,
+    },
+  });
+
+  if (!liquidator) {
+    throw new NotFoundError("Liquidador no encontrado");
+  }
+
+  const existingVehicle = await findVehicleForClaim({
+    vin: data.vin,
+    plate: data.plate,
+  });
+  const vehicleLink =
+    await createClaimClientAndVehicle({
+      liquidatorName: liquidator.name,
+      ownerPhone: data.ownerPhone,
+      ownerEmail: data.ownerEmail,
+      ownerAddress: data.ownerAddress,
+      existingVehicleId: existingVehicle?.id,
+      plate: data.plate ?? undefined,
+      vin: data.vin,
+      make: data.make,
+      model: data.model,
+      year: data.year,
+      color: data.color ?? undefined,
+    });
+  const matchingCase = await insuranceCaseRepository.findLatestByVehicle(vehicleLink.id);
 
   if (matchingCase && matchingCase.liquidatorId !== liquidatorId) {
     throw new UnauthorizedError(
@@ -165,9 +254,14 @@ export async function createInsuranceCaseByLiquidator(
 
   const insuranceCase = await insuranceCaseRepository.create({
     caseNumber: await createInsuranceCaseNumber(),
-    clientId: data.clientId,
-    vehicleId: data.vehicleId,
+    clientId: vehicleLink.clientId,
+    vehicleId: vehicleLink.id,
     liquidatorId,
+    createdFromLiquidatorPortal: true,
+    ownerFullName: data.ownerFullName,
+    ownerPhone: data.ownerPhone,
+    ownerEmail: data.ownerEmail,
+    ownerAddress: data.ownerAddress,
     claimNumber: data.claimNumber,
     policyNumber: data.policyNumber,
     incidentDate: parseDateInput(data.incidentDate) ?? new Date(),
@@ -198,40 +292,9 @@ export async function createInsuranceCaseByLiquidator(
   );
 }
 
-export async function listInternalInsuranceCases() {
-  const cases = await insuranceCaseRepository.listForInternal();
+export async function listInternalInsuranceCases(search?: string) {
+  const cases = await insuranceCaseRepository.listForInternal(search?.trim());
   return cases.map(summarizeInsuranceCaseList);
-}
-
-export async function getInsuranceCaseCreateContext() {
-  await requireApiUser([UserRole.LIQUIDATOR]);
-
-  const clients = await prisma.client.findMany({
-    where: {
-      deletedAt: null,
-    },
-    include: {
-      vehicles: {
-        where: {
-          deletedAt: null,
-        },
-        orderBy: [{ make: "asc" }, { model: "asc" }],
-      },
-    },
-    orderBy: {
-      fullName: "asc",
-    },
-  });
-
-  return {
-    clients,
-    vehicles: clients.flatMap((client) =>
-      client.vehicles.map((vehicle) => ({
-        ...vehicle,
-        clientName: client.fullName,
-      })),
-    ),
-  };
 }
 
 export async function getInternalInsuranceCaseDetail(id: string) {

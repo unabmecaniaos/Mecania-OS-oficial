@@ -21,11 +21,6 @@ export default async function CustomerPortalPage() {
           Portal cliente
         </p>
         <h1 className="mt-2 font-heading text-3xl font-semibold">Tu acceso aun no esta habilitado</h1>
-        <p className="mt-4 max-w-2xl text-sm leading-7 text-[color:var(--muted-strong)]">
-          Tu cuenta existe, pero todavia no tiene una ficha de cliente vinculada con vehiculos
-          visibles. Si llegaste desde una autoinspeccion, entra primero por tu link seguro. Si no,
-          pide al taller que habilite tu acceso.
-        </p>
       </Card>
     );
   }
@@ -39,10 +34,6 @@ export default async function CustomerPortalPage() {
         <h1 className="mt-2 font-heading text-3xl font-semibold">
           Hola, {portal.customer.fullName}
         </h1>
-        <p className="mt-3 text-sm text-[color:var(--muted-strong)]">
-          Aqui puedes revisar solo tus vehiculos, los ingresos recibidos desde autoinspeccion y el
-          avance de cada caso.
-        </p>
 
         {portal.budgets.length > 0 ? (
           <div className="mt-6 rounded-2xl border border-[rgba(37,99,235,0.16)] bg-[linear-gradient(135deg,rgba(37,99,235,0.10)_0%,rgba(14,34,63,0.08)_100%)] p-5">
@@ -58,10 +49,6 @@ export default async function CustomerPortalPage() {
                       } pendiente${portal.stats.pendingBudgets === 1 ? "" : "s"}`
                     : "Ya puedes revisar tus presupuestos enviados"}
                 </h2>
-                <p className="text-sm text-[color:var(--muted-strong)]">
-                  Entra directo al detalle para revisar repuestos, mano de obra y responder desde
-                  tu cuenta.
-                </p>
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
@@ -127,10 +114,6 @@ export default async function CustomerPortalPage() {
             <h2 className="mt-2 font-heading text-2xl font-semibold">
               Revision y respuesta del cliente
             </h2>
-            <p className="mt-2 text-sm text-[color:var(--muted-strong)]">
-              Cuando el taller te envia un presupuesto, aqui puedes revisar el detalle completo.
-              Si el caso pasa por aseguradora, la aprobacion queda en manos del liquidador.
-            </p>
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2">
@@ -173,18 +156,6 @@ export default async function CustomerPortalPage() {
                     </p>
                   </div>
                 </div>
-
-                <p className="mt-4 text-sm text-[color:var(--muted)]">
-                  {budget.status === "SENT"
-                    ? budget.insuranceCase
-                      ? "Este presupuesto esta siendo revisado por la aseguradora asignada."
-                      : "Tienes una respuesta pendiente para este presupuesto."
-                    : budget.status === "APPROVED"
-                      ? "Ya aprobaste este presupuesto y el taller puede continuar el flujo."
-                      : budget.status === "REJECTED"
-                        ? "Este presupuesto fue rechazado desde tu portal."
-                        : "Este presupuesto ya se convirtio en una orden de trabajo."}
-                </p>
 
                 <div className="mt-6 flex justify-end">
                   <Link
@@ -284,10 +255,6 @@ export default async function CustomerPortalPage() {
             <h2 className="mt-2 font-heading text-2xl font-semibold">
               Ingresos pendientes de recepcion
             </h2>
-            <p className="mt-2 text-sm text-[color:var(--muted-strong)]">
-              Aqui veras los vehiculos enviados por autoinspeccion aunque el taller aun no los haya
-              creado como orden de trabajo.
-            </p>
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2">
@@ -346,10 +313,6 @@ export default async function CustomerPortalPage() {
                   </div>
                 </div>
 
-                <p className="mt-6 text-sm text-[color:var(--muted)]">
-                  El taller ya recibio este ingreso. Cuando lo conviertan en vehiculo u orden de
-                  trabajo lo veras integrado en tu panel principal.
-                </p>
               </Card>
             ))}
           </div>

@@ -85,9 +85,11 @@ export default async function SelfInspectionDetailPage({
         <div className="space-y-6">
           <Card className="rounded-[32px]">
             <h2 className="font-heading text-2xl font-semibold">Resumen automatico</h2>
-            <p className="mt-3 text-sm leading-7 text-[color:var(--muted-strong)]">
-              {inspection.summaryGenerated ?? "Sin resumen generado todavia."}
-            </p>
+            {inspection.summaryGenerated ? (
+              <p className="mt-3 text-sm leading-7 text-[color:var(--muted-strong)]">
+                {inspection.summaryGenerated}
+              </p>
+            ) : null}
 
             <div className="mt-5 data-grid">
               <div>

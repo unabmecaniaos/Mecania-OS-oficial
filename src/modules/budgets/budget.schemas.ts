@@ -3,7 +3,7 @@ import { BudgetStatus } from "@prisma/client";
 
 import { optionalText, requiredInteger, requiredText } from "@/lib/validation";
 
-export const createBudgetSchema = z
+export const createWorkshopBudgetSchema = z
   .object({
     clientId: optionalText(40),
     vehicleId: optionalText(40),
@@ -19,7 +19,7 @@ export const createBudgetSchema = z
     if (!data.clientId) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Debes seleccionar un cliente o una autoinspeccion revisada",
+        message: "Debes seleccionar un cliente del taller o una autoinspeccion revisada",
         path: ["clientId"],
       });
     }
@@ -32,6 +32,12 @@ export const createBudgetSchema = z
       });
     }
   });
+
+export const createLiquidatorBudgetSchema = z.object({
+  insuranceCaseId: requiredText(1, 40),
+  title: requiredText(5, 120),
+  summary: optionalText(1200),
+});
 
 export const updateBudgetDraftSchema = z.object({
   title: requiredText(5, 120),

@@ -80,8 +80,12 @@ export function BudgetDetailForm({ budget }: BudgetDetailFormProps) {
     createWorkOrderFromBudgetAction.bind(null, budget.id),
     initialActionState,
   );
-  const isDraft = budget.status === BudgetStatus.DRAFT;
-  const canCreateWorkOrder = budget.status === BudgetStatus.APPROVED && !budget.workOrder;
+  const isDraft =
+    budget.status === BudgetStatus.DRAFT || budget.status === BudgetStatus.REQUEST_CHANGES;
+  const canCreateWorkOrder =
+    (budget.status === BudgetStatus.APPROVED ||
+      budget.status === BudgetStatus.PARTIALLY_APPROVED) &&
+    !budget.workOrder;
 
   return (
     <div className="space-y-6">
@@ -119,7 +123,7 @@ export function BudgetDetailForm({ budget }: BudgetDetailFormProps) {
                 >
                   {budget.insuranceCase.caseNumber}
                 </a>{" "}
-                / Liquidador {budget.insuranceCase.liquidatorName}
+                / Liquidadora: {budget.insuranceCase.liquidatorName}
               </p>
             ) : null}
           </div>
@@ -153,6 +157,8 @@ export function BudgetDetailForm({ budget }: BudgetDetailFormProps) {
             ? "rounded-2xl border border-[rgba(22,163,74,0.18)] bg-[rgba(22,163,74,0.05)]"
             : budget.status === BudgetStatus.REJECTED
               ? "rounded-2xl border border-[rgba(185,28,28,0.18)] bg-[rgba(185,28,28,0.05)]"
+              : budget.status === BudgetStatus.REQUEST_CHANGES
+                ? "rounded-2xl border border-[rgba(217,119,6,0.18)] bg-[rgba(217,119,6,0.05)]"
               : budget.status === BudgetStatus.SENT
                 ? "rounded-2xl border border-[rgba(217,119,6,0.18)] bg-[rgba(217,119,6,0.05)]"
                 : "rounded-2xl"
@@ -162,21 +168,6 @@ export function BudgetDetailForm({ budget }: BudgetDetailFormProps) {
           <div className="space-y-1">
             <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--muted)]">
               Flujo de aprobacion
-            </p>
-            <p className="text-sm text-[color:var(--muted-strong)]">
-              {isDraft
-                ? budget.insuranceCase
-                  ? "Cuando el borrador este listo, puedes enviarlo al cliente y quedara visible de inmediato para el liquidador asignado."
-                  : "Cuando el borrador este listo, puedes enviarlo al cliente para revision."
-                : budget.status === BudgetStatus.SENT
-                  ? budget.insuranceCase
-                    ? "Este presupuesto ya fue enviado. El cliente puede verlo y el liquidador de la aseguradora debe resolver su aprobacion desde su portal."
-                    : "Este presupuesto ya fue enviado. El cliente debe revisarlo desde su portal para aprobarlo o rechazarlo."
-                  : budget.status === BudgetStatus.APPROVED
-                    ? "El presupuesto ya fue aprobado y queda listo para transformarse en orden de trabajo."
-                    : budget.status === BudgetStatus.CONVERTED_TO_WORK_ORDER
-                      ? "Este presupuesto ya se transformo en una orden de trabajo y mantiene su trazabilidad operativa."
-                      : "El presupuesto ya cerro su ciclo actual y no admite nuevas transiciones desde esta pantalla."}
             </p>
           </div>
 
@@ -199,7 +190,7 @@ export function BudgetDetailForm({ budget }: BudgetDetailFormProps) {
           <div className="flex flex-wrap gap-3">
             {isDraft ? (
               <Button name="nextStatus" type="submit" value={BudgetStatus.SENT}>
-                {budget.insuranceCase ? "Enviar a cliente y liquidador" : "Enviar al cliente"}
+                {budget.insuranceCase ? "Enviar a liquidadora" : "Enviar al cliente"}
               </Button>
             ) : null}
           </div>
@@ -213,14 +204,9 @@ export function BudgetDetailForm({ budget }: BudgetDetailFormProps) {
         {canCreateWorkOrder ? (
           <form action={createWorkOrderAction} className="mt-4 border-t border-[color:var(--border)] pt-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-medium text-[color:var(--foreground)]">
-                  Crear orden de trabajo
-                </p>
-                <p className="text-sm text-[color:var(--muted)]">
-                  Genera la OT real del taller usando este presupuesto aprobado como base.
-                </p>
-              </div>
+              <p className="text-sm font-medium text-[color:var(--foreground)]">
+                Crear orden de trabajo
+              </p>
               <SubmitButton
                 label="Crear orden de trabajo"
                 pendingLabel="Creando orden..."
@@ -240,9 +226,6 @@ export function BudgetDetailForm({ budget }: BudgetDetailFormProps) {
               >
                 {budget.workOrder.orderNumber}
               </a>
-            </p>
-            <p className="mt-1 text-sm text-[#166534]">
-              Este presupuesto ya se encuentra convertido y listo para seguir el flujo operativo.
             </p>
           </div>
         ) : null}
@@ -348,7 +331,7 @@ export function BudgetDetailForm({ budget }: BudgetDetailFormProps) {
                     type="number"
                   />
                   <p className="text-xs text-[color:var(--muted)]">
-                    Modificable mientras el presupuesto siga en borrador.
+                    Editable en borrador
                   </p>
                 </div>
 

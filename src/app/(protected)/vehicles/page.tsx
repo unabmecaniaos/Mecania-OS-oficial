@@ -28,10 +28,6 @@ export default async function VehiclesPage({ searchParams }: VehiclesPageProps) 
                 Registro vehicular
               </p>
               <h1 className="mt-2 font-heading text-3xl font-semibold">Vehiculos del taller</h1>
-              <p className="mt-3 max-w-2xl text-sm text-[color:var(--muted-strong)]">
-                Mantiene a mano la ficha tecnica, el cliente asociado y la carga operativa de cada
-                vehiculo.
-              </p>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">

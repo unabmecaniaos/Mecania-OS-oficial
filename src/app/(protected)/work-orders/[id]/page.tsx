@@ -72,7 +72,7 @@ export default async function WorkOrderDetailPage({ params }: WorkOrderDetailPag
             <div className="flex flex-wrap gap-3">
               {workOrder.insuranceCase ? (
                 <Link href={`/insurance-cases/${workOrder.insuranceCase.id}`}>
-                  <Button variant="secondary">Ver siniestro</Button>
+                  <Button variant="secondary">Ver cliente liquidadora</Button>
                 </Link>
               ) : null}
               {workOrder.budget ? (
@@ -133,7 +133,7 @@ export default async function WorkOrderDetailPage({ params }: WorkOrderDetailPag
                     Caso aseguradora: {workOrder.insuranceCase.caseNumber}
                   </p>
                   <p className="mt-1 text-sm text-[#1d4ed8]">
-                    Visible automaticamente para {workOrder.insuranceCase.liquidator.name} en su portal.
+                    Cliente gestionado por la liquidadora {workOrder.insuranceCase.liquidator.name}.
                   </p>
                 </div>
               ) : null}
@@ -165,11 +165,8 @@ export default async function WorkOrderDetailPage({ params }: WorkOrderDetailPag
           </Card>
 
           {workOrder.budget ? (
-            <Card className="rounded-2xl">
-              <h2 className="font-heading text-2xl font-semibold">Items del presupuesto base</h2>
-              <p className="mt-2 text-sm text-[color:var(--muted)]">
-                Referencia directa de los repuestos, mano de obra y suministros que dieron origen a esta OT.
-              </p>
+          <Card className="rounded-2xl">
+            <h2 className="font-heading text-2xl font-semibold">Items del presupuesto base</h2>
 
               <div className="mt-5 space-y-3">
                 {workOrder.budget.items.map((item) => (
@@ -202,9 +199,6 @@ export default async function WorkOrderDetailPage({ params }: WorkOrderDetailPag
 
           <Card className="rounded-2xl">
             <h2 className="font-heading text-2xl font-semibold">Asignacion</h2>
-            <p className="mt-2 text-sm text-[color:var(--muted)]">
-              Define el mecanico responsable para su vista de trabajo diaria.
-            </p>
 
             <div className="mt-5">
               <AssignmentForm
@@ -220,9 +214,6 @@ export default async function WorkOrderDetailPage({ params }: WorkOrderDetailPag
 
           <Card className="rounded-2xl">
             <h2 className="font-heading text-2xl font-semibold">Cambiar estado</h2>
-            <p className="mt-2 text-sm text-[color:var(--muted)]">
-              Cada cambio queda registrado para trazabilidad.
-            </p>
 
             <div className="mt-5">
               <StatusForm currentStatus={workOrder.status} orderId={workOrder.id} />
@@ -231,10 +222,6 @@ export default async function WorkOrderDetailPage({ params }: WorkOrderDetailPag
 
           <Card className="rounded-2xl">
             <h2 className="font-heading text-2xl font-semibold">Repuestos utilizados</h2>
-            <p className="mt-2 text-sm text-[color:var(--muted)]">
-              Registra la cantidad final usada por repuesto. Si cambias una cantidad, solo se mueve
-              la diferencia de stock.
-            </p>
 
             <div className="mt-5">
               <PartsUsageForm orderId={workOrder.id} repuestos={repuestos} />
@@ -284,9 +271,6 @@ export default async function WorkOrderDetailPage({ params }: WorkOrderDetailPag
           <div className="space-y-6">
             <div>
               <h2 className="font-heading text-2xl font-semibold">Evidencias de la orden</h2>
-              <p className="mt-2 text-sm text-[color:var(--muted)]">
-                Adjunta imagenes del proceso para mantener historial visual de la reparacion.
-              </p>
             </div>
 
             {evidenceUploadsEnabled ? (
@@ -336,9 +320,6 @@ export default async function WorkOrderDetailPage({ params }: WorkOrderDetailPag
 
             <div>
               <h2 className="font-heading text-2xl font-semibold">Bitacora de estados</h2>
-              <p className="mt-2 text-sm text-[color:var(--muted)]">
-                Historial cronologico de la reparacion.
-              </p>
             </div>
 
             <div className="space-y-4">

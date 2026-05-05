@@ -26,8 +26,16 @@ export async function createInsuranceCaseAction(
 
     const insuranceCase = await createInsuranceCaseByLiquidator(
       {
-        clientId: String(formData.get("clientId") ?? ""),
-        vehicleId: String(formData.get("vehicleId") ?? ""),
+        ownerFullName: String(formData.get("ownerFullName") ?? ""),
+        ownerPhone: String(formData.get("ownerPhone") ?? ""),
+        ownerEmail: String(formData.get("ownerEmail") ?? ""),
+        ownerAddress: String(formData.get("ownerAddress") ?? ""),
+        plate: String(formData.get("plate") ?? ""),
+        vin: String(formData.get("vin") ?? ""),
+        make: String(formData.get("make") ?? ""),
+        model: String(formData.get("model") ?? ""),
+        year: Number(formData.get("year") ?? 0),
+        color: String(formData.get("color") ?? ""),
         claimNumber: String(formData.get("claimNumber") ?? ""),
         policyNumber: String(formData.get("policyNumber") ?? ""),
         incidentDate: String(formData.get("incidentDate") ?? ""),
@@ -65,7 +73,12 @@ export async function respondToInsuranceBudgetAction(
   try {
     const nextStatus = String(formData.get("nextStatus") ?? "");
 
-    if (nextStatus !== BudgetStatus.APPROVED && nextStatus !== BudgetStatus.REJECTED) {
+    if (
+      nextStatus !== BudgetStatus.APPROVED &&
+      nextStatus !== BudgetStatus.REJECTED &&
+      nextStatus !== BudgetStatus.REQUEST_CHANGES &&
+      nextStatus !== BudgetStatus.PARTIALLY_APPROVED
+    ) {
       return {
         error: "La respuesta solicitada no es valida.",
       };
@@ -83,7 +96,11 @@ export async function respondToInsuranceBudgetAction(
     const successMessage =
       nextStatus === BudgetStatus.APPROVED
         ? "Presupuesto aprobado correctamente."
-        : "Presupuesto rechazado correctamente.";
+        : nextStatus === BudgetStatus.REJECTED
+          ? "Presupuesto rechazado correctamente."
+          : nextStatus === BudgetStatus.REQUEST_CHANGES
+            ? "Solicitud de cambios enviada correctamente."
+            : "Presupuesto parcialmente aprobado correctamente.";
 
     return {
       success: successMessage,

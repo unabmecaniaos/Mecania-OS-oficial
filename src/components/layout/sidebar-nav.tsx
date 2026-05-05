@@ -8,11 +8,8 @@ import { cn } from "@/lib/utils";
 
 const baseLinks = [
   { href: "/dashboard", label: "Panel" },
-  { href: "/clients", label: "Clientes" },
-  { href: "/vehicles", label: "Vehiculos" },
   { href: "/self-inspections", label: "Autoinspecciones" },
   { href: "/budgets", label: "Presupuestos" },
-  { href: "/insurance-cases", label: "Siniestros" },
   { href: "/work-orders", label: "Ordenes" },
   { href: "/inventory", label: "Inventario" },
 ];

@@ -26,12 +26,9 @@ export default async function ClientsPage({ searchParams }: ClientsPageProps) {
           <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
             <div>
               <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--muted)]">
-                Gestion de clientes
+                Registro comercial
               </p>
               <h1 className="mt-2 font-heading text-3xl font-semibold">Clientes del taller</h1>
-              <p className="mt-3 max-w-2xl text-sm text-[color:var(--muted-strong)]">
-                Consulta rapida de contactos, vehiculos asociados y ordenes ligadas a cada ficha.
-              </p>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3">
@@ -43,11 +40,7 @@ export default async function ClientsPage({ searchParams }: ClientsPageProps) {
 
           <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
             <form className="flex flex-col gap-3 sm:flex-row xl:min-w-[520px]" method="get">
-              <Input
-                defaultValue={q}
-                name="q"
-                placeholder="Buscar por nombre, correo o telefono"
-              />
+              <Input defaultValue={q} name="q" placeholder="Buscar por nombre, correo o telefono" />
               <Button className="sm:min-w-[120px]" type="submit" variant="secondary">
                 Buscar
               </Button>
@@ -71,7 +64,7 @@ export default async function ClientsPage({ searchParams }: ClientsPageProps) {
                 <div className="flex flex-wrap items-center gap-3">
                   <h2 className="font-heading text-2xl font-semibold">{client.fullName}</h2>
                   <span className="rounded-full border border-[rgba(37,99,235,0.14)] bg-[rgba(37,99,235,0.08)] px-3 py-1 text-xs font-semibold text-[#1d4ed8]">
-                    Cliente activo
+                    Cliente taller
                   </span>
                 </div>
                 <p className="text-sm text-[color:var(--muted-strong)]">
@@ -95,7 +88,7 @@ export default async function ClientsPage({ searchParams }: ClientsPageProps) {
                     className="text-sm font-semibold text-[#2563eb] hover:text-[#1d4ed8]"
                     href={`/clients/${client.id}`}
                   >
-                    Ver detalle
+                    Ver ficha
                   </Link>
                 </div>
               </div>
@@ -106,7 +99,7 @@ export default async function ClientsPage({ searchParams }: ClientsPageProps) {
         {clients.length === 0 ? (
           <Card className="rounded-xl text-center">
             <p className="text-[color:var(--muted-strong)]">
-              No hay clientes que coincidan con la busqueda.
+              No hay clientes del taller que coincidan con la busqueda.
             </p>
           </Card>
         ) : null}

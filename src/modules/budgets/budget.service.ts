@@ -6,7 +6,8 @@ import { budgetRepository } from "@/modules/budgets/budget.repository";
 import { findLatestInsuranceCaseLink } from "@/modules/insurance-cases/insurance-case.service";
 import {
   budgetLineUpdateSchema,
-  createBudgetSchema,
+  createLiquidatorBudgetSchema,
+  createWorkshopBudgetSchema,
   transitionBudgetStatusSchema,
   updateBudgetDraftSchema,
 } from "@/modules/budgets/budget.schemas";
@@ -98,8 +99,15 @@ function calculateTotals(
 
 const ALLOWED_STATUS_TRANSITIONS: Record<BudgetStatus, BudgetStatus[]> = {
   [BudgetStatus.DRAFT]: [BudgetStatus.SENT],
-  [BudgetStatus.SENT]: [BudgetStatus.APPROVED, BudgetStatus.REJECTED],
+  [BudgetStatus.SENT]: [
+    BudgetStatus.APPROVED,
+    BudgetStatus.REJECTED,
+    BudgetStatus.REQUEST_CHANGES,
+    BudgetStatus.PARTIALLY_APPROVED,
+  ],
   [BudgetStatus.APPROVED]: [BudgetStatus.CONVERTED_TO_WORK_ORDER],
+  [BudgetStatus.REQUEST_CHANGES]: [BudgetStatus.SENT],
+  [BudgetStatus.PARTIALLY_APPROVED]: [BudgetStatus.CONVERTED_TO_WORK_ORDER],
   [BudgetStatus.REJECTED]: [],
   [BudgetStatus.CONVERTED_TO_WORK_ORDER]: [],
 };
@@ -126,9 +134,9 @@ export async function listBudgets(search?: string) {
   };
 }
 
-export async function getBudgetCreateContext() {
+export async function getWorkshopBudgetCreateContext() {
   const [clients, references, inventoryParts, selfInspections] =
-    await budgetRepository.listCreateContext();
+    await budgetRepository.listWorkshopCreateContext();
 
   return {
     clients,
@@ -144,6 +152,17 @@ export async function getBudgetCreateContext() {
   };
 }
 
+export async function getLiquidatorBudgetCreateContext() {
+  const [references, inventoryParts, insuranceCases] =
+    await budgetRepository.listLiquidatorCreateContext();
+
+  return {
+    insuranceCases,
+    references,
+    inventoryParts,
+  };
+}
+
 export async function getBudgetById(id: string) {
   const budget = await budgetRepository.findById(id);
 
@@ -154,46 +173,12 @@ export async function getBudgetById(id: string) {
   return budget;
 }
 
-export async function createBudgetDraft(
-  input: unknown,
+function buildDraftItems(
+  references: Awaited<ReturnType<typeof budgetRepository.listWorkshopCreateContext>>[1],
+  inventoryParts: Awaited<ReturnType<typeof budgetRepository.listWorkshopCreateContext>>[2],
   selections: DraftCatalogSelection[],
   manualSelections: DraftManualSelection[],
-  actorId: string,
 ) {
-  const data = createBudgetSchema.parse(input);
-  const { clients, references, inventoryParts, selfInspections } = await getBudgetCreateContext();
-
-  let clientId = data.clientId ?? "";
-  let vehicleId = data.vehicleId ?? "";
-  let selfInspectionId: string | undefined;
-
-  if (data.selfInspectionId) {
-    const selfInspection = selfInspections.find((entry) => entry.id === data.selfInspectionId);
-
-    if (!selfInspection || !selfInspection.vehicle) {
-      throw new AppError(
-        "La autoinspeccion seleccionada debe estar revisada y vinculada a un vehiculo",
-        422,
-      );
-    }
-
-    clientId = selfInspection.customerId;
-    vehicleId = selfInspection.vehicleId ?? "";
-    selfInspectionId = selfInspection.id;
-  } else {
-    const client = clients.find((entry) => entry.id === clientId);
-
-    if (!client) {
-      throw new NotFoundError("Cliente no encontrado");
-    }
-
-    const vehicle = client.vehicles.find((entry) => entry.id === vehicleId);
-
-    if (!vehicle) {
-      throw new AppError("El vehiculo seleccionado no pertenece al cliente indicado", 422);
-    }
-  }
-
   const selectedCatalogItems = selections
     .map((selection) => {
       if (selection.source === "inventoryPart") {
@@ -253,7 +238,51 @@ export async function createBudgetDraft(
     throw new AppError("Debes seleccionar al menos un repuesto o servicio para el presupuesto", 422);
   }
 
-  const draftItems = [...selectedCatalogItems, ...manualItems];
+  return [...selectedCatalogItems, ...manualItems];
+}
+
+export async function createWorkshopBudgetDraft(
+  input: unknown,
+  selections: DraftCatalogSelection[],
+  manualSelections: DraftManualSelection[],
+  actorId: string,
+) {
+  const data = createWorkshopBudgetSchema.parse(input);
+  const { clients, references, inventoryParts, selfInspections } =
+    await getWorkshopBudgetCreateContext();
+
+  let clientId = data.clientId ?? "";
+  let vehicleId = data.vehicleId ?? "";
+  let selfInspectionId: string | undefined;
+
+  if (data.selfInspectionId) {
+    const selfInspection = selfInspections.find((entry) => entry.id === data.selfInspectionId);
+
+    if (!selfInspection || !selfInspection.vehicle) {
+      throw new AppError(
+        "La autoinspeccion seleccionada debe estar revisada y vinculada a un vehiculo",
+        422,
+      );
+    }
+
+    clientId = selfInspection.customerId;
+    vehicleId = selfInspection.vehicleId ?? "";
+    selfInspectionId = selfInspection.id;
+  } else {
+    const client = clients.find((entry) => entry.id === clientId);
+
+    if (!client) {
+      throw new NotFoundError("Cliente no encontrado");
+    }
+
+    const vehicle = client.vehicles.find((entry) => entry.id === vehicleId);
+
+    if (!vehicle) {
+      throw new AppError("El vehiculo seleccionado no pertenece al cliente indicado", 422);
+    }
+  }
+
+  const draftItems = buildDraftItems(references, inventoryParts, selections, manualSelections);
   const totals = calculateTotals(draftItems);
   const insuranceCase = await findLatestInsuranceCaseLink(clientId, vehicleId);
 
@@ -271,6 +300,37 @@ export async function createBudgetDraft(
   });
 }
 
+export async function createLiquidatorBudgetDraft(
+  input: unknown,
+  selections: DraftCatalogSelection[],
+  manualSelections: DraftManualSelection[],
+  actorId: string,
+) {
+  const data = createLiquidatorBudgetSchema.parse(input);
+  const { references, inventoryParts, insuranceCases } =
+    await getLiquidatorBudgetCreateContext();
+  const insuranceCase = insuranceCases.find((entry) => entry.id === data.insuranceCaseId);
+
+  if (!insuranceCase) {
+    throw new NotFoundError("Caso de liquidadora no encontrado");
+  }
+
+  const draftItems = buildDraftItems(references, inventoryParts, selections, manualSelections);
+  const totals = calculateTotals(draftItems);
+
+  return budgetRepository.createDraft({
+    budgetNumber: await createBudgetNumber(),
+    clientId: insuranceCase.clientId,
+    vehicleId: insuranceCase.vehicleId,
+    insuranceCaseId: insuranceCase.id,
+    title: data.title,
+    summary: data.summary,
+    createdById: actorId,
+    items: draftItems,
+    ...totals,
+  });
+}
+
 export async function updateBudgetDraft(
   budgetId: string,
   input: unknown,
@@ -280,8 +340,11 @@ export async function updateBudgetDraft(
   const data = updateBudgetDraftSchema.parse(input);
   const budget = await getBudgetById(budgetId);
 
-  if (budget.status !== BudgetStatus.DRAFT) {
-    throw new AppError("Solo los presupuestos en borrador pueden editarse", 422);
+  if (budget.status !== BudgetStatus.DRAFT && budget.status !== BudgetStatus.REQUEST_CHANGES) {
+    throw new AppError(
+      "Solo los presupuestos en borrador o con solicitud de cambios pueden editarse",
+      422,
+    );
   }
 
   const normalizedUpdates = updates.map((update) => ({
@@ -360,9 +423,12 @@ export async function transitionBudgetStatus(
 export async function createWorkOrderFromBudget(budgetId: string, actorId: string) {
   const budget = await getBudgetById(budgetId);
 
-  if (budget.status !== BudgetStatus.APPROVED) {
+  if (
+    budget.status !== BudgetStatus.APPROVED &&
+    budget.status !== BudgetStatus.PARTIALLY_APPROVED
+  ) {
     throw new AppError(
-      "Solo los presupuestos aprobados pueden convertirse en orden de trabajo",
+      "Solo los presupuestos aprobados o parcialmente aprobados pueden convertirse en orden de trabajo",
       422,
     );
   }
@@ -381,6 +447,19 @@ export async function createWorkOrderFromBudget(budgetId: string, actorId: strin
     .join(", ");
 
   return prisma.$transaction(async (tx) => {
+    if (!budget.client.isWorkshopClient) {
+      const liquidatorName = budget.insuranceCase?.liquidator.name ?? "Liquidadora";
+      await tx.client.update({
+        where: {
+          id: budget.clientId,
+        },
+        data: {
+          isWorkshopClient: true,
+          fullName: `Cliente de ${liquidatorName}`,
+        },
+      });
+    }
+
     const workOrder = await tx.workOrder.create({
       data: {
         orderNumber,
@@ -420,7 +499,7 @@ export async function createWorkOrderFromBudget(budgetId: string, actorId: strin
         updatedById: actorId,
         statusLogs: {
           create: {
-            previousStatus: BudgetStatus.APPROVED,
+            previousStatus: budget.status,
             nextStatus: BudgetStatus.CONVERTED_TO_WORK_ORDER,
             note: `Orden ${workOrder.orderNumber} creada desde presupuesto aprobado.`,
             changedById: actorId,

@@ -87,9 +87,6 @@ export default async function VehicleDetailPage({ params }: VehicleDetailPagePro
           <div className="flex items-center justify-between gap-4">
             <div>
               <h2 className="font-heading text-2xl font-semibold">Historial tecnico</h2>
-              <p className="mt-2 text-sm text-[color:var(--muted)]">
-                Servicios y reparaciones previas del vehiculo.
-              </p>
             </div>
             <div className="rounded-md bg-[color:var(--surface-strong)] px-4 py-2 text-sm">
               {vehicle.workOrders.length} ordenes

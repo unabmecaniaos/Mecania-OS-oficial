@@ -161,6 +161,8 @@ enum BudgetStatus {
   SENT
   APPROVED
   REJECTED
+  REQUEST_CHANGES
+  PARTIALLY_APPROVED
   CONVERTED_TO_WORK_ORDER
 }
 
@@ -218,6 +220,7 @@ model Client {
   phone           String           @db.VarChar(32)
   email           String           @db.VarChar(255)
   address         String?
+  isWorkshopClient Boolean         @default(true)
   deletedAt       DateTime?
   purgeAt         DateTime?
   createdAt       DateTime         @default(now())
@@ -231,6 +234,7 @@ model Client {
 
   @@index([fullName])
   @@index([email])
+  @@index([isWorkshopClient, deletedAt])
   @@index([deletedAt, purgeAt])
 }
 
@@ -583,6 +587,11 @@ model InsuranceCase {
   clientId         String
   vehicleId        String
   liquidatorId     String
+  createdFromLiquidatorPortal Boolean   @default(false)
+  ownerFullName    String               @default("")
+  ownerPhone       String               @default("") @db.VarChar(32)
+  ownerEmail       String?              @db.VarChar(255)
+  ownerAddress     String?
   incidentDate     DateTime
   incidentLocation String?
   description      String

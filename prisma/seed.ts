@@ -20,6 +20,7 @@ import {
 } from "@prisma/client";
 import { hash } from "bcryptjs";
 import { createHash } from "node:crypto";
+import { fileURLToPath } from "node:url";
 
 const prisma = new PrismaClient();
 
@@ -27,7 +28,7 @@ function hashAccessToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
 }
 
-async function main() {
+export async function seedDemoData() {
   await prisma.budgetStatusLog.deleteMany();
   await prisma.budgetItem.deleteMany();
   await prisma.budget.deleteMany();
@@ -984,11 +985,15 @@ async function main() {
   console.log(`Autoinspeccion revisada: ${selfInspectionReviewed.id}`);
 }
 
-main()
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+const isDirectRun = process.argv[1] === fileURLToPath(import.meta.url);
+
+if (isDirectRun) {
+  seedDemoData()
+    .catch((error) => {
+      console.error(error);
+      process.exit(1);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+}

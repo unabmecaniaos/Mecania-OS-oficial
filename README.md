@@ -94,12 +94,15 @@ Luego abre:
 http://localhost:3000/login
 ```
 
+Si la base local esta vacia, este modo carga automaticamente los datos demo una sola vez al arrancar.
+
 Este modo queda aislado del deploy:
 
 - `app-dev` siempre usa PostgreSQL local en `db:5432`
 - no reutiliza `DATABASE_URL`, `DIRECT_URL` ni `SUPABASE_*` del `.env` de Dockploy
 - al recrear el contenedor se regenera `.next`, evitando que queden assets viejos pegados
 - los cambios en `src/` se reflejan por hot reload
+- si la base esta vacia, crea los usuarios y registros demo del seed local sin tocar entornos remotos
 
 Comandos utiles:
 
@@ -201,6 +204,7 @@ Notas:
 
 - `docker-compose.dockploy.yml` sigue leyendo `DATABASE_URL`, `DIRECT_URL`, `SUPABASE_*` y `APP_URL` reales del entorno de Dockploy.
 - En Dockploy el contenedor sincroniza Prisma con `pnpm db:push` antes de iniciar la app, para que los cambios de schema del branch queden aplicados al desplegar.
+- El deploy no ejecuta `db:seed`, por lo que los datos demo locales nunca se mezclan con produccion. Solo se puede crear o reactivar el admin inicial mediante `BOOTSTRAP_ADMIN_*`.
 - Los cambios hechos para `docker compose --profile dev` no alteran ese flujo.
 
 Comandos utiles para simular el deploy en local:
@@ -213,6 +217,7 @@ corepack pnpm docker:prod:down
 ## Datos iniciales
 
 `pnpm db:seed` carga catalogos y registros base para desarrollo local.
+`pnpm db:seed:if-empty` hace lo mismo solo cuando la base aun no tiene usuarios.
 
 ## Scripts
 
@@ -226,6 +231,7 @@ corepack pnpm docker:prod:down
 - `pnpm db:push`
 - `pnpm db:migrate`
 - `pnpm db:seed`
+- `pnpm db:seed:if-empty`
 - `pnpm db:bootstrap`
 - `pnpm studio`
 - `pnpm docker:db:up`

@@ -1,6 +1,7 @@
 import type { ActionState } from "@/lib/form-state";
 import { getErrorMessage } from "@/lib/errors";
 import { createLogger, logHandledError } from "@/lib/logger";
+import { revalidateApplicationData } from "@/lib/revalidation";
 
 type ActionExecutionResult<T> =
   | {
@@ -27,6 +28,8 @@ export async function executeServerAction<T>(
 
   try {
     const data = await operation();
+
+    revalidateApplicationData();
 
     logger.info("Server action completed", {
       durationMs: Date.now() - startedAt,

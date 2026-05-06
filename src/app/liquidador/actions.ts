@@ -8,6 +8,7 @@ import { BudgetStatus, UserRole } from "@prisma/client";
 import { getErrorMessage } from "@/lib/errors";
 import { setFlashMessage } from "@/lib/flash";
 import type { ActionState } from "@/lib/form-state";
+import { revalidateApplicationData } from "@/lib/revalidation";
 import { requireApiUser } from "@/modules/auth/auth.service";
 import {
   createInsuranceCaseByLiquidator,
@@ -46,6 +47,7 @@ export async function createInsuranceCaseAction(
       session.user.id,
     );
 
+    revalidateApplicationData();
     revalidatePath("/liquidador");
     revalidatePath("/insurance-cases");
     await setFlashMessage({
@@ -89,6 +91,7 @@ export async function respondToInsuranceBudgetAction(
       note: String(formData.get("note") ?? ""),
     });
 
+    revalidateApplicationData();
     revalidatePath("/liquidador");
     revalidatePath(`/liquidador/cases/${caseId}`);
     revalidatePath("/budgets");

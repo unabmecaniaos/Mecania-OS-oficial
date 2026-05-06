@@ -3,6 +3,7 @@ import { ZodError } from "zod";
 
 import { normalizeError } from "@/lib/errors";
 import { createLogger, logHandledError } from "@/lib/logger";
+import { revalidateApplicationData } from "@/lib/revalidation";
 
 export function apiResponse<T>(data: T, status = 200) {
   return NextResponse.json({ data }, { status });
@@ -83,6 +84,10 @@ export function handleApiRoute<TArgs extends [Request] | [Request, { params: Pro
         durationMs,
         statusCode: response.status,
       };
+
+      if (request.method !== "GET" && response.status < 400) {
+        revalidateApplicationData();
+      }
 
       if (response.status >= 400) {
         logger.warn("API request completed with warning", logContext);

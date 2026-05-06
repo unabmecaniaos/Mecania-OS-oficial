@@ -6,6 +6,7 @@ import { UserRole } from "@prisma/client";
 
 import { requireApiUser } from "@/modules/auth/auth.service";
 import { setFlashMessage } from "@/lib/flash";
+import { revalidateApplicationData } from "@/lib/revalidation";
 import {
   deleteBudgetForever,
   deleteClientForever,
@@ -52,6 +53,8 @@ const TRASH_REDIRECTS_BY_ENTITY_TYPE: Record<TrashEntityType, string> = {
 };
 
 function revalidateTrashRelatedPaths() {
+  revalidateApplicationData();
+
   for (const path of COMMON_REVALIDATE_PATHS) {
     revalidatePath(path);
   }

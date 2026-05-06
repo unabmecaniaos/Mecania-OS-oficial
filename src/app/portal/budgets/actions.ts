@@ -7,6 +7,7 @@ import { BudgetStatus } from "@prisma/client";
 import { getErrorMessage } from "@/lib/errors";
 import { setFlashMessage } from "@/lib/flash";
 import type { ActionState } from "@/lib/form-state";
+import { revalidateApplicationData } from "@/lib/revalidation";
 import { respondToCustomerBudget } from "@/modules/customer-portal/customer-portal.service";
 
 export async function respondToCustomerBudgetAction(
@@ -28,6 +29,7 @@ export async function respondToCustomerBudgetAction(
       note: String(formData.get("note") ?? ""),
     });
 
+    revalidateApplicationData();
     revalidatePath("/portal");
     revalidatePath(`/portal/budgets/${budgetId}`);
     revalidatePath("/budgets");

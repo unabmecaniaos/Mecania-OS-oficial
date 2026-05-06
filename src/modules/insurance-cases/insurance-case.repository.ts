@@ -203,7 +203,6 @@ export const insuranceCaseRepository = {
     return prisma.insuranceCase.findMany({
       where: {
         liquidatorId,
-        createdFromLiquidatorPortal: true,
       },
       include: insuranceCaseListInclude,
       orderBy: [{ incidentDate: "desc" }, { createdAt: "desc" }],
@@ -289,7 +288,6 @@ export const insuranceCaseRepository = {
       where: {
         id,
         liquidatorId,
-        createdFromLiquidatorPortal: true,
       },
       include: insuranceCaseDetailInclude,
     });

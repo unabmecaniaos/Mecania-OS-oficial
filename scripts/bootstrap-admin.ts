@@ -8,55 +8,81 @@ const prisma = new PrismaClient({
 const adminEmail = process.env.BOOTSTRAP_ADMIN_EMAIL?.trim().toLowerCase();
 const adminPassword = process.env.BOOTSTRAP_ADMIN_PASSWORD?.trim();
 const adminName = process.env.BOOTSTRAP_ADMIN_NAME?.trim() || "Administrador";
+const liquidatorEmail = process.env.BOOTSTRAP_LIQUIDATOR_EMAIL?.trim().toLowerCase();
+const liquidatorPassword = process.env.BOOTSTRAP_LIQUIDATOR_PASSWORD?.trim();
+const liquidatorName = process.env.BOOTSTRAP_LIQUIDATOR_NAME?.trim() || "Liquidador";
 
-async function main() {
-  if (!adminEmail || !adminPassword) {
-    console.log("Bootstrap admin omitido: faltan variables BOOTSTRAP_ADMIN_*.");
+async function upsertBootstrapUser(input: {
+  email?: string;
+  name: string;
+  password?: string;
+  role: UserRole;
+  label: string;
+}) {
+  if (!input.email || !input.password) {
+    console.log(`Bootstrap ${input.label} omitido: faltan variables.`);
     return;
   }
 
-  if (adminPassword.length < 8) {
-    throw new Error("BOOTSTRAP_ADMIN_PASSWORD debe tener al menos 8 caracteres.");
+  if (input.password.length < 8) {
+    throw new Error(`La password de ${input.label} debe tener al menos 8 caracteres.`);
   }
 
   const existing = await prisma.user.findUnique({
     where: {
-      email: adminEmail,
+      email: input.email,
     },
   });
 
   if (existing) {
-    if (existing.role !== UserRole.ADMIN) {
-      throw new Error("Ya existe un usuario con ese correo y no es ADMIN.");
+    if (existing.role !== input.role) {
+      throw new Error(`Ya existe un usuario con el correo de ${input.label} y otro rol.`);
     }
 
-    if (!existing.active || existing.name !== adminName) {
+    if (!existing.active || existing.name !== input.name) {
       await prisma.user.update({
         where: {
           id: existing.id,
         },
         data: {
-          name: adminName,
+          name: input.name,
           active: true,
         },
       });
     }
 
-    console.log(`Bootstrap admin listo: ${adminEmail}`);
+    console.log(`Bootstrap ${input.label} listo: ${input.email}`);
     return;
   }
 
   await prisma.user.create({
     data: {
-      name: adminName,
-      email: adminEmail,
-      passwordHash: await hash(adminPassword, 10),
-      role: UserRole.ADMIN,
+      name: input.name,
+      email: input.email,
+      passwordHash: await hash(input.password, 10),
+      role: input.role,
       active: true,
     },
   });
 
-  console.log(`Bootstrap admin creado: ${adminEmail}`);
+  console.log(`Bootstrap ${input.label} creado: ${input.email}`);
+}
+
+async function main() {
+  await upsertBootstrapUser({
+    email: adminEmail,
+    name: adminName,
+    password: adminPassword,
+    role: UserRole.ADMIN,
+    label: "admin",
+  });
+  await upsertBootstrapUser({
+    email: liquidatorEmail,
+    name: liquidatorName,
+    password: liquidatorPassword,
+    role: UserRole.LIQUIDATOR,
+    label: "liquidador",
+  });
 }
 
 main()

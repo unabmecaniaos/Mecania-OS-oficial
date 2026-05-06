@@ -62,9 +62,6 @@ export default async function LiquidatorCaseDetailPage({
             <Link href="/liquidador">
               <Button variant="secondary">Volver al portal</Button>
             </Link>
-            <Link href={`/insurance-cases/${insuranceCase.id}`}>
-              <Button variant="secondary">Ver solicitud taller</Button>
-            </Link>
           </div>
         </div>
       </Card>

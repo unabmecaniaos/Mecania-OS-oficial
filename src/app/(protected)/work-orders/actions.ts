@@ -2,12 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { UserRole } from "@prisma/client";
 
-import { getErrorMessage } from "@/lib/errors";
 import { setFlashMessage } from "@/lib/flash";
 import type { ActionState } from "@/lib/form-state";
+import { executeServerAction } from "@/lib/server-action";
 import { requireApiUser } from "@/modules/auth/auth.service";
 import {
   addWorkOrderEvidence,
@@ -21,7 +20,7 @@ export async function createWorkOrderAction(
   _previousState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  try {
+  const result = await executeServerAction("createWorkOrderAction", async () => {
     const session = await requireApiUser([UserRole.ADMIN, UserRole.MECHANIC]);
 
     await createWorkOrder(
@@ -37,14 +36,10 @@ export async function createWorkOrderAction(
       },
       session.user.id,
     );
-  } catch (error) {
-    if (isRedirectError(error)) {
-      throw error;
-    }
+  });
 
-    return {
-      error: getErrorMessage(error),
-    };
+  if (!result.ok) {
+    return result.state;
   }
 
   revalidatePath("/work-orders");
@@ -60,8 +55,7 @@ export async function updateWorkOrderAssignmentAction(
   formData: FormData,
 ): Promise<ActionState> {
   const orderId = String(formData.get("orderId") ?? "");
-
-  try {
+  const result = await executeServerAction("updateWorkOrderAssignmentAction", async () => {
     const session = await requireApiUser([UserRole.ADMIN, UserRole.MECHANIC]);
 
     await updateWorkOrderAssignment(
@@ -71,14 +65,10 @@ export async function updateWorkOrderAssignmentAction(
       },
       session.user.id,
     );
-  } catch (error) {
-    if (isRedirectError(error)) {
-      throw error;
-    }
+  });
 
-    return {
-      error: getErrorMessage(error),
-    };
+  if (!result.ok) {
+    return result.state;
   }
 
   revalidatePath("/work-orders");
@@ -96,8 +86,7 @@ export async function updateWorkOrderStatusAction(
   formData: FormData,
 ): Promise<ActionState> {
   const orderId = String(formData.get("orderId") ?? "");
-
-  try {
+  const result = await executeServerAction("updateWorkOrderStatusAction", async () => {
     const session = await requireApiUser([UserRole.ADMIN, UserRole.MECHANIC]);
 
     await updateWorkOrderStatus(
@@ -108,14 +97,10 @@ export async function updateWorkOrderStatusAction(
       },
       session.user.id,
     );
-  } catch (error) {
-    if (isRedirectError(error)) {
-      throw error;
-    }
+  });
 
-    return {
-      error: getErrorMessage(error),
-    };
+  if (!result.ok) {
+    return result.state;
   }
 
   revalidatePath("/work-orders");
@@ -134,8 +119,7 @@ export async function addWorkOrderEvidenceAction(
 ): Promise<ActionState> {
   const orderId = String(formData.get("orderId") ?? "");
   const file = formData.get("file");
-
-  try {
+  const result = await executeServerAction("addWorkOrderEvidenceAction", async () => {
     const session = await requireApiUser([UserRole.ADMIN, UserRole.MECHANIC]);
 
     if (!(file instanceof File)) {
@@ -150,14 +134,10 @@ export async function addWorkOrderEvidenceAction(
       },
       session.user.id,
     );
-  } catch (error) {
-    if (isRedirectError(error)) {
-      throw error;
-    }
+  });
 
-    return {
-      error: getErrorMessage(error),
-    };
+  if (!result.ok) {
+    return result.state;
   }
 
   revalidatePath(`/work-orders/${orderId}`);
@@ -174,8 +154,7 @@ export async function setWorkOrderPartUsageAction(
   formData: FormData,
 ): Promise<ActionState> {
   const orderId = String(formData.get("orderId") ?? "");
-
-  try {
+  const result = await executeServerAction("setWorkOrderPartUsageAction", async () => {
     const session = await requireApiUser([UserRole.ADMIN, UserRole.MECHANIC]);
 
     await setWorkOrderPartUsage(
@@ -186,14 +165,10 @@ export async function setWorkOrderPartUsageAction(
       },
       session.user.id,
     );
-  } catch (error) {
-    if (isRedirectError(error)) {
-      throw error;
-    }
+  });
 
-    return {
-      error: getErrorMessage(error),
-    };
+  if (!result.ok) {
+    return result.state;
   }
 
   revalidatePath("/inventory");

@@ -1,6 +1,6 @@
 import { UserRole } from "@prisma/client";
 
-import { apiError, apiResponse } from "@/lib/http";
+import { apiResponse, handleApiRoute } from "@/lib/http";
 import { requireApiUser } from "@/modules/auth/auth.service";
 import { getHistoryByVehicleId } from "@/modules/service-history/service-history.service";
 
@@ -10,13 +10,9 @@ type VehicleHistoryContext = {
   }>;
 };
 
-export async function GET(_request: Request, context: VehicleHistoryContext) {
-  try {
+export const GET = handleApiRoute(async (_request: Request, context: VehicleHistoryContext) => {
     await requireApiUser([UserRole.ADMIN, UserRole.MECHANIC]);
     const { id } = await context.params;
     const history = await getHistoryByVehicleId(id);
     return apiResponse(history);
-  } catch (error) {
-    return apiError(error);
-  }
-}
+});

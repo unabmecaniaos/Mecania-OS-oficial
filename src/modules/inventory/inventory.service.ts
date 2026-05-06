@@ -5,6 +5,7 @@ import {
 } from "@prisma/client";
 
 import { ConflictError, NotFoundError } from "@/lib/errors";
+import { createLogger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { inventoryRepository } from "@/modules/inventory/inventory.repository";
 import {
@@ -13,6 +14,8 @@ import {
   registerStockEntrySchema,
   setWorkOrderPartUsageSchema,
 } from "@/modules/inventory/inventory.schemas";
+
+const inventoryLogger = createLogger("inventory");
 
 type InventoryTx = Prisma.TransactionClient;
 
@@ -97,7 +100,7 @@ export async function listRecentStockMovements(limit?: number) {
 export async function createRepuesto(input: unknown, actorId: string) {
   const data = createRepuestoSchema.parse(input);
 
-  return prisma.$transaction(async (tx) => {
+  const repuesto = await prisma.$transaction(async (tx) => {
     const existing = await tx.repuesto.findUnique({
       where: { code: data.code },
       select: { id: true },
@@ -133,12 +136,20 @@ export async function createRepuesto(input: unknown, actorId: string) {
       where: { id: repuesto.id },
     });
   });
+
+  inventoryLogger.info("Inventory item created", {
+    actorId,
+    repuestoId: repuesto.id,
+    code: repuesto.code,
+  });
+
+  return repuesto;
 }
 
 export async function registerStockEntry(input: unknown, actorId: string) {
   const data = registerStockEntrySchema.parse(input);
 
-  return prisma.$transaction((tx) =>
+  const movement = await prisma.$transaction((tx) =>
     applyStockMovement(tx, {
       repuestoId: data.repuestoId,
       type: StockMovementType.ENTRY,
@@ -149,12 +160,21 @@ export async function registerStockEntry(input: unknown, actorId: string) {
       createdById: actorId,
     }),
   );
+
+  inventoryLogger.info("Stock entry registered", {
+    actorId,
+    repuestoId: data.repuestoId,
+    movementId: movement.id,
+    quantity: data.quantity,
+  });
+
+  return movement;
 }
 
 export async function adjustStock(input: unknown, actorId: string) {
   const data = adjustStockSchema.parse(input);
 
-  return prisma.$transaction((tx) =>
+  const movement = await prisma.$transaction((tx) =>
     applyStockMovement(tx, {
       repuestoId: data.repuestoId,
       type: StockMovementType.ADJUSTMENT,
@@ -165,12 +185,21 @@ export async function adjustStock(input: unknown, actorId: string) {
       createdById: actorId,
     }),
   );
+
+  inventoryLogger.info("Stock adjusted", {
+    actorId,
+    repuestoId: data.repuestoId,
+    movementId: movement.id,
+    quantity: data.quantity,
+  });
+
+  return movement;
 }
 
 export async function setWorkOrderPartUsage(workOrderId: string, input: unknown, actorId: string) {
   const data = setWorkOrderPartUsageSchema.parse(input);
 
-  return prisma.$transaction(async (tx) => {
+  const partUsage = await prisma.$transaction(async (tx) => {
     const workOrder = await tx.workOrder.findUnique({
       where: { id: workOrderId },
       select: {
@@ -251,4 +280,14 @@ export async function setWorkOrderPartUsage(workOrderId: string, input: unknown,
       },
     });
   });
+
+  inventoryLogger.info("Work order part usage updated", {
+    actorId,
+    workOrderId,
+    repuestoId: data.repuestoId,
+    quantity: data.quantity,
+    partUsageId: partUsage?.id,
+  });
+
+  return partUsage;
 }

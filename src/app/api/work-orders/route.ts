@@ -1,11 +1,10 @@
 import { UserRole, WorkOrderStatus } from "@prisma/client";
 
-import { apiError, apiResponse } from "@/lib/http";
+import { apiResponse, handleApiRoute } from "@/lib/http";
 import { requireApiUser } from "@/modules/auth/auth.service";
 import { createWorkOrder, listWorkOrders } from "@/modules/work-orders/work-order.service";
 
-export async function GET(request: Request) {
-  try {
+export const GET = handleApiRoute(async (request: Request) => {
     await requireApiUser([UserRole.ADMIN, UserRole.MECHANIC]);
     const { searchParams } = new URL(request.url);
     const statusParam = searchParams.get("status");
@@ -17,18 +16,11 @@ export async function GET(request: Request) {
           : undefined,
     });
     return apiResponse(workOrders);
-  } catch (error) {
-    return apiError(error);
-  }
-}
+});
 
-export async function POST(request: Request) {
-  try {
+export const POST = handleApiRoute(async (request: Request) => {
     const session = await requireApiUser([UserRole.ADMIN, UserRole.MECHANIC]);
     const body = await request.json();
     const workOrder = await createWorkOrder(body, session.user.id);
     return apiResponse(workOrder, 201);
-  } catch (error) {
-    return apiError(error);
-  }
-}
+});

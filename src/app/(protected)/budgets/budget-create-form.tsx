@@ -1,7 +1,7 @@
 "use client";
 
 import { BudgetItemType } from "@prisma/client";
-import { ChangeEvent, useActionState, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, useActionState, useMemo, useState } from "react";
 
 import {
   createLiquidatorBudgetDraftAction,
@@ -301,16 +301,23 @@ export function LiquidatorBudgetCreateForm({
     selectedInsuranceCase ? buildLiquidatorBudgetSummary(selectedInsuranceCase) : "",
   );
 
-  useEffect(() => {
-    if (!selectedInsuranceCase) {
+  function handleInsuranceCaseChange(event: ChangeEvent<HTMLSelectElement>) {
+    const nextInsuranceCaseId = event.target.value;
+    const nextInsuranceCase = insuranceCases.find(
+      (insuranceCase) => insuranceCase.id === nextInsuranceCaseId,
+    );
+
+    setSelectedInsuranceCaseId(nextInsuranceCaseId);
+
+    if (!nextInsuranceCase) {
       setTitle("");
       setSummary("");
       return;
     }
 
-    setTitle(buildLiquidatorBudgetTitle(selectedInsuranceCase));
-    setSummary(buildLiquidatorBudgetSummary(selectedInsuranceCase));
-  }, [selectedInsuranceCase]);
+    setTitle(buildLiquidatorBudgetTitle(nextInsuranceCase));
+    setSummary(buildLiquidatorBudgetSummary(nextInsuranceCase));
+  }
 
   return (
     <form action={formAction} className="space-y-6">
@@ -353,7 +360,7 @@ export function LiquidatorBudgetCreateForm({
               <Select
                 id="insuranceCaseId"
                 name="insuranceCaseId"
-                onChange={(event) => setSelectedInsuranceCaseId(event.target.value)}
+                onChange={handleInsuranceCaseChange}
                 value={selectedInsuranceCaseId}
               >
                 <option value="">Selecciona un caso de liquidadora</option>

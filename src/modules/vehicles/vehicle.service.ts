@@ -1,10 +1,13 @@
 import { NotFoundError } from "@/lib/errors";
+import { createLogger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import {
   createVehicleSchema,
   updateVehicleSchema,
 } from "@/modules/vehicles/vehicle.schemas";
 import { vehicleRepository } from "@/modules/vehicles/vehicle.repository";
+
+const vehicleLogger = createLogger("vehicles");
 
 async function assertClientExists(clientId: string) {
   const client = await prisma.client.findFirst({
@@ -45,11 +48,11 @@ export async function searchVehicle(input: { vin?: string; plate?: string }) {
   return vehicle;
 }
 
-export async function createVehicle(input: unknown) {
+export async function createVehicle(input: unknown, actorId?: string) {
   const data = createVehicleSchema.parse(input);
   await assertClientExists(data.clientId);
 
-  return vehicleRepository.create({
+  const vehicle = await vehicleRepository.create({
     client: {
       connect: {
         id: data.clientId,
@@ -63,12 +66,20 @@ export async function createVehicle(input: unknown) {
     color: data.color,
     mileage: data.mileage,
   });
+
+  vehicleLogger.info("Vehicle created", {
+    actorId,
+    vehicleId: vehicle.id,
+    clientId: data.clientId,
+  });
+
+  return vehicle;
 }
 
-export async function updateVehicle(id: string, input: unknown) {
+export async function updateVehicle(id: string, input: unknown, actorId?: string) {
   const data = updateVehicleSchema.parse(input);
 
-  return vehicleRepository.update(id, {
+  const vehicle = await vehicleRepository.update(id, {
     plate: data.plate,
     vin: data.vin,
     make: data.make,
@@ -77,4 +88,11 @@ export async function updateVehicle(id: string, input: unknown) {
     color: data.color,
     mileage: data.mileage,
   });
+
+  vehicleLogger.info("Vehicle updated", {
+    actorId,
+    vehicleId: vehicle.id,
+  });
+
+  return vehicle;
 }

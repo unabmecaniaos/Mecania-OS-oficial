@@ -76,6 +76,7 @@ Notas:
 
 - `DATABASE_URL` y `DIRECT_URL` de deploy usan el `pooler` de Supabase para evitar problemas de conectividad IPv6 en servidores.
 - Los buckets `self-inspections` y `work-orders` deben existir en Supabase Storage.
+- `LOG_LEVEL` permite forzar el nivel de logs (`debug`, `info`, `warn`, `error`). Si no se define, en desarrollo se habilita `debug` y en produccion se usa `info`.
 - Si defines `BOOTSTRAP_ADMIN_*`, el contenedor crea o reactiva un administrador al arrancar.
 
 ## Levantado local

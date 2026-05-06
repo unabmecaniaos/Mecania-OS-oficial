@@ -9,6 +9,7 @@ const envSchema = z.object({
   SUPABASE_STORAGE_BUCKET_SELF_INSPECTIONS: z.string().min(1).optional(),
   SUPABASE_STORAGE_BUCKET_WORK_ORDERS: z.string().min(1).optional(),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+  LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).optional(),
 });
 
 export const env = envSchema.parse({
@@ -20,4 +21,5 @@ export const env = envSchema.parse({
   SUPABASE_STORAGE_BUCKET_SELF_INSPECTIONS: process.env.SUPABASE_STORAGE_BUCKET_SELF_INSPECTIONS,
   SUPABASE_STORAGE_BUCKET_WORK_ORDERS: process.env.SUPABASE_STORAGE_BUCKET_WORK_ORDERS,
   NODE_ENV: process.env.NODE_ENV,
+  LOG_LEVEL: process.env.LOG_LEVEL,
 });

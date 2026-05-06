@@ -2,12 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { UserRole } from "@prisma/client";
 
-import { getErrorMessage } from "@/lib/errors";
 import { setFlashMessage } from "@/lib/flash";
 import type { ActionState } from "@/lib/form-state";
+import { executeServerAction } from "@/lib/server-action";
 import { requireApiUser } from "@/modules/auth/auth.service";
 import {
   createSelfInspectionInvite,
@@ -21,28 +20,23 @@ export async function createSelfInspectionInviteAction(
   _previousState: InviteActionState,
   _formData: FormData,
 ): Promise<InviteActionState> {
-  try {
+  const result = await executeServerAction("createSelfInspectionInviteAction", async () => {
     void _previousState;
     void _formData;
-    await requireApiUser([UserRole.ADMIN, UserRole.MECHANIC]);
+    const session = await requireApiUser([UserRole.ADMIN, UserRole.MECHANIC]);
+    return createSelfInspectionInvite({}, session.user.id);
+  });
 
-    const invite = await createSelfInspectionInvite({});
-
-    revalidatePath("/self-inspections");
-    await setFlashMessage({
-      message: "Autoinspeccion creada correctamente.",
-      tone: "success",
-    });
-    redirect(`/self-inspections/${invite.inspectionId}?token=${invite.token}`);
-  } catch (error) {
-    if (isRedirectError(error)) {
-      throw error;
-    }
-
-    return {
-      error: getErrorMessage(error),
-    };
+  if (!result.ok) {
+    return result.state;
   }
+
+  revalidatePath("/self-inspections");
+  await setFlashMessage({
+    message: "Autoinspeccion creada correctamente.",
+    tone: "success",
+  });
+  redirect(`/self-inspections/${result.data.inspectionId}?token=${result.data.token}`);
 }
 
 export async function reviewSelfInspectionAction(
@@ -50,7 +44,7 @@ export async function reviewSelfInspectionAction(
   _previousState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  try {
+  const result = await executeServerAction("reviewSelfInspectionAction", async () => {
     const session = await requireApiUser([UserRole.ADMIN, UserRole.MECHANIC]);
 
     await reviewSelfInspection(
@@ -66,14 +60,10 @@ export async function reviewSelfInspectionAction(
       },
       session.user.id,
     );
-  } catch (error) {
-    if (isRedirectError(error)) {
-      throw error;
-    }
+  });
 
-    return {
-      error: getErrorMessage(error),
-    };
+  if (!result.ok) {
+    return result.state;
   }
 
   revalidatePath(`/self-inspections/${inspectionId}`);
@@ -89,7 +79,7 @@ export async function updateSelfInspectionStatusAction(
   _previousState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  try {
+  const result = await executeServerAction("updateSelfInspectionStatusAction", async () => {
     const session = await requireApiUser([UserRole.ADMIN, UserRole.MECHANIC]);
 
     await updateSelfInspectionStatus(
@@ -100,14 +90,10 @@ export async function updateSelfInspectionStatusAction(
       },
       session.user.id,
     );
-  } catch (error) {
-    if (isRedirectError(error)) {
-      throw error;
-    }
+  });
 
-    return {
-      error: getErrorMessage(error),
-    };
+  if (!result.ok) {
+    return result.state;
   }
 
   revalidatePath(`/self-inspections/${inspectionId}`);

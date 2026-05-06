@@ -35,6 +35,16 @@ export class ConflictError extends AppError {
   }
 }
 
+export function isDatabaseError(error: unknown) {
+  return (
+    error instanceof Prisma.PrismaClientInitializationError ||
+    error instanceof Prisma.PrismaClientKnownRequestError ||
+    error instanceof Prisma.PrismaClientRustPanicError ||
+    error instanceof Prisma.PrismaClientUnknownRequestError ||
+    error instanceof Prisma.PrismaClientValidationError
+  );
+}
+
 export function normalizeError(error: unknown): AppError {
   if (error instanceof AppError) {
     return error;
@@ -44,17 +54,11 @@ export function normalizeError(error: unknown): AppError {
     return new AppError(error.issues[0]?.message ?? "Datos invalidos", 422);
   }
 
-  if (
-    error instanceof Prisma.PrismaClientKnownRequestError &&
-    error.code === "P2002"
-  ) {
+  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
     return new ConflictError("Ya existe un registro con ese valor unico");
   }
 
-  if (
-    error instanceof Prisma.PrismaClientKnownRequestError &&
-    error.code === "P2025"
-  ) {
+  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
     return new NotFoundError("Registro no encontrado");
   }
 

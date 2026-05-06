@@ -19,6 +19,7 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "@/lib/errors";
+import { createLogger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { getCurrentSession, signIn, signOut } from "@/modules/auth/auth.service";
 import {
@@ -1209,7 +1210,7 @@ export async function getSelfInspectionById(id: string) {
   };
 }
 
-export async function createSelfInspectionInvite(input: unknown) {
+export async function createSelfInspectionInvite(input: unknown, actorId?: string) {
   const data = createSelfInspectionInviteSchema.parse(input) as CreateSelfInspectionInviteInput;
   const rawToken = createAccessToken();
   const accessTokenHash = hashAccessToken(rawToken);
@@ -1248,7 +1249,7 @@ export async function createSelfInspectionInvite(input: unknown) {
     };
   });
 
-  return {
+  const invite = {
     inspectionId: created.inspection.id,
     token: rawToken,
     accessTokenExpiresAt,
@@ -1259,6 +1260,15 @@ export async function createSelfInspectionInvite(input: unknown) {
     },
     vehicle: null,
   };
+
+  selfInspectionLogger.info("Self-inspection invite created", {
+    actorId,
+    inspectionId: invite.inspectionId,
+    customerId: created.customer.id,
+    sourceChannel: data.sourceChannel,
+  });
+
+  return invite;
 }
 
 export async function getPublicSelfInspectionStartPageData(token: string) {
@@ -1328,6 +1338,12 @@ export async function authorizePublicSelfInspectionAccess(token: string, input: 
     await signOut();
     throw new ForbiddenError("Esta autoinspeccion ya esta asociada a otra cuenta");
   }
+
+  selfInspectionLogger.info("Self-inspection public access authorized", {
+    inspectionId: inspection.id,
+    customerEmail: email,
+    mode: data.mode,
+  });
 
   return {
     authorized: true,
@@ -1593,6 +1609,12 @@ export async function submitPublicSelfInspection(token: string, input: unknown) 
     });
   });
 
+  selfInspectionLogger.info("Self-inspection submitted", {
+    inspectionId: refreshed.id,
+    customerId: refreshed.customer.id,
+    overallRiskLevel,
+  });
+
   return getPublicSelfInspectionWizard(token);
 }
 
@@ -1646,7 +1668,15 @@ export async function updateSelfInspectionStatus(id: string, input: unknown, act
     });
   });
 
-  return getSelfInspectionById(id);
+  const inspection = await getSelfInspectionById(id);
+
+  selfInspectionLogger.info("Self-inspection status updated", {
+    actorId,
+    inspectionId: inspection.id,
+    status: inspection.status,
+  });
+
+  return inspection;
 }
 
 export async function reviewSelfInspection(id: string, input: unknown, actorId: string) {
@@ -1715,7 +1745,16 @@ export async function reviewSelfInspection(id: string, input: unknown, actorId: 
     });
   });
 
-  return getSelfInspectionById(id);
+  const inspection = await getSelfInspectionById(id);
+
+  selfInspectionLogger.info("Self-inspection reviewed", {
+    actorId,
+    inspectionId: inspection.id,
+    status: inspection.status,
+    recommendedNextStep: data.recommendedNextStep,
+  });
+
+  return inspection;
 }
 
 export type PublicSelfInspectionStartPageData = Awaited<
@@ -1725,3 +1764,5 @@ export type PublicSelfInspectionWizardData = Awaited<
   ReturnType<typeof getPublicSelfInspectionWizard>
 >;
 export type SelfInspectionDetailData = Awaited<ReturnType<typeof getSelfInspectionById>>;
+
+const selfInspectionLogger = createLogger("self-inspections");

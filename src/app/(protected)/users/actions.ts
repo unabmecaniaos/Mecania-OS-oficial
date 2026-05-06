@@ -4,9 +4,9 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { UserRole } from "@prisma/client";
 
-import { getErrorMessage } from "@/lib/errors";
 import { setFlashMessage } from "@/lib/flash";
 import type { ActionState } from "@/lib/form-state";
+import { executeServerAction } from "@/lib/server-action";
 import { requireApiUser } from "@/modules/auth/auth.service";
 import { createInternalUser, updateInternalUser } from "@/modules/users/user.service";
 
@@ -14,19 +14,22 @@ export async function createInternalUserAction(
   _previousState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  try {
-    await requireApiUser([UserRole.ADMIN]);
+  const result = await executeServerAction("createInternalUserAction", async () => {
+    const session = await requireApiUser([UserRole.ADMIN]);
 
-    await createInternalUser({
-      name: String(formData.get("name") ?? ""),
-      email: String(formData.get("email") ?? ""),
-      password: String(formData.get("password") ?? ""),
-      role: String(formData.get("role") ?? ""),
-    });
-  } catch (error) {
-    return {
-      error: getErrorMessage(error),
-    };
+    await createInternalUser(
+      {
+        name: String(formData.get("name") ?? ""),
+        email: String(formData.get("email") ?? ""),
+        password: String(formData.get("password") ?? ""),
+        role: String(formData.get("role") ?? ""),
+      },
+      session.user.id,
+    );
+  });
+
+  if (!result.ok) {
+    return result.state;
   }
 
   revalidatePath("/users");
@@ -42,19 +45,22 @@ export async function updateInternalUserAction(
   formData: FormData,
 ): Promise<ActionState> {
   const userId = String(formData.get("userId") ?? "");
+  const result = await executeServerAction("updateInternalUserAction", async () => {
+    const session = await requireApiUser([UserRole.ADMIN]);
 
-  try {
-    await requireApiUser([UserRole.ADMIN]);
+    await updateInternalUser(
+      userId,
+      {
+        role: String(formData.get("role") ?? ""),
+        active: formData.get("active") === "on",
+        password: String(formData.get("password") ?? ""),
+      },
+      session.user.id,
+    );
+  });
 
-    await updateInternalUser(userId, {
-      role: String(formData.get("role") ?? ""),
-      active: formData.get("active") === "on",
-      password: String(formData.get("password") ?? ""),
-    });
-  } catch (error) {
-    return {
-      error: getErrorMessage(error),
-    };
+  if (!result.ok) {
+    return result.state;
   }
 
   revalidatePath("/users");

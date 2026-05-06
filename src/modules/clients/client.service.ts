@@ -2,12 +2,15 @@ import { hash } from "bcryptjs";
 import { UserRole } from "@prisma/client";
 
 import { ConflictError, NotFoundError } from "@/lib/errors";
+import { createLogger } from "@/lib/logger";
 import { userRepository } from "@/modules/users/user.repository";
 import { clientRepository } from "@/modules/clients/client.repository";
 import {
   createClientSchema,
   updateClientSchema,
 } from "@/modules/clients/client.schemas";
+
+const clientLogger = createLogger("clients");
 
 export async function listClients(search?: string) {
   return clientRepository.list(search?.trim());
@@ -23,7 +26,7 @@ export async function getClientById(id: string) {
   return client;
 }
 
-export async function createClient(input: unknown) {
+export async function createClient(input: unknown, actorId?: string) {
   const data = createClientSchema.parse(input);
   const email = data.email.toLowerCase();
 
@@ -53,17 +56,30 @@ export async function createClient(input: unknown) {
     });
   }
 
+  clientLogger.info("Client created", {
+    actorId,
+    clientId: client.id,
+    hasPortalUser: Boolean(data.portalPassword),
+  });
+
   return client;
 }
 
-export async function updateClient(id: string, input: unknown) {
+export async function updateClient(id: string, input: unknown, actorId?: string) {
   const data = updateClientSchema.parse(input);
 
-  return clientRepository.update(id, {
+  const client = await clientRepository.update(id, {
     fullName: data.fullName,
     localIdentifier: data.localIdentifier,
     phone: data.phone,
     email: data.email?.toLowerCase(),
     address: data.address,
   });
+
+  clientLogger.info("Client updated", {
+    actorId,
+    clientId: client.id,
+  });
+
+  return client;
 }

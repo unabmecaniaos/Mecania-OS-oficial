@@ -1,4 +1,4 @@
-import { apiError, apiResponse } from "@/lib/http";
+import { apiResponse, handleApiRoute } from "@/lib/http";
 import { deletePublicSelfInspectionPhoto } from "@/modules/self-inspections/self-inspection.service";
 
 type RouteContext = {
@@ -8,13 +8,9 @@ type RouteContext = {
   }>;
 };
 
-export async function DELETE(_request: Request, { params }: RouteContext) {
-  try {
+export const DELETE = handleApiRoute(async (_request: Request, { params }: RouteContext) => {
     const { token, photoId } = await params;
     const inspection = await deletePublicSelfInspectionPhoto(token, photoId);
 
     return apiResponse(inspection);
-  } catch (error) {
-    return apiError(error);
-  }
-}
+});

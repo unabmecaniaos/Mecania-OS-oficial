@@ -1,14 +1,13 @@
 import { UserRole } from "@prisma/client";
 
-import { apiError, apiResponse } from "@/lib/http";
+import { apiResponse, handleApiRoute } from "@/lib/http";
 import { requireApiUser } from "@/modules/auth/auth.service";
 import {
   createSelfInspectionInvite,
   listSelfInspections,
 } from "@/modules/self-inspections/self-inspection.service";
 
-export async function GET(request: Request) {
-  try {
+export const GET = handleApiRoute(async (request: Request) => {
     await requireApiUser([UserRole.ADMIN, UserRole.MECHANIC]);
     const { searchParams } = new URL(request.url);
     const inspections = await listSelfInspections({
@@ -18,19 +17,12 @@ export async function GET(request: Request) {
     });
 
     return apiResponse(inspections);
-  } catch (error) {
-    return apiError(error);
-  }
-}
+});
 
-export async function POST(request: Request) {
-  try {
-    await requireApiUser([UserRole.ADMIN, UserRole.MECHANIC]);
+export const POST = handleApiRoute(async (request: Request) => {
+    const session = await requireApiUser([UserRole.ADMIN, UserRole.MECHANIC]);
     const body = await request.json();
-    const invite = await createSelfInspectionInvite(body);
+    const invite = await createSelfInspectionInvite(body, session.user.id);
 
     return apiResponse(invite, 201);
-  } catch (error) {
-    return apiError(error);
-  }
-}
+});

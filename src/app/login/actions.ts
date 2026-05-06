@@ -1,8 +1,9 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { getErrorMessage } from "@/lib/errors";
+
 import type { ActionState } from "@/lib/form-state";
+import { executeServerAction } from "@/lib/server-action";
 import { getDefaultRouteForRole, signIn } from "@/modules/auth/auth.service";
 
 export async function loginAction(
@@ -10,19 +11,17 @@ export async function loginAction(
   formData: FormData,
 ): Promise<ActionState> {
   let destination = "/dashboard";
-
-  try {
-    const user = await signIn({
+  const result = await executeServerAction("loginAction", async () =>
+    signIn({
       email: String(formData.get("email") ?? ""),
       password: String(formData.get("password") ?? ""),
-    });
+    }),
+  );
 
-    destination = getDefaultRouteForRole(user.role);
-  } catch (error) {
-    return {
-      error: getErrorMessage(error),
-    };
+  if (!result.ok) {
+    return result.state;
   }
 
+  destination = getDefaultRouteForRole(result.data.role);
   redirect(destination);
 }

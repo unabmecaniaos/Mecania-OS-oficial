@@ -48,6 +48,7 @@ La arquitectura todavia debe crecer para soportar de forma completa:
 - validacion de entrada con `Zod`.
 - reglas de negocio dentro de `src/modules`, no en las rutas HTTP.
 - persistencia centralizada en Prisma.
+- logging estructurado centralizado para rutas API, server actions y servicios criticos.
 - trazabilidad de cambios relevantes mediante tablas de historial.
 - componentes server-first para la interfaz interna.
 - storage encapsulado por dominio para no acoplarse temprano a un proveedor.

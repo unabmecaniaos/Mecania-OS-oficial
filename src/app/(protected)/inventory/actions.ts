@@ -4,9 +4,9 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { UserRole } from "@prisma/client";
 
-import { getErrorMessage } from "@/lib/errors";
 import { setFlashMessage } from "@/lib/flash";
 import type { ActionState } from "@/lib/form-state";
+import { executeServerAction } from "@/lib/server-action";
 import { requireApiUser } from "@/modules/auth/auth.service";
 import {
   adjustStock,
@@ -18,7 +18,7 @@ export async function createRepuestoAction(
   _previousState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  try {
+  const result = await executeServerAction("createRepuestoAction", async () => {
     const session = await requireApiUser([UserRole.ADMIN]);
 
     await createRepuesto(
@@ -31,10 +31,10 @@ export async function createRepuestoAction(
       },
       session.user.id,
     );
-  } catch (error) {
-    return {
-      error: getErrorMessage(error),
-    };
+  });
+
+  if (!result.ok) {
+    return result.state;
   }
 
   revalidatePath("/inventory");
@@ -49,7 +49,7 @@ export async function registerStockEntryAction(
   _previousState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  try {
+  const result = await executeServerAction("registerStockEntryAction", async () => {
     const session = await requireApiUser([UserRole.ADMIN]);
 
     await registerStockEntry(
@@ -60,10 +60,10 @@ export async function registerStockEntryAction(
       },
       session.user.id,
     );
-  } catch (error) {
-    return {
-      error: getErrorMessage(error),
-    };
+  });
+
+  if (!result.ok) {
+    return result.state;
   }
 
   revalidatePath("/inventory");
@@ -78,7 +78,7 @@ export async function adjustStockAction(
   _previousState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  try {
+  const result = await executeServerAction("adjustStockAction", async () => {
     const session = await requireApiUser([UserRole.ADMIN]);
 
     await adjustStock(
@@ -89,10 +89,10 @@ export async function adjustStockAction(
       },
       session.user.id,
     );
-  } catch (error) {
-    return {
-      error: getErrorMessage(error),
-    };
+  });
+
+  if (!result.ok) {
+    return result.state;
   }
 
   revalidatePath("/inventory");

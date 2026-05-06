@@ -1,6 +1,7 @@
 import { BudgetItemType, BudgetStatus, WorkOrderStatus } from "@prisma/client";
 
 import { AppError, ConflictError, NotFoundError } from "@/lib/errors";
+import { createLogger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { budgetRepository } from "@/modules/budgets/budget.repository";
 import { findLatestInsuranceCaseLink } from "@/modules/insurance-cases/insurance-case.service";
@@ -11,6 +12,8 @@ import {
   transitionBudgetStatusSchema,
   updateBudgetDraftSchema,
 } from "@/modules/budgets/budget.schemas";
+
+const budgetLogger = createLogger("budgets");
 
 type DraftCatalogSelection = {
   source: "inventoryPart" | "referenceCatalog";
@@ -286,7 +289,7 @@ export async function createWorkshopBudgetDraft(
   const totals = calculateTotals(draftItems);
   const insuranceCase = await findLatestInsuranceCaseLink(clientId, vehicleId);
 
-  return budgetRepository.createDraft({
+  const budget = await budgetRepository.createDraft({
     budgetNumber: await createBudgetNumber(),
     clientId,
     vehicleId,
@@ -298,6 +301,15 @@ export async function createWorkshopBudgetDraft(
     items: draftItems,
     ...totals,
   });
+
+  budgetLogger.info("Budget draft created", {
+    actorId,
+    budgetId: budget.id,
+    budgetNumber: budget.budgetNumber,
+    totalAmount: budget.totalAmount,
+  });
+
+  return budget;
 }
 
 export async function createLiquidatorBudgetDraft(
@@ -338,9 +350,12 @@ export async function updateBudgetDraft(
   actorId: string,
 ) {
   const data = updateBudgetDraftSchema.parse(input);
-  const budget = await getBudgetById(budgetId);
+  const currentBudget = await getBudgetById(budgetId);
 
-  if (budget.status !== BudgetStatus.DRAFT && budget.status !== BudgetStatus.REQUEST_CHANGES) {
+  if (
+    currentBudget.status !== BudgetStatus.DRAFT &&
+    currentBudget.status !== BudgetStatus.REQUEST_CHANGES
+  ) {
     throw new AppError(
       "Solo los presupuestos en borrador o con solicitud de cambios pueden editarse",
       422,
@@ -356,7 +371,7 @@ export async function updateBudgetDraft(
     }),
   }));
 
-  const items = budget.items.map((item) => {
+  const items = currentBudget.items.map((item) => {
     const update = normalizedUpdates.find((entry) => entry.id === item.id);
 
     if (!update) {
@@ -376,7 +391,7 @@ export async function updateBudgetDraft(
 
   const totals = calculateTotals(items);
 
-  return budgetRepository.updateDraft(budgetId, {
+  const updatedBudget = await budgetRepository.updateDraft(budgetId, {
     title: data.title,
     summary: data.summary,
     updatedById: actorId,
@@ -389,6 +404,14 @@ export async function updateBudgetDraft(
       note: update.note,
     })),
   });
+
+  budgetLogger.info("Budget draft updated", {
+    actorId,
+    budgetId: updatedBudget.id,
+    totalAmount: updatedBudget.totalAmount,
+  });
+
+  return updatedBudget;
 }
 
 export async function transitionBudgetStatus(
@@ -398,26 +421,36 @@ export async function transitionBudgetStatus(
 ) {
   const data = transitionBudgetStatusSchema.parse(input);
   const budget = await getBudgetById(budgetId);
+  const previousStatus = budget.status;
 
-  ensureStatusTransition(budget.status, data.nextStatus);
+  ensureStatusTransition(previousStatus, data.nextStatus);
 
   if (budget.items.length === 0) {
     throw new AppError("No puedes cambiar el estado de un presupuesto sin items", 422);
   }
 
-  if (budget.status === BudgetStatus.DRAFT && data.nextStatus === BudgetStatus.SENT) {
+  if (previousStatus === BudgetStatus.DRAFT && data.nextStatus === BudgetStatus.SENT) {
     if (budget.totalAmount <= 0) {
       throw new AppError("El presupuesto debe tener un total valido antes de enviarse", 422);
     }
   }
 
-  return budgetRepository.transitionStatus(budgetId, {
-    previousStatus: budget.status,
+  const updatedBudget = await budgetRepository.transitionStatus(budgetId, {
+    previousStatus,
     nextStatus: data.nextStatus,
     note: data.note,
     changedById: actorId,
     changedAt: new Date(),
   });
+
+  budgetLogger.info("Budget status transitioned", {
+    actorId,
+    budgetId: updatedBudget.id,
+    previousStatus,
+    nextStatus: updatedBudget.status,
+  });
+
+  return updatedBudget;
 }
 
 export async function createWorkOrderFromBudget(budgetId: string, actorId: string) {
@@ -446,7 +479,7 @@ export async function createWorkOrderFromBudget(budgetId: string, actorId: strin
     .slice(0, 3)
     .join(", ");
 
-  return prisma.$transaction(async (tx) => {
+  const workOrder = await prisma.$transaction(async (tx) => {
     if (!budget.client.isWorkshopClient) {
       const liquidatorName = budget.insuranceCase?.liquidator.name ?? "Liquidadora";
       await tx.client.update({
@@ -510,4 +543,13 @@ export async function createWorkOrderFromBudget(budgetId: string, actorId: strin
 
     return workOrder;
   });
+
+  budgetLogger.info("Budget converted to work order", {
+    actorId,
+    budgetId: budget.id,
+    workOrderId: workOrder.id,
+    workOrderNumber: workOrder.orderNumber,
+  });
+
+  return workOrder;
 }

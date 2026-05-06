@@ -2,12 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { BudgetItemType, UserRole } from "@prisma/client";
 
-import { getErrorMessage } from "@/lib/errors";
 import { setFlashMessage } from "@/lib/flash";
 import type { ActionState } from "@/lib/form-state";
+import { executeServerAction } from "@/lib/server-action";
 import { requireApiUser } from "@/modules/auth/auth.service";
 import {
   createWorkOrderFromBudget,
@@ -250,10 +249,10 @@ export async function createWorkshopBudgetDraftAction(
   _previousState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  try {
+  const result = await executeServerAction("createWorkshopBudgetDraftAction", async () => {
     const session = await requireApiUser([UserRole.ADMIN, UserRole.MECHANIC]);
 
-    const budget = await createWorkshopBudgetDraft(
+    return createWorkshopBudgetDraft(
       {
         clientId: String(formData.get("clientId") ?? ""),
         vehicleId: String(formData.get("vehicleId") ?? ""),
@@ -265,32 +264,28 @@ export async function createWorkshopBudgetDraftAction(
       parseManualSelections(formData),
       session.user.id,
     );
+  });
 
-    revalidatePath("/budgets");
-    await setFlashMessage({
-      message: "Presupuesto creado correctamente.",
-      tone: "success",
-    });
-    redirect(`/budgets/${budget.id}`);
-  } catch (error) {
-    if (isRedirectError(error)) {
-      throw error;
-    }
-
-    return {
-      error: getErrorMessage(error),
-    };
+  if (!result.ok) {
+    return result.state;
   }
+
+  revalidatePath("/budgets");
+  await setFlashMessage({
+    message: "Presupuesto creado correctamente.",
+    tone: "success",
+  });
+  redirect(`/budgets/${result.data.id}`);
 }
 
 export async function createLiquidatorBudgetDraftAction(
   _previousState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  try {
+  const result = await executeServerAction("createLiquidatorBudgetDraftAction", async () => {
     const session = await requireApiUser([UserRole.ADMIN, UserRole.MECHANIC]);
 
-    const budget = await createLiquidatorBudgetDraft(
+    return createLiquidatorBudgetDraft(
       {
         insuranceCaseId: String(formData.get("insuranceCaseId") ?? ""),
         title: String(formData.get("title") ?? ""),
@@ -300,23 +295,19 @@ export async function createLiquidatorBudgetDraftAction(
       parseManualSelections(formData),
       session.user.id,
     );
+  });
 
-    revalidatePath("/budgets");
-    revalidatePath("/work-orders");
-    await setFlashMessage({
-      message: "Presupuesto de liquidadora creado correctamente.",
-      tone: "success",
-    });
-    redirect(`/budgets/${budget.id}`);
-  } catch (error) {
-    if (isRedirectError(error)) {
-      throw error;
-    }
-
-    return {
-      error: getErrorMessage(error),
-    };
+  if (!result.ok) {
+    return result.state;
   }
+
+  revalidatePath("/budgets");
+  revalidatePath("/work-orders");
+  await setFlashMessage({
+    message: "Presupuesto de liquidadora creado correctamente.",
+    tone: "success",
+  });
+  redirect(`/budgets/${result.data.id}`);
 }
 
 export async function updateBudgetDraftAction(
@@ -324,7 +315,7 @@ export async function updateBudgetDraftAction(
   _previousState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  try {
+  const result = await executeServerAction("updateBudgetDraftAction", async () => {
     const session = await requireApiUser([UserRole.ADMIN, UserRole.MECHANIC]);
 
     await updateBudgetDraft(
@@ -336,23 +327,19 @@ export async function updateBudgetDraftAction(
       parseLineUpdates(formData),
       session.user.id,
     );
+  });
 
-    revalidatePath("/budgets");
-    revalidatePath(`/budgets/${budgetId}`);
-    revalidatePath("/portal");
-    revalidatePath("/liquidador");
-    return {
-      success: "Cambios guardados correctamente.",
-    };
-  } catch (error) {
-    if (isRedirectError(error)) {
-      throw error;
-    }
-
-    return {
-      error: getErrorMessage(error),
-    };
+  if (!result.ok) {
+    return result.state;
   }
+
+  revalidatePath("/budgets");
+  revalidatePath(`/budgets/${budgetId}`);
+  revalidatePath("/portal");
+  revalidatePath("/liquidador");
+  return {
+    success: "Cambios guardados correctamente.",
+  };
 }
 
 export async function transitionBudgetStatusAction(
@@ -360,7 +347,7 @@ export async function transitionBudgetStatusAction(
   _previousState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  try {
+  const result = await executeServerAction("transitionBudgetStatusAction", async () => {
     const session = await requireApiUser([UserRole.ADMIN, UserRole.MECHANIC]);
 
     await transitionBudgetStatus(
@@ -371,23 +358,19 @@ export async function transitionBudgetStatusAction(
       },
       session.user.id,
     );
+  });
 
-    revalidatePath("/budgets");
-    revalidatePath(`/budgets/${budgetId}`);
-    revalidatePath("/portal");
-    revalidatePath("/liquidador");
-    return {
-      success: "Estado del presupuesto actualizado correctamente.",
-    };
-  } catch (error) {
-    if (isRedirectError(error)) {
-      throw error;
-    }
-
-    return {
-      error: getErrorMessage(error),
-    };
+  if (!result.ok) {
+    return result.state;
   }
+
+  revalidatePath("/budgets");
+  revalidatePath(`/budgets/${budgetId}`);
+  revalidatePath("/portal");
+  revalidatePath("/liquidador");
+  return {
+    success: "Estado del presupuesto actualizado correctamente.",
+  };
 }
 
 export async function createWorkOrderFromBudgetAction(
@@ -395,31 +378,27 @@ export async function createWorkOrderFromBudgetAction(
   previousState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  try {
+  const result = await executeServerAction("createWorkOrderFromBudgetAction", async () => {
     void previousState;
     void formData;
     const session = await requireApiUser([UserRole.ADMIN, UserRole.MECHANIC]);
-    const workOrder = await createWorkOrderFromBudget(budgetId, session.user.id);
+    return createWorkOrderFromBudget(budgetId, session.user.id);
+  });
 
-    revalidatePath("/budgets");
-    revalidatePath(`/budgets/${budgetId}`);
-    revalidatePath("/work-orders");
-    revalidatePath(`/work-orders/${workOrder.id}`);
-    revalidatePath("/portal");
-    revalidatePath("/liquidador");
-    revalidatePath(`/portal/budgets/${budgetId}`);
-    await setFlashMessage({
-      message: "Orden creada desde presupuesto aprobado.",
-      tone: "success",
-    });
-    redirect(`/work-orders/${workOrder.id}`);
-  } catch (error) {
-    if (isRedirectError(error)) {
-      throw error;
-    }
-
-    return {
-      error: getErrorMessage(error),
-    };
+  if (!result.ok) {
+    return result.state;
   }
+
+  revalidatePath("/budgets");
+  revalidatePath(`/budgets/${budgetId}`);
+  revalidatePath("/work-orders");
+  revalidatePath(`/work-orders/${result.data.id}`);
+  revalidatePath("/portal");
+  revalidatePath("/liquidador");
+  revalidatePath(`/portal/budgets/${budgetId}`);
+  await setFlashMessage({
+    message: "Orden creada desde presupuesto aprobado.",
+    tone: "success",
+  });
+  redirect(`/work-orders/${result.data.id}`);
 }

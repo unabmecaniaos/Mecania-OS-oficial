@@ -1,6 +1,7 @@
 import { UserRole, WorkOrderStatus } from "@prisma/client";
 
 import { ConflictError, NotFoundError } from "@/lib/errors";
+import { createLogger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { parseDateInput } from "@/lib/utils";
 import { isClosedStatus } from "@/modules/work-orders/work-order.constants";
@@ -14,6 +15,8 @@ import {
 import { saveWorkOrderEvidenceFile } from "@/modules/work-orders/work-order.storage";
 import { findLatestInsuranceCaseLink } from "@/modules/insurance-cases/insurance-case.service";
 import { listMechanics } from "@/modules/users/user.service";
+
+const workOrderLogger = createLogger("work-orders");
 
 async function assertClientVehicleMatch(clientId: string, vehicleId: string) {
   const vehicle = await prisma.vehicle.findFirst({
@@ -76,7 +79,7 @@ export async function createWorkOrder(input: unknown, actorId: string) {
   const orderNumber = await getNextOrderNumber();
   const insuranceCase = await findLatestInsuranceCaseLink(data.clientId, data.vehicleId);
 
-  return prisma.$transaction(async (tx) => {
+  const workOrder = await prisma.$transaction(async (tx) => {
     const workOrder = await tx.workOrder.create({
       data: {
         orderNumber,
@@ -106,6 +109,15 @@ export async function createWorkOrder(input: unknown, actorId: string) {
 
     return workOrder;
   });
+
+  workOrderLogger.info("Work order created", {
+    actorId,
+    workOrderId: workOrder.id,
+    orderNumber: workOrder.orderNumber,
+    status: workOrder.status,
+  });
+
+  return workOrder;
 }
 
 export async function updateWorkOrderAssignment(id: string, input: unknown, actorId: string) {
@@ -116,13 +128,21 @@ export async function updateWorkOrderAssignment(id: string, input: unknown, acto
     throw new NotFoundError("Orden de trabajo no encontrada");
   }
 
-  return prisma.workOrder.update({
+  const workOrder = await prisma.workOrder.update({
     where: { id },
     data: {
       assignedTechnicianId: data.assignedTechnicianId ?? null,
       updatedById: actorId,
     },
   });
+
+  workOrderLogger.info("Work order assignment updated", {
+    actorId,
+    workOrderId: workOrder.id,
+    assignedTechnicianId: workOrder.assignedTechnicianId,
+  });
+
+  return workOrder;
 }
 
 export async function addWorkOrderEvidence(workOrderId: string, input: { file: File; note?: string }, actorId: string) {
@@ -137,7 +157,7 @@ export async function addWorkOrderEvidence(workOrderId: string, input: { file: F
     file: input.file,
   });
 
-  return prisma.workOrderEvidence.create({
+  const evidence = await prisma.workOrderEvidence.create({
     data: {
       workOrderId,
       uploadedById: actorId,
@@ -149,6 +169,15 @@ export async function addWorkOrderEvidence(workOrderId: string, input: { file: F
       note: input.note?.trim() ? input.note.trim() : null,
     },
   });
+
+  workOrderLogger.info("Work order evidence uploaded", {
+    actorId,
+    workOrderId,
+    evidenceId: evidence.id,
+    fileName: evidence.fileName,
+  });
+
+  return evidence;
 }
 
 export async function getAssignableMechanics() {
@@ -174,7 +203,7 @@ export async function updateWorkOrder(id: string, input: unknown, actorId: strin
 
   const nextStatus = data.status ?? existing.status;
 
-  return prisma.$transaction(async (tx) => {
+  const workOrder = await prisma.$transaction(async (tx) => {
     const workOrder = await tx.workOrder.update({
       where: { id },
       data: {
@@ -203,6 +232,14 @@ export async function updateWorkOrder(id: string, input: unknown, actorId: strin
 
     return workOrder;
   });
+
+  workOrderLogger.info("Work order updated", {
+    actorId,
+    workOrderId: workOrder.id,
+    status: workOrder.status,
+  });
+
+  return workOrder;
 }
 
 export async function updateWorkOrderStatus(id: string, input: unknown, actorId: string) {
@@ -247,5 +284,13 @@ export async function updateWorkOrderStatus(id: string, input: unknown, actorId:
     });
   });
 
-  return getWorkOrderById(id);
+  const workOrder = await getWorkOrderById(id);
+
+  workOrderLogger.info("Work order status updated", {
+    actorId,
+    workOrderId: workOrder.id,
+    status: workOrder.status,
+  });
+
+  return workOrder;
 }

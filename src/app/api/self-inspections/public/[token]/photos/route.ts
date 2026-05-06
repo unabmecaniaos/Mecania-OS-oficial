@@ -1,4 +1,4 @@
-import { apiError, apiResponse } from "@/lib/http";
+import { apiResponse, handleApiRoute } from "@/lib/http";
 import { uploadPublicSelfInspectionPhoto } from "@/modules/self-inspections/self-inspection.service";
 
 export const runtime = "nodejs";
@@ -9,8 +9,7 @@ type RouteContext = {
   }>;
 };
 
-export async function POST(request: Request, { params }: RouteContext) {
-  try {
+export const POST = handleApiRoute(async (request: Request, { params }: RouteContext) => {
     const formData = await request.formData();
     const file = formData.get("file");
 
@@ -26,7 +25,4 @@ export async function POST(request: Request, { params }: RouteContext) {
     });
 
     return apiResponse(inspection);
-  } catch (error) {
-    return apiError(error);
-  }
-}
+});

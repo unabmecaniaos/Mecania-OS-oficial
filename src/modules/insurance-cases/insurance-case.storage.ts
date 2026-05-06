@@ -3,7 +3,12 @@ import { randomUUID } from "node:crypto";
 
 import { env } from "@/lib/env";
 import { AppError } from "@/lib/errors";
-import { deleteStorageObject, uploadPublicStorageObject } from "@/lib/supabase-storage";
+import {
+  deleteStorageObject,
+  isLocalFileStorageFallbackEnabled,
+  isPublicStorageEnabled,
+  uploadPublicStorageObject,
+} from "@/lib/supabase-storage";
 
 const MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024;
 const ALLOWED_MIME_TYPES = new Set([
@@ -23,8 +28,12 @@ const mimeExtensionMap: Record<string, string> = {
 };
 
 export function isInsuranceCaseStorageConfigured() {
+  return isPublicStorageEnabled(env.SUPABASE_STORAGE_BUCKET_SELF_INSPECTIONS);
+}
+
+export function isInsuranceCaseUsingLocalStorageFallback() {
   return Boolean(
-    env.SUPABASE_SERVICE_ROLE_KEY && env.SUPABASE_STORAGE_BUCKET_SELF_INSPECTIONS,
+    env.SUPABASE_STORAGE_BUCKET_SELF_INSPECTIONS && isLocalFileStorageFallbackEnabled(),
   );
 }
 

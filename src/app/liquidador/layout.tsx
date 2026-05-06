@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
-import { FormMessage } from "@/components/ui/form-message";
+import { FlashMessageBanner } from "@/components/ui/flash-message-banner";
 import { consumeFlashMessage } from "@/lib/flash";
 import { getCurrentSession, getDefaultRouteForRole } from "@/modules/auth/auth.service";
 import { logoutAction } from "@/app/(protected)/actions";
@@ -73,7 +73,7 @@ export default async function LiquidatorLayout({
         </header>
 
         <main className="space-y-4 pb-8">
-          {flash ? <FormMessage message={flash.message} tone={flash.tone} /> : null}
+          {flash ? <FlashMessageBanner message={flash.message} tone={flash.tone} /> : null}
           {children}
         </main>
       </div>

@@ -103,6 +103,7 @@ Este modo queda aislado del deploy:
 - al recrear el contenedor se regenera `.next`, evitando que queden assets viejos pegados
 - los cambios en `src/` se reflejan por hot reload
 - si la base esta vacia, crea los usuarios y registros demo del seed local sin tocar entornos remotos
+- si no hay un Supabase real configurado para desarrollo, las fotos se guardan localmente en `public/uploads/` sin afectar Dockploy
 
 Comandos utiles:
 

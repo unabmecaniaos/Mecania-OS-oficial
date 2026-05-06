@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { AppShell } from "@/components/layout/app-shell";
-import { FormMessage } from "@/components/ui/form-message";
+import { FlashMessageBanner } from "@/components/ui/flash-message-banner";
 import { consumeFlashMessage } from "@/lib/flash";
 import { getCurrentSession, getDefaultRouteForRole } from "@/modules/auth/auth.service";
 import { logoutAction } from "@/app/(protected)/actions";
@@ -35,7 +35,7 @@ export default async function ProtectedLayout({
         role: session.user.role,
       }}
     >
-      {flash ? <FormMessage message={flash.message} tone={flash.tone} /> : null}
+      {flash ? <FlashMessageBanner message={flash.message} tone={flash.tone} /> : null}
       {children}
     </AppShell>
   );

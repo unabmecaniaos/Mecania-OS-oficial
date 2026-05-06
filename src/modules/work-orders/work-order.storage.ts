@@ -3,7 +3,11 @@ import { randomUUID } from "node:crypto";
 
 import { env } from "@/lib/env";
 import { AppError } from "@/lib/errors";
-import { deleteStorageObject, uploadPublicStorageObject } from "@/lib/supabase-storage";
+import {
+  deleteStorageObject,
+  isPublicStorageEnabled,
+  uploadPublicStorageObject,
+} from "@/lib/supabase-storage";
 
 const MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024;
 const ALLOWED_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -15,9 +19,7 @@ const mimeExtensionMap: Record<string, string> = {
 };
 
 export function isWorkOrderEvidenceStorageConfigured() {
-  return Boolean(
-    env.SUPABASE_SERVICE_ROLE_KEY && env.SUPABASE_STORAGE_BUCKET_WORK_ORDERS,
-  );
+  return isPublicStorageEnabled(env.SUPABASE_STORAGE_BUCKET_WORK_ORDERS);
 }
 
 function sanitizeFileName(fileName: string) {

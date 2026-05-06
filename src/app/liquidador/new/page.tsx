@@ -1,7 +1,14 @@
 import { Card } from "@/components/ui/card";
 import { InsuranceCaseForm } from "@/app/liquidador/insurance-case-form";
+import {
+  isInsuranceCaseStorageConfigured,
+  isInsuranceCaseUsingLocalStorageFallback,
+} from "@/modules/insurance-cases/insurance-case.storage";
 
 export default async function NewInsuranceCasePage() {
+  const photoUploadsEnabled = isInsuranceCaseStorageConfigured();
+  const usingLocalPhotoStorage = isInsuranceCaseUsingLocalStorageFallback();
+
   return (
     <div className="space-y-6">
       <Card className="rounded-2xl">
@@ -13,7 +20,10 @@ export default async function NewInsuranceCasePage() {
         </h1>
       </Card>
 
-      <InsuranceCaseForm />
+      <InsuranceCaseForm
+        photoUploadsEnabled={photoUploadsEnabled}
+        usingLocalPhotoStorage={usingLocalPhotoStorage}
+      />
     </div>
   );
 }

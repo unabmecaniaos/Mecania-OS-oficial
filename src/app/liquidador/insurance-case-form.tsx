@@ -12,7 +12,15 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { Textarea } from "@/components/ui/textarea";
 import { initialActionState } from "@/lib/form-state";
 
-export function InsuranceCaseForm() {
+type InsuranceCaseFormProps = {
+  photoUploadsEnabled: boolean;
+  usingLocalPhotoStorage: boolean;
+};
+
+export function InsuranceCaseForm({
+  photoUploadsEnabled,
+  usingLocalPhotoStorage,
+}: InsuranceCaseFormProps) {
   const [state, formAction] = useActionState(createInsuranceCaseAction, initialActionState);
   const [ownerName, setOwnerName] = useState("");
   const [plate, setPlate] = useState("");
@@ -267,8 +275,21 @@ export function InsuranceCaseForm() {
           <label className="text-sm font-medium text-[color:var(--muted-strong)]" htmlFor="photos">
             Fotos iniciales del choque
           </label>
+          {usingLocalPhotoStorage ? (
+            <FormMessage
+              message="En este entorno las fotos se guardaran localmente para desarrollo. El registro del siniestro seguira funcionando normal."
+              tone="info"
+            />
+          ) : null}
+          {!photoUploadsEnabled ? (
+            <FormMessage
+              message="La carga de fotos del siniestro no esta habilitada en este entorno. Configura Supabase Storage real para registrar casos nuevos desde el portal del liquidador."
+              tone="info"
+            />
+          ) : null}
           <Input
             accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+            disabled={!photoUploadsEnabled}
             id="photos"
             multiple
             name="photos"
@@ -287,7 +308,11 @@ export function InsuranceCaseForm() {
             Volver al portal
           </Button>
         </Link>
-        <SubmitButton label="Registrar siniestro" pendingLabel="Registrando..." />
+        <SubmitButton
+          disabled={!photoUploadsEnabled}
+          label="Registrar siniestro"
+          pendingLabel="Registrando..."
+        />
       </div>
 
       <FormMessage message={state.error} />

@@ -35,13 +35,6 @@ export async function consumeFlashMessage(): Promise<FlashMessage | null> {
     return null;
   }
 
-  cookieStore.set(FLASH_COOKIE_NAME, "", {
-    httpOnly: true,
-    path: "/",
-    sameSite: "lax",
-    expires: new Date(0),
-  });
-
   try {
     const parsed = JSON.parse(raw) as FlashMessage;
 
@@ -53,4 +46,15 @@ export async function consumeFlashMessage(): Promise<FlashMessage | null> {
   } catch {
     return null;
   }
+}
+
+export async function clearFlashMessage() {
+  const cookieStore = await cookies();
+
+  cookieStore.set(FLASH_COOKIE_NAME, "", {
+    httpOnly: true,
+    path: "/",
+    sameSite: "lax",
+    expires: new Date(0),
+  });
 }

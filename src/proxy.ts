@@ -17,10 +17,15 @@ const protectedRoutes = [
   "/liquidador",
 ];
 
+const publicRoutes = [
+  "/self-inspections/start",
+];
+
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const hasSession = Boolean(request.cookies.get(SESSION_COOKIE_NAME)?.value);
-  const isProtected = protectedRoutes.some((route) => pathname.startsWith(route));
+  const isPublic = publicRoutes.some((route) => pathname.startsWith(route));
+  const isProtected = !isPublic && protectedRoutes.some((route) => pathname.startsWith(route));
 
   if (!hasSession && isProtected) {
     const loginUrl = new URL("/login", request.url);

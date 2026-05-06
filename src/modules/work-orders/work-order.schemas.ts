@@ -14,9 +14,15 @@ export const createWorkOrderSchema = z.object({
   notes: optionalText(1000),
 });
 
-export const updateWorkOrderSchema = createWorkOrderSchema
-  .omit({ clientId: true, vehicleId: true })
-  .partial()
+export const updateWorkOrderSchema = z
+  .object({
+    assignedTechnicianId: optionalText(40),
+    reason: requiredText(5, 500).optional(),
+    initialDiagnosis: optionalText(1000),
+    status: z.nativeEnum(WorkOrderStatus).optional(),
+    estimatedDate: optionalDateOnly(),
+    notes: optionalText(1000),
+  })
   .refine((value) => Object.keys(value).length > 0, "Debe enviar datos para actualizar");
 
 export const updateWorkOrderStatusSchema = z.object({

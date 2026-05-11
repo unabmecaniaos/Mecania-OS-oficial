@@ -10,9 +10,11 @@ import { executeServerAction } from "@/lib/server-action";
 import { requireApiUser } from "@/modules/auth/auth.service";
 import {
   addWorkOrderEvidence,
+  createWorkOrderTask,
   createWorkOrder,
   updateWorkOrderAssignment,
   updateWorkOrderStatus,
+  updateWorkOrderTaskStatus,
 } from "@/modules/work-orders/work-order.service";
 import { setWorkOrderPartUsage } from "@/modules/inventory/inventory.service";
 
@@ -177,6 +179,69 @@ export async function setWorkOrderPartUsageAction(
   revalidatePath("/liquidador");
   await setFlashMessage({
     message: "Uso de repuesto actualizado correctamente.",
+    tone: "success",
+  });
+  redirect(`/work-orders/${orderId}`);
+}
+
+export async function createWorkOrderTaskAction(
+  _previousState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const orderId = String(formData.get("orderId") ?? "");
+  const result = await executeServerAction("createWorkOrderTaskAction", async () => {
+    const session = await requireApiUser([UserRole.ADMIN, UserRole.MECHANIC]);
+
+    await createWorkOrderTask(
+      orderId,
+      {
+        title: String(formData.get("title") ?? ""),
+        description: String(formData.get("description") ?? ""),
+      },
+      session.user.id,
+    );
+  });
+
+  if (!result.ok) {
+    return result.state;
+  }
+
+  revalidatePath("/work-orders");
+  revalidatePath(`/work-orders/${orderId}`);
+  await setFlashMessage({
+    message: "Tarea agregada correctamente a la orden.",
+    tone: "success",
+  });
+  redirect(`/work-orders/${orderId}`);
+}
+
+export async function updateWorkOrderTaskStatusAction(
+  _previousState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const orderId = String(formData.get("orderId") ?? "");
+  const taskId = String(formData.get("taskId") ?? "");
+  const result = await executeServerAction("updateWorkOrderTaskStatusAction", async () => {
+    const session = await requireApiUser([UserRole.ADMIN, UserRole.MECHANIC]);
+
+    await updateWorkOrderTaskStatus(
+      orderId,
+      taskId,
+      {
+        status: String(formData.get("status") ?? ""),
+      },
+      session.user.id,
+    );
+  });
+
+  if (!result.ok) {
+    return result.state;
+  }
+
+  revalidatePath("/work-orders");
+  revalidatePath(`/work-orders/${orderId}`);
+  await setFlashMessage({
+    message: "Estado de la tarea actualizado correctamente.",
     tone: "success",
   });
   redirect(`/work-orders/${orderId}`);

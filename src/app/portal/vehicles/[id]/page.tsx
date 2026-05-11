@@ -89,7 +89,10 @@ export default async function CustomerVehicleDetailPage({
 
             {vehicle.currentOrder ? (
               <div className="mt-5 space-y-4">
-                <WorkOrderProgress status={vehicle.currentOrder.status} />
+                <WorkOrderProgress
+                  progressPercent={vehicle.progressPercent}
+                  status={vehicle.currentOrder.status}
+                />
                 <div className="space-y-2 text-sm text-[color:var(--muted-strong)]">
                   <p>
                     <span className="font-semibold text-[color:var(--foreground)]">Orden:</span>{" "}

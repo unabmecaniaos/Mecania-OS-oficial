@@ -8,11 +8,16 @@ import {
 
 type WorkOrderProgressProps = {
   status: WorkOrderStatus;
+  progressPercent?: number;
   className?: string;
 };
 
-export function WorkOrderProgress({ status, className }: WorkOrderProgressProps) {
-  const progressPercent = getWorkOrderProgressPercent(status);
+export function WorkOrderProgress({
+  status,
+  progressPercent: providedProgressPercent,
+  className,
+}: WorkOrderProgressProps) {
+  const progressPercent = providedProgressPercent ?? getWorkOrderProgressPercent(status);
 
   return (
     <div className={cn("space-y-2", className)}>

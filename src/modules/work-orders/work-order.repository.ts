@@ -92,6 +92,11 @@ export const workOrderRepository = {
             active: true,
           },
         },
+        tasks: {
+          select: {
+            status: true,
+          },
+        },
       },
       orderBy: {
         intakeDate: "desc",
@@ -187,6 +192,9 @@ export const workOrderRepository = {
           orderBy: {
             createdAt: "desc",
           },
+        },
+        tasks: {
+          orderBy: [{ status: "asc" }, { createdAt: "asc" }],
         },
         statusLogs: {
           include: {

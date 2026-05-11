@@ -11,7 +11,10 @@ import {
 } from "@/modules/insurance-cases/insurance-case.repository";
 import { createInsuranceCaseSchema } from "@/modules/insurance-cases/insurance-case.schemas";
 import { saveInsuranceCasePhotoFile } from "@/modules/insurance-cases/insurance-case.storage";
-import { getWorkOrderProgressPercent, isClosedStatus } from "@/modules/work-orders/work-order.constants";
+import {
+  getWorkOrderAutomaticProgressPercent,
+  isClosedStatus,
+} from "@/modules/work-orders/work-order.constants";
 
 export const INSURANCE_CASE_STAGE_LABELS = {
   INGRESADO: "Ingresado",
@@ -85,7 +88,12 @@ function summarizeInsuranceCaseList(record: InsuranceCaseListRecord) {
     currentWorkOrder,
     stage,
     stageLabel: INSURANCE_CASE_STAGE_LABELS[stage],
-    progressPercent: currentWorkOrder ? getWorkOrderProgressPercent(currentWorkOrder.status) : 0,
+    progressPercent: currentWorkOrder
+      ? getWorkOrderAutomaticProgressPercent({
+          status: currentWorkOrder.status,
+          tasks: currentWorkOrder.tasks,
+        })
+      : 0,
     hasPendingBudgetDecision: latestBudget?.status === BudgetStatus.SENT,
     readyForDelivery:
       currentWorkOrder?.status === WorkOrderStatus.READY_FOR_DELIVERY ||
@@ -108,7 +116,12 @@ function summarizeInsuranceCaseDetail(record: InsuranceCaseDetailRecord) {
     currentWorkOrder,
     stage,
     stageLabel: INSURANCE_CASE_STAGE_LABELS[stage],
-    progressPercent: currentWorkOrder ? getWorkOrderProgressPercent(currentWorkOrder.status) : 0,
+    progressPercent: currentWorkOrder
+      ? getWorkOrderAutomaticProgressPercent({
+          status: currentWorkOrder.status,
+          tasks: currentWorkOrder.tasks,
+        })
+      : 0,
     hasPendingBudgetDecision: latestBudget?.status === BudgetStatus.SENT,
     readyForDelivery:
       currentWorkOrder?.status === WorkOrderStatus.READY_FOR_DELIVERY ||

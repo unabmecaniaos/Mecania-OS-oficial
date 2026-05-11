@@ -47,3 +47,24 @@ export function getWorkOrderProgressPercent(status: WorkOrderStatus) {
 export function isClosedStatus(status: WorkOrderStatus) {
   return status === WorkOrderStatus.DELIVERED || status === WorkOrderStatus.CANCELLED;
 }
+
+function startOfDay(value: Date) {
+  const next = new Date(value);
+  next.setHours(0, 0, 0, 0);
+  return next;
+}
+
+export function isWorkOrderDelayed(input: {
+  status: WorkOrderStatus;
+  promisedDate?: Date | string | null;
+  referenceDate?: Date;
+}) {
+  if (isClosedStatus(input.status) || !input.promisedDate) {
+    return false;
+  }
+
+  const promisedDate =
+    input.promisedDate instanceof Date ? input.promisedDate : new Date(input.promisedDate);
+
+  return promisedDate < startOfDay(input.referenceDate ?? new Date());
+}

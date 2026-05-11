@@ -67,6 +67,9 @@ export default async function DashboardPage() {
                   <p className="mt-2 text-sm text-[color:var(--muted-strong)]">
                     {order.client.fullName} / {order.vehicle.make} {order.vehicle.model}
                   </p>
+                  <p className="mt-1 text-sm text-[color:var(--muted)]">
+                    Responsable actual: {order.assignedTechnician?.name ?? "Sin asignar"}
+                  </p>
                   <p className="mt-1 text-sm text-[color:var(--muted)]">{order.reason}</p>
                 </div>
 
@@ -100,6 +103,12 @@ export default async function DashboardPage() {
               <p className="text-sm text-[color:var(--muted-strong)]">Listas para entrega</p>
               <p className="mt-2 font-heading text-4xl font-semibold text-[#334155]">
                 {summary.readyForDelivery}
+              </p>
+            </div>
+            <div className="rounded-lg border border-[rgba(220,38,38,0.18)] bg-[rgba(220,38,38,0.08)] p-5">
+              <p className="text-sm text-[#b91c1c]">Ordenes atrasadas</p>
+              <p className="mt-2 font-heading text-4xl font-semibold text-[#b91c1c]">
+                {summary.overdueOrders}
               </p>
             </div>
           </div>

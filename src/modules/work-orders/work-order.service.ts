@@ -8,6 +8,7 @@ import { workOrderRepository } from "@/modules/work-orders/work-order.repository
 import {
   createWorkOrderSchema,
   updateWorkOrderAssignmentSchema,
+  updateWorkOrderPromisedDateSchema,
   updateWorkOrderSchema,
   updateWorkOrderStatusSchema,
 } from "@/modules/work-orders/work-order.schemas";
@@ -114,6 +115,23 @@ export async function updateWorkOrderAssignment(id: string, input: unknown, acto
     where: { id },
     data: {
       assignedTechnicianId: data.assignedTechnicianId ?? null,
+      updatedById: actorId,
+    },
+  });
+}
+
+export async function updateWorkOrderPromisedDate(id: string, input: unknown, actorId: string) {
+  const data = updateWorkOrderPromisedDateSchema.parse(input);
+  const existing = await workOrderRepository.findByIdForAssignment(id);
+
+  if (!existing) {
+    throw new NotFoundError("Orden de trabajo no encontrada");
+  }
+
+  return prisma.workOrder.update({
+    where: { id },
+    data: {
+      estimatedDate: parseDateInput(data.estimatedDate),
       updatedById: actorId,
     },
   });

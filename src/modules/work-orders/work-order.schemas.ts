@@ -27,3 +27,7 @@ export const updateWorkOrderStatusSchema = z.object({
 export const updateWorkOrderAssignmentSchema = z.object({
   assignedTechnicianId: optionalText(40),
 });
+
+export const updateWorkOrderPromisedDateSchema = z.object({
+  estimatedDate: optionalDateOnly(),
+});

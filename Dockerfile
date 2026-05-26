@@ -4,7 +4,7 @@ ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 
 RUN apk add --no-cache libc6-compat
-RUN corepack enable
+RUN corepack enable && corepack prepare pnpm@10.28.0 --activate
 
 FROM base AS deps
 WORKDIR /app
@@ -31,7 +31,6 @@ ENV SUPABASE_URL="${BUILD_SUPABASE_URL}"
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN pnpm prisma generate
 RUN pnpm build
 
 FROM base AS runner
@@ -53,4 +52,4 @@ COPY --from=builder /app/scripts ./scripts
 
 EXPOSE 3000
 
-CMD ["pnpm", "start:prod"]
+CMD ["sh", "-c", "if [ -n \"${BOOTSTRAP_ADMIN_EMAIL:-}\" ] && [ -n \"${BOOTSTRAP_ADMIN_PASSWORD:-}\" ]; then pnpm db:bootstrap; fi; exec pnpm next start -H 0.0.0.0 -p ${PORT:-3000}"]

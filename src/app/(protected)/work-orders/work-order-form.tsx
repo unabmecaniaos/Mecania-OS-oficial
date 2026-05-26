@@ -166,7 +166,7 @@ export function WorkOrderForm({
             className="text-sm font-medium text-[color:var(--muted-strong)]"
             htmlFor="estimatedDate"
           >
-            Fecha estimada
+            Fecha prometida
           </label>
           <Input id="estimatedDate" name="estimatedDate" type="date" />
         </div>

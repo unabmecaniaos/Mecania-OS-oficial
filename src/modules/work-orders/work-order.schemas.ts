@@ -42,3 +42,7 @@ export const createWorkOrderTaskSchema = z.object({
 export const updateWorkOrderTaskStatusSchema = z.object({
   status: z.nativeEnum(WorkOrderTaskStatus),
 });
+
+export const updateWorkOrderPromisedDateSchema = z.object({
+  estimatedDate: optionalDateOnly(),
+});

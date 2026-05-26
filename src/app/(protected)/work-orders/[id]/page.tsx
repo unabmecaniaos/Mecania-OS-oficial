@@ -1,33 +1,35 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { MoveToTrashButton } from "@/components/trash/trash-ui";
-import { StatusBadge } from "@/components/ui/status-badge";
-import { normalizeError } from "@/lib/errors";
-import { formatDate, formatDateTime } from "@/lib/utils";
-import { listInventoryOptions } from "@/modules/inventory/inventory.service";
-import {
-  getAssignableMechanics,
-  getWorkOrderById,
-} from "@/modules/work-orders/work-order.service";
-import { isWorkOrderEvidenceStorageConfigured } from "@/modules/work-orders/work-order.storage";
 import { AssignmentForm } from "@/app/(protected)/work-orders/assignment-form";
 import { EvidenceUploadForm } from "@/app/(protected)/work-orders/evidence-upload-form";
 import {
   ExistingPartUsageForm,
   PartsUsageForm,
 } from "@/app/(protected)/work-orders/parts-usage-form";
+import { PromisedDateForm } from "@/app/(protected)/work-orders/promised-date-form";
 import { StatusForm } from "@/app/(protected)/work-orders/status-form";
 import { WorkOrderTaskForm } from "@/app/(protected)/work-orders/work-order-task-form";
 import { WorkOrderTaskStatusForm } from "@/app/(protected)/work-orders/work-order-task-status-form";
+import { MoveToTrashButton } from "@/components/trash/trash-ui";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { normalizeError } from "@/lib/errors";
+import { formatDate, formatDateTime } from "@/lib/utils";
+import { BUDGET_ITEM_TYPE_LABELS, BUDGET_STATUS_LABELS } from "@/modules/budgets/budget.constants";
+import { listInventoryOptions } from "@/modules/inventory/inventory.service";
 import {
   getWorkOrderAutomaticProgressPercent,
+  isWorkOrderDelayed,
   WORK_ORDER_STATUS_LABELS,
   WORK_ORDER_TASK_STATUS_LABELS,
 } from "@/modules/work-orders/work-order.constants";
-import { BUDGET_ITEM_TYPE_LABELS, BUDGET_STATUS_LABELS } from "@/modules/budgets/budget.constants";
+import {
+  getAssignableMechanics,
+  getWorkOrderById,
+} from "@/modules/work-orders/work-order.service";
+import { isWorkOrderEvidenceStorageConfigured } from "@/modules/work-orders/work-order.storage";
 
 type WorkOrderDetailPageProps = {
   params: Promise<{
@@ -45,10 +47,18 @@ export default async function WorkOrderDetailPage({ params }: WorkOrderDetailPag
 
     throw error;
   });
+
   const [mechanics, repuestos] = await Promise.all([
     getAssignableMechanics(),
     listInventoryOptions(),
   ]);
+  const isDelayed = isWorkOrderDelayed({
+    status: workOrder.status,
+    promisedDate: workOrder.estimatedDate,
+  });
+  const promisedDateValue = workOrder.estimatedDate
+    ? new Date(workOrder.estimatedDate).toISOString().slice(0, 10)
+    : undefined;
   const completedTasksCount = workOrder.tasks.filter((task) => task.status === "COMPLETED").length;
   const automaticProgressPercent = getWorkOrderAutomaticProgressPercent({
     status: workOrder.status,
@@ -66,6 +76,11 @@ export default async function WorkOrderDetailPage({ params }: WorkOrderDetailPag
             <div className="mt-2 flex flex-wrap items-center gap-3">
               <h1 className="font-heading text-3xl font-semibold">{workOrder.orderNumber}</h1>
               <StatusBadge status={workOrder.status} />
+              {isDelayed ? (
+                <span className="rounded-full border border-[rgba(220,38,38,0.22)] bg-[rgba(220,38,38,0.10)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#b91c1c]">
+                  Atrasada
+                </span>
+              ) : null}
             </div>
             <p className="mt-3 text-sm text-[color:var(--muted-strong)]">
               {workOrder.client.fullName} / {workOrder.vehicle.make} {workOrder.vehicle.model} /{" "}
@@ -118,19 +133,25 @@ export default async function WorkOrderDetailPage({ params }: WorkOrderDetailPag
                   </p>
                   <div className="mt-3 grid gap-3 md:grid-cols-3">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.18em] text-[#166534]">Repuestos</p>
+                      <p className="text-xs uppercase tracking-[0.18em] text-[#166534]">
+                        Repuestos
+                      </p>
                       <p className="mt-1 text-lg font-semibold text-[#14532d]">
                         ${workOrder.budget.subtotalParts.toLocaleString("es-CL")}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-[0.18em] text-[#166534]">Mano de obra</p>
+                      <p className="text-xs uppercase tracking-[0.18em] text-[#166534]">
+                        Mano de obra
+                      </p>
                       <p className="mt-1 text-lg font-semibold text-[#14532d]">
                         ${workOrder.budget.subtotalLabor.toLocaleString("es-CL")}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-[0.18em] text-[#166534]">Total aprobado</p>
+                      <p className="text-xs uppercase tracking-[0.18em] text-[#166534]">
+                        Total aprobado
+                      </p>
                       <p className="mt-1 text-lg font-semibold text-[#14532d]">
                         ${workOrder.budget.totalAmount.toLocaleString("es-CL")}
                       </p>
@@ -157,7 +178,7 @@ export default async function WorkOrderDetailPage({ params }: WorkOrderDetailPag
                 {formatDate(workOrder.intakeDate)}
               </p>
               <p>
-                <span className="font-semibold text-[color:var(--foreground)]">Fecha estimada:</span>{" "}
+                <span className="font-semibold text-[color:var(--foreground)]">Fecha prometida:</span>{" "}
                 {formatDate(workOrder.estimatedDate)}
               </p>
               <p>
@@ -165,13 +186,36 @@ export default async function WorkOrderDetailPage({ params }: WorkOrderDetailPag
                 {workOrder.createdBy.name}
               </p>
               <p>
-                <span className="font-semibold text-[color:var(--foreground)]">Tecnico asignado:</span>{" "}
+                <span className="font-semibold text-[color:var(--foreground)]">Responsable actual:</span>{" "}
                 {workOrder.assignedTechnician?.name ?? "Sin asignar"}
               </p>
               <p>
                 <span className="font-semibold text-[color:var(--foreground)]">Observaciones:</span>{" "}
                 {workOrder.notes ?? "Sin observaciones"}
               </p>
+            </div>
+          </Card>
+
+          <Card className="rounded-2xl">
+            <h2 className="font-heading text-2xl font-semibold">Fecha prometida de entrega</h2>
+            <p className="mt-2 text-sm text-[color:var(--muted)]">
+              Define o actualiza la fecha comprometida con el cliente. Esta fecha alimenta las
+              reglas de atraso y seguimiento operativo.
+            </p>
+
+            {isDelayed ? (
+              <div className="mt-4 rounded-xl border border-[rgba(220,38,38,0.18)] bg-[rgba(220,38,38,0.08)] p-4">
+                <p className="text-sm font-semibold text-[#b91c1c]">
+                  Esta orden esta atrasada respecto de la fecha prometida.
+                </p>
+                <p className="mt-1 text-sm text-[#b91c1c]">
+                  La fecha comprometida ya fue superada y la OT aun no tiene cierre.
+                </p>
+              </div>
+            ) : null}
+
+            <div className="mt-5">
+              <PromisedDateForm currentPromisedDate={promisedDateValue} orderId={workOrder.id} />
             </div>
           </Card>
 
@@ -208,8 +252,8 @@ export default async function WorkOrderDetailPage({ params }: WorkOrderDetailPag
           </Card>
 
           {workOrder.budget ? (
-          <Card className="rounded-2xl">
-            <h2 className="font-heading text-2xl font-semibold">Items del presupuesto base</h2>
+            <Card className="rounded-2xl">
+              <h2 className="font-heading text-2xl font-semibold">Items del presupuesto base</h2>
 
               <div className="mt-5 space-y-3">
                 {workOrder.budget.items.map((item) => (
@@ -223,7 +267,8 @@ export default async function WorkOrderDetailPage({ params }: WorkOrderDetailPag
                           {item.description}
                         </p>
                         <p className="mt-1 text-xs text-[color:var(--muted)]">
-                          {BUDGET_ITEM_TYPE_LABELS[item.itemType]} / {item.referenceCode ?? "Sin codigo"}
+                          {BUDGET_ITEM_TYPE_LABELS[item.itemType]} /{" "}
+                          {item.referenceCode ?? "Sin codigo"}
                         </p>
                       </div>
                       <div className="text-right text-sm text-[color:var(--muted-strong)]">
@@ -241,7 +286,12 @@ export default async function WorkOrderDetailPage({ params }: WorkOrderDetailPag
           ) : null}
 
           <Card className="rounded-2xl">
-            <h2 className="font-heading text-2xl font-semibold">Asignacion</h2>
+            <h2 className="font-heading text-2xl font-semibold">Responsable de la orden</h2>
+            <p className="mt-2 text-sm text-[color:var(--muted)]">
+              Define o reasigna el responsable principal activo de esta orden. El cambio se refleja
+              de inmediato y la OT siempre conserva un responsable actual o el estado explicito
+              &quot;Sin asignar&quot;.
+            </p>
 
             <div className="mt-5">
               <AssignmentForm
@@ -327,6 +377,9 @@ export default async function WorkOrderDetailPage({ params }: WorkOrderDetailPag
 
           <Card className="rounded-2xl">
             <h2 className="font-heading text-2xl font-semibold">Cambiar estado</h2>
+            <p className="mt-2 text-sm text-[color:var(--muted)]">
+              Cada cambio queda registrado para trazabilidad.
+            </p>
 
             <div className="mt-5">
               <StatusForm currentStatus={workOrder.status} orderId={workOrder.id} />

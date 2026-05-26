@@ -1,22 +1,23 @@
 import Link from "next/link";
 import { WorkOrderStatus } from "@prisma/client";
 
+import { MoveToTrashButton, SectionTrashLink } from "@/components/trash/trash-ui";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { MoveToTrashButton, SectionTrashLink } from "@/components/trash/trash-ui";
 import { cn, formatCurrency, formatDate } from "@/lib/utils";
 import { getCurrentSession } from "@/modules/auth/auth.service";
+import { BudgetStatusBadge } from "@/modules/budgets/budget-status-badge";
 import { listClients } from "@/modules/clients/client.service";
 import { listInternalInsuranceCases } from "@/modules/insurance-cases/insurance-case.service";
-import { BudgetStatusBadge } from "@/modules/budgets/budget-status-badge";
 import {
   getWorkOrderAutomaticProgressPercent,
+  isClosedStatus,
+  isWorkOrderDelayed,
   WORK_ORDER_STATUS_LABELS,
   WORK_ORDER_STATUS_OPTIONS,
-  isClosedStatus,
 } from "@/modules/work-orders/work-order.constants";
 import { listWorkOrders } from "@/modules/work-orders/work-order.service";
 
@@ -219,75 +220,83 @@ export default async function WorkOrdersPage({ searchParams }: WorkOrdersPagePro
 
       {currentView === "orders" ? (
         <div className="space-y-4">
-          {workOrders.map((order) => (
-            <Card className="rounded-xl" key={order.id}>
-              <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-                <div className="min-w-0 space-y-3">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <h2 className="font-heading text-2xl font-semibold">{order.orderNumber}</h2>
-                    <StatusBadge status={order.status} />
-                  </div>
-                  <p className="text-sm text-[color:var(--muted-strong)]">
-                    {order.client.fullName} / {order.vehicle.make} {order.vehicle.model}
-                  </p>
-                  <p className="text-sm text-[color:var(--muted)]">
-                    Tecnico: {order.assignedTechnician?.name ?? "Sin asignar"}
-                  </p>
-                  <p className="text-sm text-[color:var(--muted)]">{order.reason}</p>
-                  <div className="max-w-xl space-y-2">
-                    <div className="flex items-center justify-between gap-3 text-xs text-[color:var(--muted)]">
-                      <span>Avance operativo</span>
-                      <span>
-                        {getWorkOrderAutomaticProgressPercent({
-                          status: order.status,
-                          tasks: order.tasks,
-                        })}
-                        %
-                      </span>
-                    </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-[rgba(37,99,235,0.10)]">
-                      <div
-                        className="h-full rounded-full bg-[linear-gradient(90deg,#17345e_0%,#2563eb_100%)] transition-[width]"
-                        style={{
-                          width: `${getWorkOrderAutomaticProgressPercent({
-                            status: order.status,
-                            tasks: order.tasks,
-                          })}%`,
-                        }}
-                      />
-                    </div>
-                    <p className="text-xs text-[color:var(--muted)]">
-                      {order.tasks.length > 0
-                        ? `${order.tasks.filter((task) => task.status === "COMPLETED").length} de ${order.tasks.length} tareas completadas`
-                        : "Sin tareas registradas, avance estimado por estado"}
-                    </p>
-                  </div>
-                </div>
+          {workOrders.map((order) => {
+            const isDelayed = isWorkOrderDelayed({
+              status: order.status,
+              promisedDate: order.estimatedDate,
+            });
+            const progressPercent = getWorkOrderAutomaticProgressPercent({
+              status: order.status,
+              tasks: order.tasks,
+            });
 
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between xl:items-center">
-                  <MoveToTrashButton
-                    entityId={order.id}
-                    entityType="workOrder"
-                    redirectTo="/work-orders"
-                  />
-                  <div className="flex flex-wrap items-center gap-3">
-                    <div className="rounded-xl border border-[color:var(--border)] bg-white/80 px-4 py-2 text-sm font-medium">
-                      Ingreso {formatDate(order.intakeDate)}
+            return (
+              <Card className="rounded-xl" key={order.id}>
+                <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                  <div className="min-w-0 space-y-3">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <h2 className="font-heading text-2xl font-semibold">{order.orderNumber}</h2>
+                      <StatusBadge status={order.status} />
+                      {isDelayed ? (
+                        <span className="rounded-full border border-[rgba(220,38,38,0.22)] bg-[rgba(220,38,38,0.10)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#b91c1c]">
+                          Atrasada
+                        </span>
+                      ) : null}
                     </div>
-                    <div className="rounded-xl border border-[color:var(--border)] bg-white/80 px-4 py-2 text-sm font-medium">
-                      {WORK_ORDER_STATUS_LABELS[order.status]}
+                    <p className="text-sm text-[color:var(--muted-strong)]">
+                      {order.client.fullName} / {order.vehicle.make} {order.vehicle.model}
+                    </p>
+                    <p className="text-sm text-[color:var(--muted)]">
+                      Tecnico: {order.assignedTechnician?.name ?? "Sin asignar"}
+                    </p>
+                    <p className="text-sm text-[color:var(--muted)]">
+                      Fecha prometida: {formatDate(order.estimatedDate)}
+                    </p>
+                    <p className="text-sm text-[color:var(--muted)]">{order.reason}</p>
+                    <div className="max-w-xl space-y-2">
+                      <div className="flex items-center justify-between gap-3 text-xs text-[color:var(--muted)]">
+                        <span>Avance operativo</span>
+                        <span>{progressPercent}%</span>
+                      </div>
+                      <div className="h-2 overflow-hidden rounded-full bg-[rgba(37,99,235,0.10)]">
+                        <div
+                          className="h-full rounded-full bg-[linear-gradient(90deg,#17345e_0%,#2563eb_100%)] transition-[width]"
+                          style={{ width: `${progressPercent}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-[color:var(--muted)]">
+                        {order.tasks.length > 0
+                          ? `${order.tasks.filter((task) => task.status === "COMPLETED").length} de ${order.tasks.length} tareas completadas`
+                          : "Sin tareas registradas, avance estimado por estado"}
+                      </p>
                     </div>
-                    <Link
-                      className="text-sm font-semibold text-[#2563eb] hover:text-[#1d4ed8]"
-                      href={`/work-orders/${order.id}`}
-                    >
-                      Abrir orden
-                    </Link>
+                  </div>
+
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between xl:items-center">
+                    <MoveToTrashButton
+                      entityId={order.id}
+                      entityType="workOrder"
+                      redirectTo="/work-orders"
+                    />
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="rounded-xl border border-[color:var(--border)] bg-white/80 px-4 py-2 text-sm font-medium">
+                        Ingreso {formatDate(order.intakeDate)}
+                      </div>
+                      <div className="rounded-xl border border-[color:var(--border)] bg-white/80 px-4 py-2 text-sm font-medium">
+                        {WORK_ORDER_STATUS_LABELS[order.status]}
+                      </div>
+                      <Link
+                        className="text-sm font-semibold text-[#2563eb] hover:text-[#1d4ed8]"
+                        href={`/work-orders/${order.id}`}
+                      >
+                        Abrir orden
+                      </Link>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            );
+          })}
 
           {workOrders.length === 0 ? (
             <Card className="rounded-xl text-center">

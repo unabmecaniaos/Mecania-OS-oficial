@@ -23,10 +23,21 @@ export function AssignmentForm({
   mechanics,
 }: AssignmentFormProps) {
   const [state, formAction] = useActionState(updateWorkOrderAssignmentAction, initialActionState);
+  const currentMechanicName =
+    mechanics.find((mechanic) => mechanic.id === currentAssignedTechnicianId)?.name ??
+    "Sin asignar";
 
   return (
     <form action={formAction} className="space-y-4">
       <input name="orderId" type="hidden" value={orderId} />
+      <div className="rounded-xl border border-[color:var(--border)] bg-white/70 p-4">
+        <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--muted)]">
+          Responsable actual
+        </p>
+        <p className="mt-2 text-sm font-semibold text-[color:var(--foreground)]">
+          {currentMechanicName}
+        </p>
+      </div>
       <Select defaultValue={currentAssignedTechnicianId ?? ""} name="assignedTechnicianId">
         <option value="">Sin asignar</option>
         {mechanics.map((mechanic) => (
@@ -36,7 +47,7 @@ export function AssignmentForm({
         ))}
       </Select>
       <FormMessage message={state.error} />
-      <SubmitButton label="Guardar asignacion" pendingLabel="Guardando..." />
+      <SubmitButton label="Actualizar responsable" pendingLabel="Actualizando..." />
     </form>
   );
 }

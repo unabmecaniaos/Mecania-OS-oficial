@@ -2,6 +2,7 @@ import { UserRole, WorkOrderStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
+import { isWorkOrderDelayed } from "@/modules/work-orders/work-order.constants";
 
 export async function getDashboardSummary(input?: { actorId?: string; actorRole?: UserRole }) {
   const workOrderWhere: Prisma.WorkOrderWhereInput =
@@ -14,7 +15,15 @@ export async function getDashboardSummary(input?: { actorId?: string; actorRole?
           deletedAt: null,
         };
 
-  const [clients, vehicles, activeOrders, awaitingApproval, readyForDelivery, latestOrders] =
+  const [
+    clients,
+    vehicles,
+    activeOrders,
+    awaitingApproval,
+    readyForDelivery,
+    latestOrders,
+    overdueOrdersRaw,
+  ] =
     await Promise.all([
       prisma.client.count({
         where: {
@@ -58,6 +67,7 @@ export async function getDashboardSummary(input?: { actorId?: string; actorRole?
         where: workOrderWhere,
         include: {
           client: true,
+          assignedTechnician: true,
           vehicle: true,
         },
         orderBy: {
@@ -65,7 +75,26 @@ export async function getDashboardSummary(input?: { actorId?: string; actorRole?
         },
         take: 5,
       }),
+      prisma.workOrder.findMany({
+        where: {
+          ...workOrderWhere,
+          estimatedDate: {
+            not: null,
+          },
+        },
+        select: {
+          status: true,
+          estimatedDate: true,
+        },
+      }),
     ]);
+
+  const overdueOrders = overdueOrdersRaw.filter((order) =>
+    isWorkOrderDelayed({
+      status: order.status,
+      promisedDate: order.estimatedDate,
+    }),
+  ).length;
 
   return {
     clients,
@@ -73,6 +102,7 @@ export async function getDashboardSummary(input?: { actorId?: string; actorRole?
     activeOrders,
     awaitingApproval,
     readyForDelivery,
+    overdueOrders,
     latestOrders,
   };
 }

@@ -79,3 +79,24 @@ export const WORK_ORDER_TASK_STATUS_LABELS: Record<WorkOrderTaskStatus, string> 
   PENDING: "Pendiente",
   COMPLETED: "Completada",
 };
+
+function startOfDay(value: Date) {
+  const next = new Date(value);
+  next.setHours(0, 0, 0, 0);
+  return next;
+}
+
+export function isWorkOrderDelayed(input: {
+  status: WorkOrderStatus;
+  promisedDate?: Date | string | null;
+  referenceDate?: Date;
+}) {
+  if (isClosedStatus(input.status) || !input.promisedDate) {
+    return false;
+  }
+
+  const promisedDate =
+    input.promisedDate instanceof Date ? input.promisedDate : new Date(input.promisedDate);
+
+  return promisedDate < startOfDay(input.referenceDate ?? new Date());
+}

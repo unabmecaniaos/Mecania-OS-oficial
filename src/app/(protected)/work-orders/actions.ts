@@ -13,6 +13,7 @@ import {
   createWorkOrderTask,
   createWorkOrder,
   updateWorkOrderAssignment,
+  updateWorkOrderPromisedDate,
   updateWorkOrderStatus,
   updateWorkOrderTaskStatus,
 } from "@/modules/work-orders/work-order.service";
@@ -80,6 +81,37 @@ export async function updateWorkOrderAssignmentAction(
     message: "Responsable actualizado correctamente.",
     tone: "success",
   });
+  redirect(`/work-orders/${orderId}`);
+}
+
+export async function updateWorkOrderPromisedDateAction(
+  _previousState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const orderId = String(formData.get("orderId") ?? "");
+
+  try {
+    const session = await requireApiUser();
+
+    await updateWorkOrderPromisedDate(
+      orderId,
+      {
+        estimatedDate: String(formData.get("estimatedDate") ?? ""),
+      },
+      session.user.id,
+    );
+  } catch (error) {
+    if (isRedirectError(error)) {
+      throw error;
+    }
+
+    return {
+      error: getErrorMessage(error),
+    };
+  }
+
+  revalidatePath("/work-orders");
+  revalidatePath(`/work-orders/${orderId}`);
   redirect(`/work-orders/${orderId}`);
 }
 

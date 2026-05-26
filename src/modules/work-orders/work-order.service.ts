@@ -10,6 +10,7 @@ import {
   createWorkOrderSchema,
   createWorkOrderTaskSchema,
   updateWorkOrderAssignmentSchema,
+  updateWorkOrderPromisedDateSchema,
   updateWorkOrderSchema,
   updateWorkOrderStatusSchema,
   updateWorkOrderTaskStatusSchema,
@@ -145,6 +146,23 @@ export async function updateWorkOrderAssignment(id: string, input: unknown, acto
   });
 
   return workOrder;
+}
+
+export async function updateWorkOrderPromisedDate(id: string, input: unknown, actorId: string) {
+  const data = updateWorkOrderPromisedDateSchema.parse(input);
+  const existing = await workOrderRepository.findByIdForAssignment(id);
+
+  if (!existing) {
+    throw new NotFoundError("Orden de trabajo no encontrada");
+  }
+
+  return prisma.workOrder.update({
+    where: { id },
+    data: {
+      estimatedDate: parseDateInput(data.estimatedDate),
+      updatedById: actorId,
+    },
+  });
 }
 
 export async function addWorkOrderEvidence(workOrderId: string, input: { file: File; note?: string }, actorId: string) {

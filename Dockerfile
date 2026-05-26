@@ -52,4 +52,4 @@ COPY --from=builder /app/scripts ./scripts
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "if [ -n \"${BOOTSTRAP_ADMIN_EMAIL:-}\" ] && [ -n \"${BOOTSTRAP_ADMIN_PASSWORD:-}\" ]; then pnpm db:bootstrap; fi; exec pnpm next start -H 0.0.0.0 -p ${PORT:-3000}"]
+CMD ["sh", "-c", "pnpm db:push && if [ -n \"${BOOTSTRAP_ADMIN_EMAIL:-}\" ] && [ -n \"${BOOTSTRAP_ADMIN_PASSWORD:-}\" ]; then pnpm db:bootstrap; fi; exec pnpm next start -H 0.0.0.0 -p ${PORT:-3000}"]

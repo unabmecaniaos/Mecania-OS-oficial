@@ -2,6 +2,7 @@ import {
   ReviewRecommendedNextStep,
   SelfInspectionAnswerType,
   SelfInspectionDepartment,
+  SelfInspectionOperationalOutcome,
   SelfInspectionPhotoType,
   SelfInspectionReason,
   SelfInspectionRiskLevel,
@@ -75,6 +76,16 @@ export const SELF_INSPECTION_NEXT_STEP_LABELS: Record<ReviewRecommendedNextStep,
   [ReviewRecommendedNextStep.FOLLOW_UP_CALL]: "Llamada de seguimiento",
 };
 
+export const SELF_INSPECTION_OPERATIONAL_OUTCOME_LABELS: Record<
+  SelfInspectionOperationalOutcome,
+  string
+> = {
+  [SelfInspectionOperationalOutcome.REMOTE_QUOTE]: "Presupuesto remoto",
+  [SelfInspectionOperationalOutcome.REQUEST_MORE_INFORMATION]: "Solicitar mas informacion",
+  [SelfInspectionOperationalOutcome.REQUIRE_IN_PERSON_INSPECTION]:
+    "Exigir inspeccion presencial",
+};
+
 export const SELF_INSPECTION_PHOTO_TYPE_LABELS: Record<SelfInspectionPhotoType, string> = {
   [SelfInspectionPhotoType.FRONTAL_FULL]: "Vehiculo completo",
   [SelfInspectionPhotoType.REAR_FULL]: "Trasera completa",
@@ -115,6 +126,10 @@ export const SELF_INSPECTION_DEPARTMENT_OPTIONS = Object.entries(
 
 export const SELF_INSPECTION_NEXT_STEP_OPTIONS = Object.entries(
   SELF_INSPECTION_NEXT_STEP_LABELS,
+).map(([value, label]) => ({ value, label }));
+
+export const SELF_INSPECTION_OPERATIONAL_OUTCOME_OPTIONS = Object.entries(
+  SELF_INSPECTION_OPERATIONAL_OUTCOME_LABELS,
 ).map(([value, label]) => ({ value, label }));
 
 export const SELF_INSPECTION_PROBLEM_TYPE_LABELS = {

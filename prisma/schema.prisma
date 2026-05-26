@@ -144,6 +144,12 @@ enum ReviewRecommendedNextStep {
   FOLLOW_UP_CALL
 }
 
+enum SelfInspectionOperationalOutcome {
+  REMOTE_QUOTE
+  REQUEST_MORE_INFORMATION
+  REQUIRE_IN_PERSON_INSPECTION
+}
+
 enum StockMovementType {
   INITIAL
   ENTRY
@@ -408,6 +414,7 @@ model SelfInspection {
   submittedAt           DateTime?
   reviewedAt            DateTime?
   reviewerId            String?
+  operationalOutcome    SelfInspectionOperationalOutcome?
   overallRiskLevel      SelfInspectionRiskLevel        @default(LOW)
   summaryGenerated      String?
   completionPercent     Int                            @default(0)

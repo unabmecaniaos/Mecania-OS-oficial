@@ -52,6 +52,7 @@ export async function reviewSelfInspectionAction(
       {
         riskAssessment: String(formData.get("riskAssessment") ?? ""),
         internalSummary: String(formData.get("internalSummary") ?? ""),
+        operationalOutcome: String(formData.get("operationalOutcome") ?? ""),
         recommendedNextStep: String(formData.get("recommendedNextStep") ?? ""),
         departmentSuggestion: String(formData.get("departmentSuggestion") ?? ""),
         createWorkOrderSuggestion: formData.get("createWorkOrderSuggestion") === "on",

@@ -12,6 +12,7 @@ import { initialActionState } from "@/lib/form-state";
 import {
   SELF_INSPECTION_DEPARTMENT_OPTIONS,
   SELF_INSPECTION_NEXT_STEP_OPTIONS,
+  SELF_INSPECTION_OPERATIONAL_OUTCOME_OPTIONS,
   SELF_INSPECTION_RISK_OPTIONS,
 } from "@/modules/self-inspections/self-inspection.constants";
 
@@ -31,6 +32,20 @@ export function ReviewForm({ inspectionId }: { inspectionId: string }) {
           <Select id="riskAssessment" name="riskAssessment">
             <option value="">Selecciona un nivel</option>
             {SELF_INSPECTION_RISK_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-[color:var(--muted-strong)]" htmlFor="operationalOutcome">
+            Resultado operativo
+          </label>
+          <Select id="operationalOutcome" name="operationalOutcome">
+            <option value="">Selecciona un resultado</option>
+            {SELF_INSPECTION_OPERATIONAL_OUTCOME_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>

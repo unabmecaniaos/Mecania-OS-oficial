@@ -24,6 +24,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentSession, signIn, signOut } from "@/modules/auth/auth.service";
 import {
   SELF_INSPECTION_NEXT_STEP_LABELS,
+  SELF_INSPECTION_OPERATIONAL_OUTCOME_LABELS,
   SELF_INSPECTION_PHOTO_SLOTS,
   SELF_INSPECTION_PHOTO_TYPE_LABELS,
   SELF_INSPECTION_PROBLEM_FREQUENCY_LABELS,
@@ -1728,6 +1729,7 @@ export async function reviewSelfInspection(id: string, input: unknown, actorId: 
         status: SelfInspectionStatus.REVIEWED,
         reviewedAt: new Date(),
         reviewerId: actorId,
+        operationalOutcome: data.operationalOutcome,
         overallRiskLevel: data.riskAssessment,
       },
     });
@@ -1739,7 +1741,7 @@ export async function reviewSelfInspection(id: string, input: unknown, actorId: 
         selfInspectionId: id,
         previousStatus: existing.status,
         nextStatus: SelfInspectionStatus.REVIEWED,
-        note: `Revision interna registrada. Proximo paso sugerido: ${SELF_INSPECTION_NEXT_STEP_LABELS[data.recommendedNextStep]}`,
+        note: `Revision interna registrada. Resultado operativo: ${SELF_INSPECTION_OPERATIONAL_OUTCOME_LABELS[data.operationalOutcome]}. Proximo paso sugerido: ${SELF_INSPECTION_NEXT_STEP_LABELS[data.recommendedNextStep]}`,
         changedById: actorId,
       },
     });
@@ -1750,6 +1752,7 @@ export async function reviewSelfInspection(id: string, input: unknown, actorId: 
   selfInspectionLogger.info("Self-inspection reviewed", {
     actorId,
     inspectionId: inspection.id,
+    operationalOutcome: data.operationalOutcome,
     status: inspection.status,
     recommendedNextStep: data.recommendedNextStep,
   });

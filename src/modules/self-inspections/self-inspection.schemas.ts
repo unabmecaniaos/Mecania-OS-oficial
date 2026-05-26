@@ -1,6 +1,7 @@
 import {
   ReviewRecommendedNextStep,
   SelfInspectionDepartment,
+  SelfInspectionOperationalOutcome,
   SelfInspectionPhotoType,
   SelfInspectionRiskLevel,
   SelfInspectionSource,
@@ -110,6 +111,7 @@ export const createSelfInspectionInviteSchema = z.object({
 export const reviewSelfInspectionSchema = z.object({
   riskAssessment: z.nativeEnum(SelfInspectionRiskLevel),
   internalSummary: requiredText(12, 2_000),
+  operationalOutcome: z.nativeEnum(SelfInspectionOperationalOutcome),
   recommendedNextStep: z.nativeEnum(ReviewRecommendedNextStep),
   departmentSuggestion: z.preprocess(
     emptyToUndefined,

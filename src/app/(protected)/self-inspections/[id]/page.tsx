@@ -13,6 +13,7 @@ import { formatDateTime } from "@/lib/utils";
 import {
   SELF_INSPECTION_DEPARTMENT_LABELS,
   SELF_INSPECTION_NEXT_STEP_LABELS,
+  SELF_INSPECTION_OPERATIONAL_OUTCOME_LABELS,
   SELF_INSPECTION_PHOTO_TYPE_LABELS,
   SELF_INSPECTION_RISK_LABELS,
 } from "@/modules/self-inspections/self-inspection.constants";
@@ -114,6 +115,16 @@ export default async function SelfInspectionDetailPage({
                 </p>
                 <p className="mt-2 text-sm text-[color:var(--foreground)]">
                   {inspection.vehicleSnapshot?.mileage?.toLocaleString("es-CL") ?? "-"} km
+                </p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--muted)]">
+                  Resultado operativo
+                </p>
+                <p className="mt-2 text-sm text-[color:var(--foreground)]">
+                  {inspection.operationalOutcome
+                    ? SELF_INSPECTION_OPERATIONAL_OUTCOME_LABELS[inspection.operationalOutcome]
+                    : "Sin definir"}
                 </p>
               </div>
               <div>
@@ -242,9 +253,17 @@ export default async function SelfInspectionDetailPage({
               ))}
 
               {latestReview ? (
-                <div className="rounded-[24px] border border-[rgba(14,79,82,0.16)] bg-[rgba(14,79,82,0.08)] p-4">
+              <div className="rounded-[24px] border border-[rgba(14,79,82,0.16)] bg-[rgba(14,79,82,0.08)] p-4">
                   <p className="font-semibold text-[color:var(--success)]">
                     Ultima revision interna
+                  </p>
+                  <p className="mt-2 text-xs uppercase tracking-[0.16em] text-[color:var(--muted)]">
+                    Resultado operativo
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-[color:var(--foreground)]">
+                    {inspection.operationalOutcome
+                      ? SELF_INSPECTION_OPERATIONAL_OUTCOME_LABELS[inspection.operationalOutcome]
+                      : "Sin definir"}
                   </p>
                   <p className="mt-2 text-sm text-[color:var(--muted-strong)]">
                     {latestReview.internalSummary}

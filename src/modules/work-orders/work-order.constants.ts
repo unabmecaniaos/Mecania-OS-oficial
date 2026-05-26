@@ -1,4 +1,4 @@
-import { WorkOrderStatus } from "@prisma/client";
+import { WorkOrderStatus, WorkOrderTaskStatus } from "@prisma/client";
 
 export const WORK_ORDER_STATUS_LABELS: Record<WorkOrderStatus, string> = {
   RECEIVED: "Recibido",
@@ -47,3 +47,35 @@ export function getWorkOrderProgressPercent(status: WorkOrderStatus) {
 export function isClosedStatus(status: WorkOrderStatus) {
   return status === WorkOrderStatus.DELIVERED || status === WorkOrderStatus.CANCELLED;
 }
+
+type WorkOrderTaskProgressRecord = {
+  status: WorkOrderTaskStatus;
+};
+
+export function getWorkOrderTasksProgressPercent(tasks: WorkOrderTaskProgressRecord[]) {
+  if (tasks.length === 0) {
+    return 0;
+  }
+
+  const completedTasks = tasks.filter(
+    (task) => task.status === WorkOrderTaskStatus.COMPLETED,
+  ).length;
+
+  return Math.round((completedTasks / tasks.length) * 100);
+}
+
+export function getWorkOrderAutomaticProgressPercent(input: {
+  status: WorkOrderStatus;
+  tasks?: WorkOrderTaskProgressRecord[];
+}) {
+  if (input.tasks && input.tasks.length > 0) {
+    return getWorkOrderTasksProgressPercent(input.tasks);
+  }
+
+  return getWorkOrderProgressPercent(input.status);
+}
+
+export const WORK_ORDER_TASK_STATUS_LABELS: Record<WorkOrderTaskStatus, string> = {
+  PENDING: "Pendiente",
+  COMPLETED: "Completada",
+};

@@ -25,7 +25,15 @@ const insuranceCaseListInclude = {
       deletedAt: null,
     },
     include: {
-      workOrder: true,
+      workOrder: {
+        include: {
+          tasks: {
+            select: {
+              status: true,
+            },
+          },
+        },
+      },
     },
     orderBy: {
       createdAt: "desc",
@@ -37,6 +45,11 @@ const insuranceCaseListInclude = {
       deletedAt: null,
     },
     include: {
+      tasks: {
+        select: {
+          status: true,
+        },
+      },
       evidences: {
         orderBy: {
           createdAt: "desc",
@@ -94,6 +107,11 @@ const insuranceCaseDetailInclude = {
       },
       workOrder: {
         include: {
+          tasks: {
+            select: {
+              status: true,
+            },
+          },
           evidences: {
             orderBy: {
               createdAt: "desc",
@@ -130,6 +148,11 @@ const insuranceCaseDetailInclude = {
           items: {
             orderBy: [{ itemType: "asc" }, { description: "asc" }],
           },
+        },
+      },
+      tasks: {
+        select: {
+          status: true,
         },
       },
       evidences: {

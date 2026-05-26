@@ -172,6 +172,11 @@ enum BudgetItemType {
   SUPPLY
 }
 
+enum WorkOrderTaskStatus {
+  PENDING
+  COMPLETED
+}
+
 model User {
   id                          String                    @id @default(cuid())
   name                        String
@@ -295,7 +300,8 @@ model WorkOrder {
   selfInspections      SelfInspection[]
   evidences            WorkOrderEvidence[]
   parts                WorkOrderPart[]
-  budget           Budget?
+  tasks                WorkOrderTask[]
+  budget               Budget?
 
   @@index([clientId, intakeDate])
   @@index([vehicleId, intakeDate])
@@ -303,6 +309,21 @@ model WorkOrder {
   @@index([status])
   @@index([assignedTechnicianId, intakeDate])
   @@index([deletedAt, purgeAt])
+}
+
+model WorkOrderTask {
+  id          String              @id @default(cuid())
+  workOrderId String
+  title       String
+  description String?
+  status      WorkOrderTaskStatus @default(PENDING)
+  completedAt DateTime?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  workOrder   WorkOrder           @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+
+  @@index([workOrderId, createdAt])
+  @@index([workOrderId, status])
 }
 
 model Repuesto {

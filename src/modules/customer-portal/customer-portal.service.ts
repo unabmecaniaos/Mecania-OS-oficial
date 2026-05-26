@@ -4,7 +4,7 @@ import { NotFoundError, UnauthorizedError } from "@/lib/errors";
 import { prisma } from "@/lib/prisma";
 import { requireCustomerUser } from "@/modules/auth/auth.service";
 import {
-  getWorkOrderProgressPercent,
+  getWorkOrderAutomaticProgressPercent,
   isClosedStatus,
 } from "@/modules/work-orders/work-order.constants";
 
@@ -64,6 +64,11 @@ export async function getCustomerPortalOverview() {
               deletedAt: null,
             },
             include: {
+              tasks: {
+                select: {
+                  status: true,
+                },
+              },
               statusLogs: {
                 orderBy: {
                   changedAt: "desc",
@@ -144,7 +149,12 @@ export async function getCustomerPortalOverview() {
     return {
       ...vehicle,
       currentOrder,
-      progressPercent: currentOrder ? getWorkOrderProgressPercent(currentOrder.status) : 0,
+      progressPercent: currentOrder
+        ? getWorkOrderAutomaticProgressPercent({
+            status: currentOrder.status,
+            tasks: currentOrder.tasks,
+          })
+        : 0,
     };
   });
   const pendingInspections = customer.selfInspections.map((inspection) => ({
@@ -198,6 +208,11 @@ export async function getCustomerPortalVehicleDetail(vehicleId: string) {
           deletedAt: null,
         },
         include: {
+          tasks: {
+            select: {
+              status: true,
+            },
+          },
           evidences: {
             include: {
               uploadedBy: {
@@ -243,7 +258,12 @@ export async function getCustomerPortalVehicleDetail(vehicleId: string) {
     ...vehicle,
     currentOrder,
     featuredOrder,
-    progressPercent: currentOrder ? getWorkOrderProgressPercent(currentOrder.status) : 0,
+    progressPercent: currentOrder
+      ? getWorkOrderAutomaticProgressPercent({
+          status: currentOrder.status,
+          tasks: currentOrder.tasks,
+        })
+      : 0,
   };
 }
 

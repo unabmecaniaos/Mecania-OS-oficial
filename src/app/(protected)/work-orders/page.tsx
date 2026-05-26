@@ -13,6 +13,7 @@ import { listClients } from "@/modules/clients/client.service";
 import { listInternalInsuranceCases } from "@/modules/insurance-cases/insurance-case.service";
 import { BudgetStatusBadge } from "@/modules/budgets/budget-status-badge";
 import {
+  getWorkOrderAutomaticProgressPercent,
   WORK_ORDER_STATUS_LABELS,
   WORK_ORDER_STATUS_OPTIONS,
   isClosedStatus,
@@ -221,7 +222,7 @@ export default async function WorkOrdersPage({ searchParams }: WorkOrdersPagePro
           {workOrders.map((order) => (
             <Card className="rounded-xl" key={order.id}>
               <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-                <div className="min-w-0 space-y-2">
+                <div className="min-w-0 space-y-3">
                   <div className="flex flex-wrap items-center gap-3">
                     <h2 className="font-heading text-2xl font-semibold">{order.orderNumber}</h2>
                     <StatusBadge status={order.status} />
@@ -233,6 +234,34 @@ export default async function WorkOrdersPage({ searchParams }: WorkOrdersPagePro
                     Tecnico: {order.assignedTechnician?.name ?? "Sin asignar"}
                   </p>
                   <p className="text-sm text-[color:var(--muted)]">{order.reason}</p>
+                  <div className="max-w-xl space-y-2">
+                    <div className="flex items-center justify-between gap-3 text-xs text-[color:var(--muted)]">
+                      <span>Avance operativo</span>
+                      <span>
+                        {getWorkOrderAutomaticProgressPercent({
+                          status: order.status,
+                          tasks: order.tasks,
+                        })}
+                        %
+                      </span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-[rgba(37,99,235,0.10)]">
+                      <div
+                        className="h-full rounded-full bg-[linear-gradient(90deg,#17345e_0%,#2563eb_100%)] transition-[width]"
+                        style={{
+                          width: `${getWorkOrderAutomaticProgressPercent({
+                            status: order.status,
+                            tasks: order.tasks,
+                          })}%`,
+                        }}
+                      />
+                    </div>
+                    <p className="text-xs text-[color:var(--muted)]">
+                      {order.tasks.length > 0
+                        ? `${order.tasks.filter((task) => task.status === "COMPLETED").length} de ${order.tasks.length} tareas completadas`
+                        : "Sin tareas registradas, avance estimado por estado"}
+                    </p>
+                  </div>
                 </div>
 
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between xl:items-center">

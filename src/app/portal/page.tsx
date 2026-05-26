@@ -200,7 +200,10 @@ export default async function CustomerPortalPage() {
 
                 {vehicle.currentOrder ? (
                   <div className="mt-5 space-y-4">
-                    <WorkOrderProgress status={vehicle.currentOrder.status} />
+                    <WorkOrderProgress
+                      progressPercent={vehicle.progressPercent}
+                      status={vehicle.currentOrder.status}
+                    />
                     <div className="text-sm text-[color:var(--muted-strong)]">
                       <p>
                         <span className="font-semibold text-[color:var(--foreground)]">Orden:</span>{" "}

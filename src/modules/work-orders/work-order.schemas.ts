@@ -1,4 +1,4 @@
-import { WorkOrderStatus } from "@prisma/client";
+import { WorkOrderStatus, WorkOrderTaskStatus } from "@prisma/client";
 import { z } from "zod";
 
 import { optionalDateOnly, optionalText, requiredText } from "@/lib/validation";
@@ -32,4 +32,13 @@ export const updateWorkOrderStatusSchema = z.object({
 
 export const updateWorkOrderAssignmentSchema = z.object({
   assignedTechnicianId: optionalText(40),
+});
+
+export const createWorkOrderTaskSchema = z.object({
+  title: requiredText(3, 160),
+  description: optionalText(800),
+});
+
+export const updateWorkOrderTaskStatusSchema = z.object({
+  status: z.nativeEnum(WorkOrderTaskStatus),
 });

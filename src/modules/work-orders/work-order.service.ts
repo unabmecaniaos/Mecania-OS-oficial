@@ -1,4 +1,4 @@
-import { UserRole, WorkOrderStatus } from "@prisma/client";
+import { UserRole, WorkOrderStatus, WorkOrderTaskStatus } from "@prisma/client";
 
 import { ConflictError, NotFoundError } from "@/lib/errors";
 import { createLogger } from "@/lib/logger";
@@ -8,9 +8,11 @@ import { isClosedStatus } from "@/modules/work-orders/work-order.constants";
 import { workOrderRepository } from "@/modules/work-orders/work-order.repository";
 import {
   createWorkOrderSchema,
+  createWorkOrderTaskSchema,
   updateWorkOrderAssignmentSchema,
   updateWorkOrderSchema,
   updateWorkOrderStatusSchema,
+  updateWorkOrderTaskStatusSchema,
 } from "@/modules/work-orders/work-order.schemas";
 import { saveWorkOrderEvidenceFile } from "@/modules/work-orders/work-order.storage";
 import { findLatestInsuranceCaseLink } from "@/modules/insurance-cases/insurance-case.service";
@@ -293,4 +295,71 @@ export async function updateWorkOrderStatus(id: string, input: unknown, actorId:
   });
 
   return workOrder;
+}
+
+export async function createWorkOrderTask(workOrderId: string, input: unknown, actorId: string) {
+  const data = createWorkOrderTaskSchema.parse(input);
+  const workOrder = await workOrderRepository.findByIdForAssignment(workOrderId);
+
+  if (!workOrder) {
+    throw new NotFoundError("Orden de trabajo no encontrada");
+  }
+
+  const task = await prisma.workOrderTask.create({
+    data: {
+      workOrderId,
+      title: data.title,
+      description: data.description,
+    },
+  });
+
+  workOrderLogger.info("Work order task created", {
+    actorId,
+    workOrderId,
+    taskId: task.id,
+    status: task.status,
+  });
+
+  return task;
+}
+
+export async function updateWorkOrderTaskStatus(
+  workOrderId: string,
+  taskId: string,
+  input: unknown,
+  actorId: string,
+) {
+  const data = updateWorkOrderTaskStatusSchema.parse(input);
+  const existingTask = await prisma.workOrderTask.findFirst({
+    where: {
+      id: taskId,
+      workOrderId,
+    },
+    select: {
+      id: true,
+      status: true,
+    },
+  });
+
+  if (!existingTask) {
+    throw new NotFoundError("Tarea de la orden no encontrada");
+  }
+
+  const task = await prisma.workOrderTask.update({
+    where: { id: taskId },
+    data: {
+      status: data.status,
+      completedAt: data.status === WorkOrderTaskStatus.COMPLETED ? new Date() : null,
+    },
+  });
+
+  workOrderLogger.info("Work order task status updated", {
+    actorId,
+    workOrderId,
+    taskId,
+    previousStatus: existingTask.status,
+    status: task.status,
+  });
+
+  return task;
 }

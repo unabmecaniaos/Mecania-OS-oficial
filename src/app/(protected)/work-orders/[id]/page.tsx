@@ -20,7 +20,13 @@ import {
   PartsUsageForm,
 } from "@/app/(protected)/work-orders/parts-usage-form";
 import { StatusForm } from "@/app/(protected)/work-orders/status-form";
-import { WORK_ORDER_STATUS_LABELS } from "@/modules/work-orders/work-order.constants";
+import { WorkOrderTaskForm } from "@/app/(protected)/work-orders/work-order-task-form";
+import { WorkOrderTaskStatusForm } from "@/app/(protected)/work-orders/work-order-task-status-form";
+import {
+  getWorkOrderAutomaticProgressPercent,
+  WORK_ORDER_STATUS_LABELS,
+  WORK_ORDER_TASK_STATUS_LABELS,
+} from "@/modules/work-orders/work-order.constants";
 import { BUDGET_ITEM_TYPE_LABELS, BUDGET_STATUS_LABELS } from "@/modules/budgets/budget.constants";
 
 type WorkOrderDetailPageProps = {
@@ -43,6 +49,11 @@ export default async function WorkOrderDetailPage({ params }: WorkOrderDetailPag
     getAssignableMechanics(),
     listInventoryOptions(),
   ]);
+  const completedTasksCount = workOrder.tasks.filter((task) => task.status === "COMPLETED").length;
+  const automaticProgressPercent = getWorkOrderAutomaticProgressPercent({
+    status: workOrder.status,
+    tasks: workOrder.tasks,
+  });
 
   return (
     <div className="space-y-6">
@@ -164,6 +175,38 @@ export default async function WorkOrderDetailPage({ params }: WorkOrderDetailPag
             </div>
           </Card>
 
+          <Card className="rounded-2xl">
+            <h2 className="font-heading text-2xl font-semibold">Avance operativo</h2>
+
+            <div className="mt-5 space-y-4">
+              <div className="flex items-center justify-between gap-3 text-sm text-[color:var(--muted-strong)]">
+                <span>Progreso automatico de la orden</span>
+                <span className="font-semibold text-[color:var(--foreground)]">
+                  {automaticProgressPercent}%
+                </span>
+              </div>
+              <div className="h-3 overflow-hidden rounded-full bg-[rgba(37,99,235,0.10)]">
+                <div
+                  className="h-full rounded-full bg-[linear-gradient(90deg,#17345e_0%,#2563eb_100%)] transition-[width]"
+                  style={{ width: `${automaticProgressPercent}%` }}
+                />
+              </div>
+              <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-4 text-sm text-[color:var(--muted-strong)]">
+                {workOrder.tasks.length > 0 ? (
+                  <p>
+                    {completedTasksCount} de {workOrder.tasks.length} tareas completadas. El avance
+                    se calcula automaticamente desde las tareas internas de esta OT.
+                  </p>
+                ) : (
+                  <p>
+                    Esta orden aun no tiene tareas registradas. Mientras tanto, el avance se estima
+                    desde el estado actual de la orden.
+                  </p>
+                )}
+              </div>
+            </div>
+          </Card>
+
           {workOrder.budget ? (
           <Card className="rounded-2xl">
             <h2 className="font-heading text-2xl font-semibold">Items del presupuesto base</h2>
@@ -209,6 +252,76 @@ export default async function WorkOrderDetailPage({ params }: WorkOrderDetailPag
                 }))}
                 orderId={workOrder.id}
               />
+            </div>
+          </Card>
+
+          <Card className="rounded-2xl">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="font-heading text-2xl font-semibold">Tareas internas</h2>
+                <p className="mt-1 text-sm text-[color:var(--muted)]">
+                  Registra el trabajo puntual que compone esta orden para hacer seguimiento
+                  operativo.
+                </p>
+              </div>
+              <div className="rounded-full border border-[color:var(--border)] bg-[color:var(--surface-strong)] px-3 py-1 text-sm font-medium text-[color:var(--foreground)]">
+                {workOrder.tasks.length} tarea{workOrder.tasks.length === 1 ? "" : "s"}
+              </div>
+            </div>
+
+            <div className="mt-5">
+              <WorkOrderTaskForm orderId={workOrder.id} />
+            </div>
+
+            <div className="mt-6 space-y-4">
+              {workOrder.tasks.map((task) => (
+                <div
+                  className="rounded-xl border border-[color:var(--border)] bg-white/70 p-4"
+                  key={task.id}
+                >
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <p className="text-base font-semibold text-[color:var(--foreground)]">
+                          {task.title}
+                        </p>
+                        <span className="rounded-full bg-[color:var(--surface-strong)] px-3 py-1 text-xs font-medium uppercase tracking-[0.16em] text-[color:var(--muted-strong)]">
+                          {WORK_ORDER_TASK_STATUS_LABELS[task.status]}
+                        </span>
+                      </div>
+                      {task.description ? (
+                        <p className="text-sm text-[color:var(--muted-strong)]">
+                          {task.description}
+                        </p>
+                      ) : (
+                        <p className="text-sm text-[color:var(--muted)]">
+                          Sin detalle adicional para esta tarea.
+                        </p>
+                      )}
+                      <p className="text-xs text-[color:var(--muted)]">
+                        Creada {formatDateTime(task.createdAt)}
+                        {task.completedAt
+                          ? ` / completada ${formatDateTime(task.completedAt)}`
+                          : ""}
+                      </p>
+                    </div>
+
+                    <div className="lg:min-w-[180px]">
+                      <WorkOrderTaskStatusForm
+                        orderId={workOrder.id}
+                        status={task.status}
+                        taskId={task.id}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {workOrder.tasks.length === 0 ? (
+                <p className="text-sm text-[color:var(--muted)]">
+                  Aun no hay tareas registradas dentro de esta orden.
+                </p>
+              ) : null}
             </div>
           </Card>
 

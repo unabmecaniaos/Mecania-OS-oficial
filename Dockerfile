@@ -4,25 +4,33 @@ ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 
 RUN apk add --no-cache libc6-compat
-RUN corepack enable
+RUN corepack enable && corepack prepare pnpm@10.28.0 --activate
 
 FROM base AS deps
 WORKDIR /app
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY prisma ./prisma
 RUN pnpm install --frozen-lockfile
 
 FROM base AS builder
 WORKDIR /app
 
-ENV DATABASE_URL="postgresql://postgres:postgres@db:5432/mecaniaos?schema=public"
-ENV SESSION_SECRET="replace-this-with-a-long-random-secret-123"
-ENV APP_URL="http://localhost:3000"
+ARG DATABASE_URL="postgresql://postgres:postgres@localhost:5432/mecaniaos?schema=public"
+ARG DIRECT_URL="postgresql://postgres:postgres@localhost:5432/mecaniaos?schema=public"
+ARG SESSION_SECRET="replace-this-with-a-long-random-secret-123"
+ARG APP_URL="http://localhost:3000"
+ARG SUPABASE_URL="https://example.supabase.co"
+
+ENV DATABASE_URL="${DATABASE_URL}"
+ENV DIRECT_URL="${DIRECT_URL}"
+ENV SESSION_SECRET="${SESSION_SECRET}"
+ENV APP_URL="${APP_URL}"
+ENV SUPABASE_URL="${SUPABASE_URL}"
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN pnpm prisma generate
 RUN pnpm build
 
 FROM base AS runner
@@ -38,4 +46,4 @@ COPY --from=builder /app/node_modules ./node_modules
 
 EXPOSE 3000
 
-CMD ["pnpm", "start"]
+CMD ["sh", "-c", "pnpm next start -H 0.0.0.0 -p ${PORT:-3000}"]

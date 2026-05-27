@@ -26,16 +26,28 @@ type WorkOrderFormProps = {
     id: string;
     name: string;
   }>;
+  contextSummary?: {
+    eyebrow: string;
+    title: string;
+    details: string[];
+  };
   defaultClientId?: string;
+  defaultInitialDiagnosis?: string;
+  defaultReason?: string;
   defaultVehicleId?: string;
+  lockClientVehicle?: boolean;
 };
 
 export function WorkOrderForm({
   clients,
   vehicles,
   mechanics,
+  contextSummary,
   defaultClientId,
+  defaultInitialDiagnosis,
+  defaultReason,
   defaultVehicleId,
+  lockClientVehicle = false,
 }: WorkOrderFormProps) {
   const [state, formAction] = useActionState(createWorkOrderAction, initialActionState);
   const initialClientId =
@@ -68,14 +80,38 @@ export function WorkOrderForm({
 
   return (
     <form action={formAction} className="space-y-5">
+      {contextSummary ? (
+        <div className="rounded-2xl border border-[rgba(37,99,235,0.14)] bg-[rgba(37,99,235,0.06)] p-4">
+          <p className="text-xs uppercase tracking-[0.22em] text-[#1d4ed8]">
+            {contextSummary.eyebrow}
+          </p>
+          <h2 className="mt-2 text-xl font-semibold text-[color:var(--foreground)]">
+            {contextSummary.title}
+          </h2>
+          <div className="mt-3 space-y-1 text-sm text-[color:var(--muted-strong)]">
+            {contextSummary.details.map((detail) => (
+              <p key={detail}>{detail}</p>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {lockClientVehicle ? (
+        <>
+          <input name="clientId" type="hidden" value={selectedClientId} />
+          <input name="vehicleId" type="hidden" value={selectedVehicleId} />
+        </>
+      ) : null}
+
       <div className="grid gap-5 md:grid-cols-2">
         <div className="space-y-2">
           <label className="text-sm font-medium text-[color:var(--muted-strong)]" htmlFor="clientId">
             Cliente
           </label>
           <Select
+            disabled={lockClientVehicle}
             id="clientId"
-            name="clientId"
+            name={lockClientVehicle ? undefined : "clientId"}
             onChange={handleClientChange}
             value={selectedClientId}
           >
@@ -93,9 +129,9 @@ export function WorkOrderForm({
             Vehiculo
           </label>
           <Select
-            disabled={!selectedClientId}
+            disabled={!selectedClientId || lockClientVehicle}
             id="vehicleId"
-            name="vehicleId"
+            name={lockClientVehicle ? undefined : "vehicleId"}
             onChange={(event) => setSelectedVehicleId(event.target.value)}
             value={selectedVehicleId}
           >
@@ -114,7 +150,12 @@ export function WorkOrderForm({
           <label className="text-sm font-medium text-[color:var(--muted-strong)]" htmlFor="reason">
             Motivo de ingreso
           </label>
-          <Textarea id="reason" name="reason" placeholder="Describir el motivo principal del ingreso" />
+          <Textarea
+            defaultValue={defaultReason}
+            id="reason"
+            name="reason"
+            placeholder="Describir el motivo principal del ingreso"
+          />
         </div>
 
         <div className="space-y-2 md:col-span-2">
@@ -125,6 +166,7 @@ export function WorkOrderForm({
             Diagnostico inicial
           </label>
           <Textarea
+            defaultValue={defaultInitialDiagnosis}
             id="initialDiagnosis"
             name="initialDiagnosis"
             placeholder="Observaciones del mecanico al recibir el vehiculo"

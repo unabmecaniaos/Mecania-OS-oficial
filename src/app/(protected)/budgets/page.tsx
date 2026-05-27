@@ -21,17 +21,16 @@ type BudgetsPageProps = {
 };
 
 const BUDGET_VIEWS: Array<{ value: BudgetView; label: string }> = [
-  { value: "budgets", label: "Presupuestos" },
   { value: "workshop-clients", label: "Clientes taller" },
   { value: "liquidator-clients", label: "Clientes liquidadora" },
 ];
 
 function resolveView(value?: string): BudgetView {
-  if (value === "workshop-clients" || value === "liquidator-clients") {
-    return value;
+  if (value === "liquidator-clients") {
+    return "liquidator-clients";
   }
 
-  return "budgets";
+  return "workshop-clients";
 }
 
 export default async function BudgetsPage({ searchParams }: BudgetsPageProps) {

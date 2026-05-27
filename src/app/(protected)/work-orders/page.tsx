@@ -32,17 +32,16 @@ type WorkOrdersPageProps = {
 };
 
 const WORK_ORDER_VIEWS: Array<{ value: WorkOrdersView; label: string }> = [
-  { value: "orders", label: "Ordenes" },
   { value: "workshop-clients", label: "Clientes taller" },
   { value: "liquidator-clients", label: "Clientes liquidadora" },
 ];
 
 function resolveView(value?: string): WorkOrdersView {
-  if (value === "workshop-clients" || value === "liquidator-clients") {
-    return value;
+  if (value === "liquidator-clients") {
+    return "liquidator-clients";
   }
 
-  return "orders";
+  return "workshop-clients";
 }
 
 export default async function WorkOrdersPage({ searchParams }: WorkOrdersPageProps) {
@@ -347,6 +346,12 @@ export default async function WorkOrdersPage({ searchParams }: WorkOrdersPagePro
                     >
                       Ver detalle
                     </Link>
+                    <Link
+                      className="text-sm font-semibold text-[#2563eb] hover:text-[#1d4ed8]"
+                      href={`/work-orders/new?clientId=${client.id}`}
+                    >
+                      Crear orden
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -428,6 +433,21 @@ export default async function WorkOrdersPage({ searchParams }: WorkOrdersPagePro
               ) : null}
 
               <div className="mt-6 flex flex-wrap justify-end gap-4">
+                {insuranceCase.currentWorkOrder ? (
+                  <Link
+                    className="text-sm font-semibold text-[#2563eb] hover:text-[#1d4ed8]"
+                    href={`/work-orders/${insuranceCase.currentWorkOrder.id}`}
+                  >
+                    Abrir orden
+                  </Link>
+                ) : (
+                  <Link
+                    className="text-sm font-semibold text-[#2563eb] hover:text-[#1d4ed8]"
+                    href={`/work-orders/new?insuranceCaseId=${insuranceCase.id}`}
+                  >
+                    Crear orden
+                  </Link>
+                )}
                 {!insuranceCase.latestBudget ? (
                   <Link
                     className="text-sm font-semibold text-[#2563eb] hover:text-[#1d4ed8]"

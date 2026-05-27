@@ -28,7 +28,7 @@ export async function createWorkOrderAction(
   const result = await executeServerAction("createWorkOrderAction", async () => {
     const session = await requireApiUser([UserRole.ADMIN, UserRole.MECHANIC]);
 
-    await createWorkOrder(
+    return createWorkOrder(
       {
         clientId: String(formData.get("clientId") ?? ""),
         vehicleId: String(formData.get("vehicleId") ?? ""),
@@ -48,11 +48,13 @@ export async function createWorkOrderAction(
   }
 
   revalidatePath("/work-orders");
+  revalidatePath(`/work-orders/${result.data.id}`);
+  revalidatePath("/liquidador");
   await setFlashMessage({
     message: "Orden de trabajo creada correctamente.",
     tone: "success",
   });
-  redirect("/work-orders");
+  redirect(`/work-orders/${result.data.id}`);
 }
 
 export async function updateWorkOrderAssignmentAction(

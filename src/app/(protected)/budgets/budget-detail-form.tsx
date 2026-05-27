@@ -82,10 +82,14 @@ export function BudgetDetailForm({ budget }: BudgetDetailFormProps) {
   );
   const isDraft =
     budget.status === BudgetStatus.DRAFT || budget.status === BudgetStatus.REQUEST_CHANGES;
+  const isLiquidatorBudget = Boolean(budget.insuranceCase);
+  const isEditable = isDraft && !isLiquidatorBudget;
   const canCreateWorkOrder =
     (budget.status === BudgetStatus.APPROVED ||
       budget.status === BudgetStatus.PARTIALLY_APPROVED) &&
-    !budget.workOrder;
+    !budget.workOrder &&
+    !isLiquidatorBudget;
+  const statusSummary = getBudgetStatusSummary(budget.status, isLiquidatorBudget);
 
   return (
     <div className="space-y-6">
@@ -151,55 +155,57 @@ export function BudgetDetailForm({ budget }: BudgetDetailFormProps) {
         </div>
       </Card>
 
-      <Card
-        className={
-          budget.status === BudgetStatus.APPROVED
-            ? "rounded-2xl border border-[rgba(22,163,74,0.18)] bg-[rgba(22,163,74,0.05)]"
-            : budget.status === BudgetStatus.REJECTED
-              ? "rounded-2xl border border-[rgba(185,28,28,0.18)] bg-[rgba(185,28,28,0.05)]"
-              : budget.status === BudgetStatus.REQUEST_CHANGES
-                ? "rounded-2xl border border-[rgba(217,119,6,0.18)] bg-[rgba(217,119,6,0.05)]"
-              : budget.status === BudgetStatus.SENT
-                ? "rounded-2xl border border-[rgba(217,119,6,0.18)] bg-[rgba(217,119,6,0.05)]"
-                : "rounded-2xl"
-        }
-      >
-        <form action={transitionAction} className="space-y-4">
+      <Card className={statusSummary.cardClassName}>
+        {isLiquidatorBudget ? (
           <div className="space-y-1">
             <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--muted)]">
-              Flujo de aprobacion
+              Estado del presupuesto
+            </p>
+            <h2 className="mt-2 font-heading text-2xl font-semibold text-[color:var(--foreground)]">
+              {statusSummary.title}
+            </h2>
+            <p className="mt-2 text-sm text-[color:var(--muted-strong)]">
+              {statusSummary.description}
             </p>
           </div>
-
-          {isDraft ? (
-            <div className="space-y-2">
-              <label
-                className="text-sm font-medium text-[color:var(--muted-strong)]"
-                htmlFor="transitionNote"
-              >
-                Nota de estado
-              </label>
-              <Textarea
-                id="transitionNote"
-                name="note"
-                placeholder="Ej. Presupuesto revisado internamente y enviado al cliente."
-              />
+        ) : (
+          <form action={transitionAction} className="space-y-4">
+            <div className="space-y-1">
+              <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--muted)]">
+                Flujo de aprobacion
+              </p>
             </div>
-          ) : null}
 
-          <div className="flex flex-wrap gap-3">
             {isDraft ? (
-              <Button name="nextStatus" type="submit" value={BudgetStatus.SENT}>
-                {budget.insuranceCase ? "Enviar a liquidadora" : "Enviar al cliente"}
-              </Button>
+              <div className="space-y-2">
+                <label
+                  className="text-sm font-medium text-[color:var(--muted-strong)]"
+                  htmlFor="transitionNote"
+                >
+                  Nota de estado
+                </label>
+                <Textarea
+                  id="transitionNote"
+                  name="note"
+                  placeholder="Ej. Presupuesto revisado internamente y enviado al cliente."
+                />
+              </div>
             ) : null}
-          </div>
 
-          <FormMessage
-            message={transitionState.error ?? transitionState.success}
-            tone={transitionState.success ? "success" : "error"}
-          />
-        </form>
+            <div className="flex flex-wrap gap-3">
+              {isDraft ? (
+                <Button name="nextStatus" type="submit" value={BudgetStatus.SENT}>
+                  Enviar al cliente
+                </Button>
+              ) : null}
+            </div>
+
+            <FormMessage
+              message={transitionState.error ?? transitionState.success}
+              tone={transitionState.success ? "success" : "error"}
+            />
+          </form>
+        )}
 
         {canCreateWorkOrder ? (
           <form action={createWorkOrderAction} className="mt-4 border-t border-[color:var(--border)] pt-4">
@@ -241,7 +247,7 @@ export function BudgetDetailForm({ budget }: BudgetDetailFormProps) {
               >
                 Titulo
               </label>
-              <Input defaultValue={budget.title} disabled={!isDraft} id="title" name="title" />
+              <Input defaultValue={budget.title} disabled={!isEditable} id="title" name="title" />
             </div>
             <div className="space-y-2">
               <label
@@ -252,7 +258,7 @@ export function BudgetDetailForm({ budget }: BudgetDetailFormProps) {
               </label>
               <Textarea
                 defaultValue={budget.summary ?? ""}
-                disabled={!isDraft}
+                disabled={!isEditable}
                 id="summary"
                 name="summary"
               />
@@ -307,7 +313,7 @@ export function BudgetDetailForm({ budget }: BudgetDetailFormProps) {
                     </label>
                     <Input
                       defaultValue={item.note ?? ""}
-                      disabled={!isDraft}
+                      disabled={!isEditable}
                       id={`lineNote:${item.id}`}
                       name={`lineNote:${item.id}`}
                       placeholder="Comentario opcional para este item"
@@ -324,14 +330,14 @@ export function BudgetDetailForm({ budget }: BudgetDetailFormProps) {
                   </label>
                   <Input
                     defaultValue={item.quantity}
-                    disabled={!isDraft}
+                    disabled={!isEditable}
                     id={`lineQty:${item.id}`}
                     min="1"
                     name={`lineQty:${item.id}`}
                     type="number"
                   />
                   <p className="text-xs text-[color:var(--muted)]">
-                    Editable en borrador
+                    {isEditable ? "Editable en borrador" : "Solo lectura"}
                   </p>
                 </div>
 
@@ -344,7 +350,7 @@ export function BudgetDetailForm({ budget }: BudgetDetailFormProps) {
                   </label>
                   <Input
                     defaultValue={item.unitPrice}
-                    disabled={!isDraft}
+                    disabled={!isEditable}
                     id={`linePrice:${item.id}`}
                     min="0"
                     name={`linePrice:${item.id}`}
@@ -363,10 +369,63 @@ export function BudgetDetailForm({ budget }: BudgetDetailFormProps) {
           message={state.error ?? state.success}
           tone={state.success ? "success" : "error"}
         />
-        {isDraft ? (
+        {isEditable ? (
           <SubmitButton label="Guardar ajustes del borrador" pendingLabel="Actualizando..." />
         ) : null}
       </form>
     </div>
   );
+}
+
+function getBudgetStatusSummary(status: BudgetStatus, isLiquidatorBudget: boolean) {
+  const baseCardClassName =
+    status === BudgetStatus.APPROVED
+      ? "rounded-2xl border border-[rgba(22,163,74,0.18)] bg-[rgba(22,163,74,0.05)]"
+      : status === BudgetStatus.REJECTED
+        ? "rounded-2xl border border-[rgba(185,28,28,0.18)] bg-[rgba(185,28,28,0.05)]"
+        : status === BudgetStatus.PARTIALLY_APPROVED
+          ? "rounded-2xl border border-[rgba(217,119,6,0.18)] bg-[rgba(217,119,6,0.05)]"
+          : status === BudgetStatus.SENT
+            ? "rounded-2xl border border-[rgba(217,119,6,0.18)] bg-[rgba(217,119,6,0.05)]"
+            : "rounded-2xl";
+
+  if (isLiquidatorBudget) {
+    if (status === BudgetStatus.SENT) {
+      return {
+        cardClassName: baseCardClassName,
+        title: "Esperando respuesta de liquidadora",
+        description: "El presupuesto ya fue enviado automaticamente al portal de la liquidadora.",
+      };
+    }
+
+    if (status === BudgetStatus.APPROVED) {
+      return {
+        cardClassName: baseCardClassName,
+        title: "Aprobado por liquidadora",
+        description: "La liquidadora aprobo el presupuesto completo.",
+      };
+    }
+
+    if (status === BudgetStatus.PARTIALLY_APPROVED) {
+      return {
+        cardClassName: baseCardClassName,
+        title: "Aprobado parcial por liquidadora",
+        description: "La liquidadora aprobo parcialmente el presupuesto.",
+      };
+    }
+
+    if (status === BudgetStatus.REJECTED) {
+      return {
+        cardClassName: baseCardClassName,
+        title: "Rechazado por liquidadora",
+        description: "La liquidadora rechazo este presupuesto.",
+      };
+    }
+  }
+
+  return {
+    cardClassName: baseCardClassName,
+    title: "Flujo de aprobacion",
+    description: "Gestion interna del estado del presupuesto.",
+  };
 }

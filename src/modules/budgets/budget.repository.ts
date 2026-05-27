@@ -239,6 +239,8 @@ export const budgetRepository = {
     vehicleId: string;
     insuranceCaseId?: string;
     selfInspectionId?: string;
+    status?: BudgetStatus;
+    statusLogNote?: string;
     title: string;
     summary?: string;
     createdById: string;
@@ -259,6 +261,9 @@ export const budgetRepository = {
     subtotalSupplies: number;
     totalAmount: number;
   }) {
+    const initialStatus = input.status ?? BudgetStatus.DRAFT;
+    const createdAt = new Date();
+
     return prisma.budget.create({
       data: {
         budgetNumber: input.budgetNumber,
@@ -266,6 +271,7 @@ export const budgetRepository = {
         vehicleId: input.vehicleId,
         insuranceCaseId: input.insuranceCaseId,
         selfInspectionId: input.selfInspectionId,
+        status: initialStatus,
         title: input.title,
         summary: input.summary,
         createdById: input.createdById,
@@ -274,14 +280,16 @@ export const budgetRepository = {
         subtotalLabor: input.subtotalLabor,
         subtotalSupplies: input.subtotalSupplies,
         totalAmount: input.totalAmount,
+        sentAt: initialStatus === BudgetStatus.SENT ? createdAt : undefined,
         items: {
           create: input.items,
         },
         statusLogs: {
           create: {
             previousStatus: null,
-            nextStatus: BudgetStatus.DRAFT,
-            note: "Presupuesto creado en borrador.",
+            nextStatus: initialStatus,
+            note: input.statusLogNote ?? "Presupuesto creado en borrador.",
+            changedAt: createdAt,
             changedById: input.createdById,
           },
         },

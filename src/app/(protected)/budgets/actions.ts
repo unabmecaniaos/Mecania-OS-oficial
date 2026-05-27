@@ -306,8 +306,13 @@ export async function createLiquidatorBudgetDraftAction(
 
   revalidatePath("/budgets");
   revalidatePath("/work-orders");
+  revalidatePath("/liquidador");
+  if (result.data.insuranceCaseId) {
+    revalidatePath(`/insurance-cases/${result.data.insuranceCaseId}`);
+    revalidatePath(`/liquidador/cases/${result.data.insuranceCaseId}`);
+  }
   await setFlashMessage({
-    message: "Presupuesto de liquidadora creado correctamente.",
+    message: "Presupuesto creado y enviado a la liquidadora.",
     tone: "success",
   });
 

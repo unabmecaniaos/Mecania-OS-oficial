@@ -348,6 +348,8 @@ export async function createLiquidatorBudgetDraft(
     clientId: insuranceCase.clientId,
     vehicleId: insuranceCase.vehicleId,
     insuranceCaseId: insuranceCase.id,
+    status: BudgetStatus.SENT,
+    statusLogNote: "Presupuesto creado y enviado automaticamente a la liquidadora.",
     title: data.title,
     summary: data.summary,
     createdById: actor.id,

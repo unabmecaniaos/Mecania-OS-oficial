@@ -78,7 +78,6 @@ export async function respondToInsuranceBudgetAction(
     if (
       nextStatus !== BudgetStatus.APPROVED &&
       nextStatus !== BudgetStatus.REJECTED &&
-      nextStatus !== BudgetStatus.REQUEST_CHANGES &&
       nextStatus !== BudgetStatus.PARTIALLY_APPROVED
     ) {
       return {
@@ -101,9 +100,7 @@ export async function respondToInsuranceBudgetAction(
         ? "Presupuesto aprobado correctamente."
         : nextStatus === BudgetStatus.REJECTED
           ? "Presupuesto rechazado correctamente."
-          : nextStatus === BudgetStatus.REQUEST_CHANGES
-            ? "Solicitud de cambios enviada correctamente."
-            : "Presupuesto parcialmente aprobado correctamente.";
+          : "Presupuesto parcialmente aprobado correctamente.";
 
     return {
       success: successMessage,

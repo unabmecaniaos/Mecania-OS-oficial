@@ -10,6 +10,7 @@ import {
   getLiquidatorBudgetCreateContext,
   getWorkshopBudgetCreateContext,
 } from "@/modules/budgets/budget.service";
+import { getInsuranceCasePhotoViewUrl } from "@/modules/insurance-cases/insurance-case.routes";
 
 type BudgetFormKind = "workshop" | "liquidator";
 
@@ -88,6 +89,11 @@ export default async function NewBudgetPage({
             vehicleIdentifier: insuranceCase.vehicle.plate ?? insuranceCase.vehicle.vin,
             liquidatorName: insuranceCase.liquidator.name,
             hasInitialPhotos: insuranceCase.photos.length > 0,
+            initialPhotos: insuranceCase.photos.map((photo) => ({
+              id: photo.id,
+              fileName: photo.fileName,
+              photoUrl: getInsuranceCasePhotoViewUrl(photo.id),
+            })),
           }))}
           inventoryParts={context.inventoryParts.map((repuesto) => ({
             id: repuesto.id,

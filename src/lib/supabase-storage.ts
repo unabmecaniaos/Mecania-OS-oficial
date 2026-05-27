@@ -1,5 +1,5 @@
 import path from "node:path";
-import { mkdir, unlink, writeFile } from "node:fs/promises";
+import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 
 import { env } from "@/lib/env";
 import { AppError } from "@/lib/errors";
@@ -130,6 +130,15 @@ export async function uploadPublicStorageObject(input: {
     mimeType: input.file.type,
     sizeBytes: input.file.size,
   };
+}
+
+export async function readStorageObject(bucket: string, storageKey: string) {
+  if (isLocalFileStorageFallbackEnabled()) {
+    return readFile(resolveLocalStoragePath(bucket, storageKey));
+  }
+
+  const response = await storageRequest(`/object/${bucket}/${encodeStoragePath(storageKey)}`);
+  return Buffer.from(await response.arrayBuffer());
 }
 
 export async function deleteStorageObject(bucket: string, storageKey: string) {

@@ -82,6 +82,11 @@ type LiquidatorBudgetCreateFormProps = {
     vehicleIdentifier: string;
     liquidatorName: string;
     hasInitialPhotos: boolean;
+    initialPhotos: Array<{
+      id: string;
+      fileName: string;
+      photoUrl: string;
+    }>;
   }>;
   inventoryParts: InventoryPartOption[];
   references: ReferenceOption[];
@@ -419,17 +424,36 @@ export function LiquidatorBudgetCreateForm({
               />
             </div>
 
-            <div className="rounded-2xl border border-[rgba(37,99,235,0.12)] bg-white/85 px-4 py-3 shadow-[0_10px_24px_rgba(37,99,235,0.05)]">
+            <div className="space-y-3 rounded-2xl border border-[rgba(37,99,235,0.12)] bg-white/85 px-4 py-3 shadow-[0_10px_24px_rgba(37,99,235,0.05)]">
               <p className="text-[11px] uppercase tracking-[0.18em] text-[color:var(--muted)]">
                 Evidencia inicial
               </p>
-              <p className="mt-2 text-sm font-semibold text-[color:var(--foreground)]">
+              <p className="text-sm font-semibold text-[color:var(--foreground)]">
                 {selectedInsuranceCase
                   ? selectedInsuranceCase.hasInitialPhotos
                     ? "Fotos iniciales cargadas por liquidadora"
                     : "Caso sin fotos iniciales"
                   : "Selecciona un caso para ver el estado"}
               </p>
+              {selectedInsuranceCase?.initialPhotos.length ? (
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {selectedInsuranceCase.initialPhotos.map((photo) => (
+                    <a
+                      className="group block overflow-hidden rounded-xl border border-[color:var(--border)] bg-white"
+                      href={photo.photoUrl}
+                      key={photo.id}
+                      target="_blank"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        alt={photo.fileName}
+                        className="h-32 w-full object-cover transition-transform group-hover:scale-[1.02]"
+                        src={photo.photoUrl}
+                      />
+                    </a>
+                  ))}
+                </div>
+              ) : null}
             </div>
 
             <div className="space-y-2 lg:col-span-2">

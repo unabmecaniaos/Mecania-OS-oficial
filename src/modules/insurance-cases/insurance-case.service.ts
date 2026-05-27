@@ -1,7 +1,9 @@
 import { BudgetStatus, UserRole, WorkOrderStatus } from "@prisma/client";
 
-import { AppError, NotFoundError, UnauthorizedError } from "@/lib/errors";
+import { AppError, ForbiddenError, NotFoundError, UnauthorizedError } from "@/lib/errors";
+import { env } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
+import { readStorageObject } from "@/lib/supabase-storage";
 import { parseDateInput } from "@/lib/utils";
 import { requireApiUser } from "@/modules/auth/auth.service";
 import {
@@ -354,6 +356,37 @@ export async function getLiquidatorInsuranceCaseDetail(id: string) {
   }
 
   return summarizeInsuranceCaseDetail(insuranceCase);
+}
+
+export async function getInsuranceCasePhotoFile(photoId: string) {
+  const session = await requireApiUser([UserRole.ADMIN, UserRole.MECHANIC, UserRole.LIQUIDATOR]);
+  const photo = await insuranceCaseRepository.findPhotoById(photoId);
+
+  if (!photo) {
+    throw new NotFoundError("Foto del siniestro no encontrada");
+  }
+
+  if (
+    session.user.role === UserRole.LIQUIDATOR &&
+    photo.insuranceCase.liquidatorId !== session.user.id
+  ) {
+    throw new ForbiddenError();
+  }
+
+  if (!env.SUPABASE_STORAGE_BUCKET_SELF_INSPECTIONS) {
+    throw new AppError("El almacenamiento de fotos no esta configurado.", 500);
+  }
+
+  const body = await readStorageObject(
+    env.SUPABASE_STORAGE_BUCKET_SELF_INSPECTIONS,
+    photo.storageKey,
+  );
+
+  return {
+    body,
+    fileName: photo.fileName,
+    mimeType: photo.mimeType,
+  };
 }
 
 export async function respondToInsuranceBudget(

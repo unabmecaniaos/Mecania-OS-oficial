@@ -176,7 +176,7 @@ export const budgetRepository = {
       }),
     ]);
   },
-  listLiquidatorCreateContext() {
+  listLiquidatorCreateContext(filters?: { liquidatorId?: string }) {
     return Promise.all([
       prisma.budgetReferenceCatalog.findMany({
         where: {
@@ -193,6 +193,7 @@ export const budgetRepository = {
       prisma.insuranceCase.findMany({
         where: {
           createdFromLiquidatorPortal: true,
+          ...(filters?.liquidatorId ? { liquidatorId: filters.liquidatorId } : {}),
         },
         include: {
           liquidator: {
@@ -206,7 +207,7 @@ export const budgetRepository = {
             orderBy: {
               createdAt: "asc",
             },
-            take: 1,
+            take: 4,
           },
           budgets: {
             where: {

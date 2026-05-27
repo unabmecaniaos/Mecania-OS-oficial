@@ -325,6 +325,22 @@ export const insuranceCaseRepository = {
     });
   },
 
+  findPhotoById(id: string) {
+    return prisma.insuranceCasePhoto.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        insuranceCase: {
+          select: {
+            id: true,
+            liquidatorId: true,
+          },
+        },
+      },
+    });
+  },
+
   create(input: {
     caseNumber: string;
     clientId: string;

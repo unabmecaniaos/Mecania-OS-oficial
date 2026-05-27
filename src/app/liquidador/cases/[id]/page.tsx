@@ -14,6 +14,7 @@ import {
   getLiquidatorInsuranceCaseDetail,
   INSURANCE_CASE_STAGE_LABELS,
 } from "@/modules/insurance-cases/insurance-case.service";
+import { getInsuranceCasePhotoViewUrl } from "@/modules/insurance-cases/insurance-case.routes";
 import { WORK_ORDER_STATUS_LABELS } from "@/modules/work-orders/work-order.constants";
 
 const timelineSteps = ["INGRESADO", "PRESUPUESTADO", "EN_REPARACION", "LISTO"] as const;
@@ -118,7 +119,7 @@ export default async function LiquidatorCaseDetailPage({
                   <img
                     alt={photo.fileName}
                     className="h-44 w-full rounded-xl object-cover"
-                    src={photo.fileUrl}
+                    src={getInsuranceCasePhotoViewUrl(photo.id)}
                   />
                   <p className="mt-3 text-sm text-[color:var(--muted)]">
                     {formatDateTime(photo.createdAt)}

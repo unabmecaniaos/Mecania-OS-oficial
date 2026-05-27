@@ -283,7 +283,7 @@ export async function createLiquidatorBudgetDraftAction(
   formData: FormData,
 ): Promise<ActionState> {
   const result = await executeServerAction("createLiquidatorBudgetDraftAction", async () => {
-    const session = await requireApiUser([UserRole.ADMIN, UserRole.MECHANIC]);
+    const session = await requireApiUser([UserRole.ADMIN, UserRole.MECHANIC, UserRole.LIQUIDATOR]);
 
     return createLiquidatorBudgetDraft(
       {
@@ -293,7 +293,10 @@ export async function createLiquidatorBudgetDraftAction(
       },
       parseCatalogSelections(formData),
       parseManualSelections(formData),
-      session.user.id,
+      {
+        id: session.user.id,
+        role: session.user.role,
+      },
     );
   });
 
@@ -307,6 +310,11 @@ export async function createLiquidatorBudgetDraftAction(
     message: "Presupuesto de liquidadora creado correctamente.",
     tone: "success",
   });
+
+  if (result.data.insuranceCaseId && result.data.insuranceCase?.liquidatorId === result.data.createdById) {
+    redirect(`/liquidador/cases/${result.data.insuranceCaseId}`);
+  }
+
   redirect(`/budgets/${result.data.id}`);
 }
 

@@ -1,4 +1,4 @@
-import { BudgetItemType, BudgetStatus, WorkOrderStatus } from "@prisma/client";
+import { BudgetItemType, BudgetStatus, UserRole, WorkOrderStatus } from "@prisma/client";
 
 import { AppError, ConflictError, NotFoundError } from "@/lib/errors";
 import { createLogger } from "@/lib/logger";
@@ -155,9 +155,16 @@ export async function getWorkshopBudgetCreateContext() {
   };
 }
 
-export async function getLiquidatorBudgetCreateContext() {
+export async function getLiquidatorBudgetCreateContext(input?: {
+  actorId?: string;
+  actorRole?: UserRole;
+}) {
   const [references, inventoryParts, insuranceCases] =
-    await budgetRepository.listLiquidatorCreateContext();
+    await budgetRepository.listLiquidatorCreateContext(
+      input?.actorRole === UserRole.LIQUIDATOR && input.actorId
+        ? { liquidatorId: input.actorId }
+        : undefined,
+    );
 
   return {
     insuranceCases,
@@ -316,11 +323,17 @@ export async function createLiquidatorBudgetDraft(
   input: unknown,
   selections: DraftCatalogSelection[],
   manualSelections: DraftManualSelection[],
-  actorId: string,
+  actor: {
+    id: string;
+    role: UserRole;
+  },
 ) {
   const data = createLiquidatorBudgetSchema.parse(input);
   const { references, inventoryParts, insuranceCases } =
-    await getLiquidatorBudgetCreateContext();
+    await getLiquidatorBudgetCreateContext({
+      actorId: actor.id,
+      actorRole: actor.role,
+    });
   const insuranceCase = insuranceCases.find((entry) => entry.id === data.insuranceCaseId);
 
   if (!insuranceCase) {
@@ -337,7 +350,7 @@ export async function createLiquidatorBudgetDraft(
     insuranceCaseId: insuranceCase.id,
     title: data.title,
     summary: data.summary,
-    createdById: actorId,
+    createdById: actor.id,
     items: draftItems,
     ...totals,
   });

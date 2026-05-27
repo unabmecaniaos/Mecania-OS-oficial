@@ -9,6 +9,7 @@ import { normalizeError } from "@/lib/errors";
 import { formatCurrency, formatDate, formatDateTime } from "@/lib/utils";
 import { BUDGET_ITEM_TYPE_LABELS } from "@/modules/budgets/budget.constants";
 import { getInternalInsuranceCaseDetail } from "@/modules/insurance-cases/insurance-case.service";
+import { getInsuranceCasePhotoViewUrl } from "@/modules/insurance-cases/insurance-case.routes";
 import { WORK_ORDER_STATUS_LABELS } from "@/modules/work-orders/work-order.constants";
 
 export default async function InternalInsuranceCaseDetailPage({
@@ -95,7 +96,7 @@ export default async function InternalInsuranceCaseDetailPage({
                   <img
                     alt={photo.fileName}
                     className="h-44 w-full rounded-xl object-cover"
-                    src={photo.fileUrl}
+                    src={getInsuranceCasePhotoViewUrl(photo.id)}
                   />
                   <p className="mt-3 text-xs text-[color:var(--muted)]">
                     {formatDateTime(photo.createdAt)}

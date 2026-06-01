@@ -10,6 +10,7 @@ import {
 import { z } from "zod";
 
 import { optionalText, requiredInteger, requiredText } from "@/lib/validation";
+import { normalizeVin, vinSchema } from "@/lib/vin";
 
 const currentYear = new Date().getFullYear() + 1;
 const relaxedPlateRegex = /^[A-Z0-9]{5,8}$/;
@@ -58,9 +59,7 @@ export function normalizePlate(value: string) {
   return value.replace(/[\s-]/g, "").toUpperCase();
 }
 
-export function normalizeVin(value: string) {
-  return value.trim().toUpperCase();
-}
+export { normalizeVin };
 
 export const plateSchema = z
   .string()
@@ -76,7 +75,7 @@ export const selfInspectionVehicleStepSchema = z.object({
   phone: requiredText(6, 32),
   email: z.email().trim(),
   plate: plateSchema,
-  vin: requiredText(8, 32).transform(normalizeVin),
+  vin: vinSchema,
   make: requiredText(1, 80),
   model: requiredText(1, 80),
   year: requiredInteger(1950, currentYear),

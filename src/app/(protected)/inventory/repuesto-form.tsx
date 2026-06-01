@@ -5,10 +5,18 @@ import { useActionState } from "react";
 import { createRepuestoAction } from "@/app/(protected)/inventory/actions";
 import { FormMessage } from "@/components/ui/form-message";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { initialActionState } from "@/lib/form-state";
 
-export function RepuestoForm() {
+type RepuestoFormProps = {
+  vehicles?: Array<{
+    id: string;
+    label: string;
+  }>;
+};
+
+export function RepuestoForm({ vehicles = [] }: RepuestoFormProps) {
   const [state, formAction] = useActionState(createRepuestoAction, initialActionState);
 
   return (
@@ -56,6 +64,27 @@ export function RepuestoForm() {
             Stock minimo
           </label>
           <Input defaultValue={0} id="minimumStock" min={0} name="minimumStock" type="number" />
+        </div>
+
+        <div className="space-y-2 md:col-span-2">
+          <label
+            className="text-sm font-medium text-[color:var(--muted-strong)]"
+            htmlFor="compatibleVehicleId"
+          >
+            Vehiculo compatible inicial
+          </label>
+          <Select id="compatibleVehicleId" name="compatibleVehicleId">
+            <option value="">Sin compatibilidad inicial</option>
+            {vehicles.map((vehicle) => (
+              <option key={vehicle.id} value={vehicle.id}>
+                {vehicle.label}
+              </option>
+            ))}
+          </Select>
+          <p className="text-sm text-[color:var(--muted)]">
+            Usa un VIN real de vehiculo ya registrado para que el presupuesto pueda filtrar este
+            repuesto.
+          </p>
         </div>
       </div>
 

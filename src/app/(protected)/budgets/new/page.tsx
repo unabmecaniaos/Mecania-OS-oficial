@@ -84,6 +84,7 @@ export default async function NewBudgetPage({
             incidentDateLabel: formatDate(insuranceCase.incidentDate),
             incidentLocation: insuranceCase.incidentLocation ?? null,
             description: insuranceCase.description,
+            vehicleId: insuranceCase.vehicle.id,
             vehicleName: `${insuranceCase.vehicle.make} ${insuranceCase.vehicle.model}`,
             vehicleLabel: `${insuranceCase.vehicle.make} ${insuranceCase.vehicle.model} / ${insuranceCase.vehicle.plate ?? insuranceCase.vehicle.vin}`,
             vehicleIdentifier: insuranceCase.vehicle.plate ?? insuranceCase.vehicle.vin,
@@ -102,6 +103,9 @@ export default async function NewBudgetPage({
             unitPrice: repuesto.unitPrice,
             currentStock: repuesto.currentStock,
             minimumStock: repuesto.minimumStock,
+            compatibleVehicleIds: repuesto.compatibleVehicles.map(
+              (compatibility) => compatibility.vehicleId,
+            ),
           }))}
           references={context.references.map((reference) => ({
             id: reference.id,
@@ -164,6 +168,9 @@ export default async function NewBudgetPage({
           unitPrice: repuesto.unitPrice,
           currentStock: repuesto.currentStock,
           minimumStock: repuesto.minimumStock,
+          compatibleVehicleIds: repuesto.compatibleVehicles.map(
+            (compatibility) => compatibility.vehicleId,
+          ),
         }))}
         references={context.references.map((reference) => ({
           id: reference.id,

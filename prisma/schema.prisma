@@ -162,6 +162,12 @@ enum StockMovementSourceType {
   WORK_ORDER
 }
 
+enum VehiclePartCompatibilitySource {
+  MANUAL
+  WORK_ORDER
+  IMPORT
+}
+
 enum BudgetStatus {
   DRAFT
   SENT
@@ -225,23 +231,23 @@ model Session {
 }
 
 model Client {
-  id              String           @id @default(cuid())
-  fullName        String
-  localIdentifier String?          @db.VarChar(32)
-  phone           String           @db.VarChar(32)
-  email           String           @db.VarChar(255)
-  address         String?
-  isWorkshopClient Boolean         @default(true)
-  deletedAt       DateTime?
-  purgeAt         DateTime?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  user            User?
-  vehicles        Vehicle[]
-  workOrders      WorkOrder[]
-  selfInspections SelfInspection[]
-  budgets         Budget[]
-  insuranceCases  InsuranceCase[]
+  id               String           @id @default(cuid())
+  fullName         String
+  localIdentifier  String?          @db.VarChar(32)
+  phone            String           @db.VarChar(32)
+  email            String           @db.VarChar(255)
+  address          String?
+  isWorkshopClient Boolean          @default(true)
+  deletedAt        DateTime?
+  purgeAt          DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  user             User?
+  vehicles         Vehicle[]
+  workOrders       WorkOrder[]
+  selfInspections  SelfInspection[]
+  budgets          Budget[]
+  insuranceCases   InsuranceCase[]
 
   @@index([fullName])
   @@index([email])
@@ -250,10 +256,10 @@ model Client {
 }
 
 model Vehicle {
-  id              String                   @id @default(cuid())
+  id              String                     @id @default(cuid())
   clientId        String
-  plate           String?                  @unique @db.VarChar(16)
-  vin             String                   @unique @db.VarChar(32)
+  plate           String?                    @unique @db.VarChar(16)
+  vin             String                     @unique @db.VarChar(32)
   make            String
   model           String
   year            Int
@@ -263,13 +269,14 @@ model Vehicle {
   transmission    VehicleTransmissionType?
   deletedAt       DateTime?
   purgeAt         DateTime?
-  createdAt       DateTime                 @default(now())
-  updatedAt       DateTime                 @updatedAt
-  client          Client                   @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  createdAt       DateTime                   @default(now())
+  updatedAt       DateTime                   @updatedAt
+  client          Client                     @relation(fields: [clientId], references: [id], onDelete: Restrict)
   workOrders      WorkOrder[]
   selfInspections SelfInspection[]
   budgets         Budget[]
   insuranceCases  InsuranceCase[]
+  compatibleParts VehiclePartCompatibility[]
 
   @@index([clientId])
   @@index([make, model])
@@ -333,22 +340,39 @@ model WorkOrderTask {
 }
 
 model Repuesto {
-  id           String          @id @default(cuid())
-  name         String
-  code         String          @unique @db.VarChar(80)
-  unitPrice    Int             @default(0)
-  currentStock Int             @default(0)
-  minimumStock Int             @default(0)
-  deletedAt    DateTime?
-  purgeAt      DateTime?
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
-  movements    StockMovement[]
-  workOrders   WorkOrderPart[]
+  id                 String                     @id @default(cuid())
+  name               String
+  code               String                     @unique @db.VarChar(80)
+  unitPrice          Int                        @default(0)
+  currentStock       Int                        @default(0)
+  minimumStock       Int                        @default(0)
+  deletedAt          DateTime?
+  purgeAt            DateTime?
+  createdAt          DateTime                   @default(now())
+  updatedAt          DateTime                   @updatedAt
+  movements          StockMovement[]
+  workOrders         WorkOrderPart[]
+  compatibleVehicles VehiclePartCompatibility[]
 
   @@index([name])
   @@index([currentStock, minimumStock])
   @@index([deletedAt, purgeAt])
+}
+
+model VehiclePartCompatibility {
+  id         String                         @id @default(cuid())
+  vehicleId  String
+  repuestoId String
+  source     VehiclePartCompatibilitySource @default(MANUAL)
+  notes      String?
+  createdAt  DateTime                       @default(now())
+  updatedAt  DateTime                       @updatedAt
+  vehicle    Vehicle                        @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  repuesto   Repuesto                       @relation(fields: [repuestoId], references: [id], onDelete: Cascade)
+
+  @@unique([vehicleId, repuestoId])
+  @@index([repuestoId])
+  @@index([source])
 }
 
 model WorkOrderPart {
@@ -419,35 +443,35 @@ model WorkOrderStatusLog {
 }
 
 model SelfInspection {
-  id                    String                         @id @default(cuid())
+  id                    String                            @id @default(cuid())
   customerId            String
   vehicleId             String?
   workOrderId           String?
-  status                SelfInspectionStatus           @default(DRAFT)
-  sourceChannel         SelfInspectionSource           @default(SECURE_LINK)
-  accessTokenHash       String?                        @unique
+  status                SelfInspectionStatus              @default(DRAFT)
+  sourceChannel         SelfInspectionSource              @default(SECURE_LINK)
+  accessTokenHash       String?                           @unique
   accessTokenExpiresAt  DateTime?
   inspectionReason      SelfInspectionReason?
   inspectionReasonOther String?
   mainComplaint         String?
   canDrive              Boolean?
-  startedAt             DateTime                       @default(now())
+  startedAt             DateTime                          @default(now())
   submittedAt           DateTime?
   reviewedAt            DateTime?
   reviewerId            String?
   operationalOutcome    SelfInspectionOperationalOutcome?
-  overallRiskLevel      SelfInspectionRiskLevel        @default(LOW)
+  overallRiskLevel      SelfInspectionRiskLevel           @default(LOW)
   summaryGenerated      String?
-  completionPercent     Int                            @default(0)
-  lastCompletedStep     Int                            @default(1)
+  completionPercent     Int                               @default(0)
+  lastCompletedStep     Int                               @default(1)
   deletedAt             DateTime?
   purgeAt               DateTime?
-  createdAt             DateTime                       @default(now())
-  updatedAt             DateTime                       @updatedAt
-  customer              Client                         @relation(fields: [customerId], references: [id], onDelete: Restrict)
-  vehicle               Vehicle?                       @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
-  workOrder             WorkOrder?                     @relation(fields: [workOrderId], references: [id], onDelete: SetNull)
-  reviewer              User?                          @relation("SelfInspectionReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  createdAt             DateTime                          @default(now())
+  updatedAt             DateTime                          @updatedAt
+  customer              Client                            @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  vehicle               Vehicle?                          @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  workOrder             WorkOrder?                        @relation(fields: [workOrderId], references: [id], onDelete: SetNull)
+  reviewer              User?                             @relation("SelfInspectionReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
   vehicleSnapshot       SelfInspectionVehicleSnapshot?
   answers               SelfInspectionAnswer[]
   photos                SelfInspectionPhoto[]
@@ -566,38 +590,38 @@ model SelfInspectionStatusLog {
 }
 
 model Budget {
-  id                String            @id @default(cuid())
-  budgetNumber      String            @unique
-  clientId          String
-  vehicleId         String
-  insuranceCaseId   String?
-  selfInspectionId  String?
-  workOrderId       String?           @unique
-  title             String
-  summary           String?
-  status            BudgetStatus      @default(DRAFT)
-  subtotalParts     Int               @default(0)
-  subtotalLabor     Int               @default(0)
-  subtotalSupplies  Int               @default(0)
-  totalAmount       Int               @default(0)
-  sentAt            DateTime?
-  approvedAt        DateTime?
-  rejectedAt        DateTime?
-  createdById       String
-  updatedById       String?
-  deletedAt         DateTime?
-  purgeAt           DateTime?
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
-  client            Client            @relation(fields: [clientId], references: [id], onDelete: Restrict)
-  vehicle           Vehicle           @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
-  insuranceCase     InsuranceCase?    @relation(fields: [insuranceCaseId], references: [id], onDelete: SetNull)
-  selfInspection    SelfInspection?   @relation(fields: [selfInspectionId], references: [id], onDelete: SetNull)
-  workOrder         WorkOrder?        @relation(fields: [workOrderId], references: [id], onDelete: SetNull)
-  createdBy         User              @relation("BudgetCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
-  updatedBy         User?             @relation("BudgetUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
-  items             BudgetItem[]
-  statusLogs        BudgetStatusLog[]
+  id               String            @id @default(cuid())
+  budgetNumber     String            @unique
+  clientId         String
+  vehicleId        String
+  insuranceCaseId  String?
+  selfInspectionId String?
+  workOrderId      String?           @unique
+  title            String
+  summary          String?
+  status           BudgetStatus      @default(DRAFT)
+  subtotalParts    Int               @default(0)
+  subtotalLabor    Int               @default(0)
+  subtotalSupplies Int               @default(0)
+  totalAmount      Int               @default(0)
+  sentAt           DateTime?
+  approvedAt       DateTime?
+  rejectedAt       DateTime?
+  createdById      String
+  updatedById      String?
+  deletedAt        DateTime?
+  purgeAt          DateTime?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  client           Client            @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  vehicle          Vehicle           @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+  insuranceCase    InsuranceCase?    @relation(fields: [insuranceCaseId], references: [id], onDelete: SetNull)
+  selfInspection   SelfInspection?   @relation(fields: [selfInspectionId], references: [id], onDelete: SetNull)
+  workOrder        WorkOrder?        @relation(fields: [workOrderId], references: [id], onDelete: SetNull)
+  createdBy        User              @relation("BudgetCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  updatedBy        User?             @relation("BudgetUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  items            BudgetItem[]
+  statusLogs       BudgetStatusLog[]
 
   @@index([clientId, createdAt])
   @@index([vehicleId, createdAt])
@@ -608,29 +632,29 @@ model Budget {
 }
 
 model InsuranceCase {
-  id               String               @id @default(cuid())
-  caseNumber       String               @unique
-  claimNumber      String?              @db.VarChar(64)
-  policyNumber     String?              @db.VarChar(64)
-  clientId         String
-  vehicleId        String
-  liquidatorId     String
-  createdFromLiquidatorPortal Boolean   @default(false)
-  ownerFullName    String               @default("")
-  ownerPhone       String               @default("") @db.VarChar(32)
-  ownerEmail       String?              @db.VarChar(255)
-  ownerAddress     String?
-  incidentDate     DateTime
-  incidentLocation String?
-  description      String
-  createdAt        DateTime             @default(now())
-  updatedAt        DateTime             @updatedAt
-  client           Client               @relation(fields: [clientId], references: [id], onDelete: Restrict)
-  vehicle          Vehicle              @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
-  liquidator       User                 @relation("InsuranceCaseLiquidator", fields: [liquidatorId], references: [id], onDelete: Restrict)
-  photos           InsuranceCasePhoto[]
-  budgets          Budget[]
-  workOrders       WorkOrder[]
+  id                          String               @id @default(cuid())
+  caseNumber                  String               @unique
+  claimNumber                 String?              @db.VarChar(64)
+  policyNumber                String?              @db.VarChar(64)
+  clientId                    String
+  vehicleId                   String
+  liquidatorId                String
+  createdFromLiquidatorPortal Boolean              @default(false)
+  ownerFullName               String               @default("")
+  ownerPhone                  String               @default("") @db.VarChar(32)
+  ownerEmail                  String?              @db.VarChar(255)
+  ownerAddress                String?
+  incidentDate                DateTime
+  incidentLocation            String?
+  description                 String
+  createdAt                   DateTime             @default(now())
+  updatedAt                   DateTime             @updatedAt
+  client                      Client               @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  vehicle                     Vehicle              @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+  liquidator                  User                 @relation("InsuranceCaseLiquidator", fields: [liquidatorId], references: [id], onDelete: Restrict)
+  photos                      InsuranceCasePhoto[]
+  budgets                     Budget[]
+  workOrders                  WorkOrder[]
 
   @@index([liquidatorId, createdAt])
   @@index([clientId, createdAt])
@@ -638,36 +662,36 @@ model InsuranceCase {
 }
 
 model InsuranceCasePhoto {
-  id              String         @id @default(cuid())
+  id              String        @id @default(cuid())
   insuranceCaseId String
   fileUrl         String
-  storageKey      String         @unique
+  storageKey      String        @unique
   fileName        String
   mimeType        String
   sizeBytes       Int
   note            String?
-  createdAt       DateTime       @default(now())
-  insuranceCase   InsuranceCase  @relation(fields: [insuranceCaseId], references: [id], onDelete: Cascade)
+  createdAt       DateTime      @default(now())
+  insuranceCase   InsuranceCase @relation(fields: [insuranceCaseId], references: [id], onDelete: Cascade)
 
   @@index([insuranceCaseId, createdAt])
 }
 
 model BudgetItem {
-  id                 String                 @id @default(cuid())
+  id                 String                  @id @default(cuid())
   budgetId           String
   referenceCatalogId String?
   itemType           BudgetItemType
   description        String
-  referenceCode      String?                @db.VarChar(40)
+  referenceCode      String?                 @db.VarChar(40)
   quantity           Int
   unitPrice          Int
   subtotal           Int
   sourceLabel        String?
   sourceUrl          String?
   note               String?
-  createdAt          DateTime               @default(now())
-  updatedAt          DateTime               @updatedAt
-  budget             Budget                 @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+  budget             Budget                  @relation(fields: [budgetId], references: [id], onDelete: Cascade)
   referenceCatalog   BudgetReferenceCatalog? @relation(fields: [referenceCatalogId], references: [id], onDelete: SetNull)
 
   @@index([budgetId, itemType])
@@ -689,17 +713,17 @@ model BudgetStatusLog {
 }
 
 model BudgetReferenceCatalog {
-  id                   String          @id @default(cuid())
+  id                   String         @id @default(cuid())
   itemType             BudgetItemType
   name                 String
-  referenceCode        String?         @unique @db.VarChar(40)
+  referenceCode        String?        @unique @db.VarChar(40)
   unitPrice            Int
   sourceLabel          String
   sourceUrl            String?
   vehicleCompatibility String?
-  active               Boolean         @default(true)
-  createdAt            DateTime        @default(now())
-  updatedAt            DateTime        @updatedAt
+  active               Boolean        @default(true)
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
   items                BudgetItem[]
 
   @@index([itemType, active])

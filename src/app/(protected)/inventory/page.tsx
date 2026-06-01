@@ -48,6 +48,11 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
                       Ajuste de stock
                     </Button>
                   </Link>
+                  <Link href="/inventory/compatibility">
+                    <Button className="whitespace-nowrap" variant="secondary">
+                      Compatibilidad VIN
+                    </Button>
+                  </Link>
                 </>
               ) : null}
               <Link href="/inventory/movements">
@@ -90,6 +95,11 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
                   </div>
                   <p className="mt-1 text-sm text-[color:var(--muted-strong)]">
                     Codigo {repuesto.code}
+                  </p>
+                  <p className="mt-1 text-sm text-[color:var(--muted)]">
+                    {repuesto.compatibleVehicles.length > 0
+                      ? `${repuesto.compatibleVehicles.length} vehiculo(s) compatible(s) por VIN`
+                      : "Sin compatibilidad VIN registrada"}
                   </p>
                 </div>
 

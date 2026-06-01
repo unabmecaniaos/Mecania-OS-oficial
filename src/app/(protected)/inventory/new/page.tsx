@@ -5,7 +5,9 @@ import { UserRole } from "@prisma/client";
 import { RepuestoForm } from "@/app/(protected)/inventory/repuesto-form";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { isValidVinFormat } from "@/lib/vin";
 import { getCurrentSession } from "@/modules/auth/auth.service";
+import { getPartCompatibilityContext } from "@/modules/inventory/inventory.service";
 
 export default async function NewInventoryPartPage() {
   const session = await getCurrentSession();
@@ -13,6 +15,8 @@ export default async function NewInventoryPartPage() {
   if (session?.user.role !== UserRole.ADMIN) {
     redirect("/inventory");
   }
+
+  const { vehicles } = await getPartCompatibilityContext();
 
   return (
     <div className="space-y-6">
@@ -32,7 +36,14 @@ export default async function NewInventoryPartPage() {
       </Card>
 
       <Card className="rounded-2xl">
-        <RepuestoForm />
+        <RepuestoForm
+          vehicles={vehicles
+            .filter((vehicle) => isValidVinFormat(vehicle.vin))
+            .map((vehicle) => ({
+              id: vehicle.id,
+              label: `${vehicle.make} ${vehicle.model} / ${vehicle.plate ?? vehicle.vin} / ${vehicle.client.fullName}`,
+            }))}
+        />
       </Card>
     </div>
   );

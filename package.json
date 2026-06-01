@@ -16,6 +16,7 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:seed:if-empty": "tsx prisma/seed-if-empty.ts",
     "db:bootstrap": "tsx scripts/bootstrap-admin.ts",
+    "audit:vins": "tsx scripts/audit-vins.ts",
     "jira:issue:get": "tsx tools/jira/cli.ts issue:get",
     "jira:issue:list-subtasks": "tsx tools/jira/list-subtasks.ts",
     "jira:issue:comment": "tsx tools/jira/cli.ts issue:comment",

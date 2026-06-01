@@ -34,6 +34,7 @@ export const createRepuestoSchema = z.object({
   unitPrice: nonNegativeStock,
   initialStock: nonNegativeStock,
   minimumStock: nonNegativeStock,
+  compatibleVehicleId: optionalText(40),
 });
 
 export const registerStockEntrySchema = z.object({
@@ -53,4 +54,10 @@ export const adjustStockSchema = z.object({
 export const setWorkOrderPartUsageSchema = z.object({
   repuestoId: requiredText(1, 40),
   quantity: nonNegativeStock,
+});
+
+export const assignPartCompatibilitySchema = z.object({
+  repuestoId: requiredText(1, 40),
+  vehicleId: requiredText(1, 40),
+  notes: optionalText(500),
 });

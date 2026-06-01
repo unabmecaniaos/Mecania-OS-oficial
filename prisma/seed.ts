@@ -12,6 +12,7 @@ import {
   SelfInspectionSource,
   SelfInspectionStatus,
   UserRole,
+  VehiclePartCompatibilitySource,
   VehicleFuelType,
   VehicleTransmissionType,
   StockMovementSourceType,
@@ -32,6 +33,7 @@ export async function seedDemoData() {
   await prisma.budgetStatusLog.deleteMany();
   await prisma.budgetItem.deleteMany();
   await prisma.budget.deleteMany();
+  await prisma.vehiclePartCompatibility.deleteMany();
   await prisma.insuranceCasePhoto.deleteMany();
   await prisma.insuranceCase.deleteMany();
   await prisma.budgetReferenceCatalog.deleteMany();
@@ -693,6 +695,35 @@ export async function seedDemoData() {
       quantity: 2,
       createdById: mechanic.id,
     },
+  });
+
+  await prisma.vehiclePartCompatibility.createMany({
+    data: [
+      {
+        vehicleId: vehicleA.id,
+        repuestoId: brakePads.id,
+        source: VehiclePartCompatibilitySource.WORK_ORDER,
+        notes: `Aprendida desde orden ${workOrderA.orderNumber}`,
+      },
+      {
+        vehicleId: vehicleA.id,
+        repuestoId: oilFilter.id,
+        source: VehiclePartCompatibilitySource.MANUAL,
+        notes: "Compatibilidad demo para filtro de presupuesto por VIN",
+      },
+      {
+        vehicleId: vehicleB.id,
+        repuestoId: oilFilter.id,
+        source: VehiclePartCompatibilitySource.MANUAL,
+        notes: "Compatibilidad demo para filtro de presupuesto por VIN",
+      },
+      {
+        vehicleId: vehicleB.id,
+        repuestoId: engineOil.id,
+        source: VehiclePartCompatibilitySource.MANUAL,
+        notes: "Compatibilidad demo para filtro de presupuesto por VIN",
+      },
+    ],
   });
 
   const publicDraftToken = "demo-self-inspection-2026";

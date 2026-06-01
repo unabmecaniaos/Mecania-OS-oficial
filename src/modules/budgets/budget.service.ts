@@ -188,6 +188,7 @@ function buildDraftItems(
   inventoryParts: Awaited<ReturnType<typeof budgetRepository.listWorkshopCreateContext>>[2],
   selections: DraftCatalogSelection[],
   manualSelections: DraftManualSelection[],
+  vehicleId: string,
 ) {
   const selectedCatalogItems = selections
     .map((selection) => {
@@ -196,6 +197,17 @@ function buildDraftItems(
 
         if (!repuesto) {
           return null;
+        }
+
+        const isCompatible = repuesto.compatibleVehicles.some(
+          (compatibility) => compatibility.vehicleId === vehicleId,
+        );
+
+        if (!isCompatible) {
+          throw new AppError(
+            `El repuesto ${repuesto.name} no esta registrado como compatible con el VIN del vehiculo seleccionado`,
+            422,
+          );
         }
 
         return {
@@ -292,7 +304,13 @@ export async function createWorkshopBudgetDraft(
     }
   }
 
-  const draftItems = buildDraftItems(references, inventoryParts, selections, manualSelections);
+  const draftItems = buildDraftItems(
+    references,
+    inventoryParts,
+    selections,
+    manualSelections,
+    vehicleId,
+  );
   const totals = calculateTotals(draftItems);
   const insuranceCase = await findLatestInsuranceCaseLink(clientId, vehicleId);
 
@@ -340,7 +358,13 @@ export async function createLiquidatorBudgetDraft(
     throw new NotFoundError("Caso de liquidadora no encontrado");
   }
 
-  const draftItems = buildDraftItems(references, inventoryParts, selections, manualSelections);
+  const draftItems = buildDraftItems(
+    references,
+    inventoryParts,
+    selections,
+    manualSelections,
+    insuranceCase.vehicleId,
+  );
   const totals = calculateTotals(draftItems);
 
   return budgetRepository.createDraft({

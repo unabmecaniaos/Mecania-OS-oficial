@@ -2,14 +2,17 @@ import {
   Prisma,
   StockMovementSourceType,
   StockMovementType,
+  VehiclePartCompatibilitySource,
 } from "@prisma/client";
 
 import { ConflictError, NotFoundError } from "@/lib/errors";
 import { createLogger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
+import { isValidVinFormat, vinSchema } from "@/lib/vin";
 import { inventoryRepository } from "@/modules/inventory/inventory.repository";
 import {
   adjustStockSchema,
+  assignPartCompatibilitySchema,
   createRepuestoSchema,
   registerStockEntrySchema,
   setWorkOrderPartUsageSchema,
@@ -93,6 +96,79 @@ export async function listInventoryOptions() {
   return inventoryRepository.listAvailableRepuestos();
 }
 
+export async function getPartCompatibilityContext() {
+  const [repuestos, vehicles, compatibilities] = await Promise.all([
+    inventoryRepository.listAvailableRepuestos(),
+    inventoryRepository.listVehicleCompatibilityOptions(),
+    inventoryRepository.listPartCompatibilities(),
+  ]);
+
+  return {
+    repuestos,
+    vehicles,
+    compatibilities,
+  };
+}
+
+export async function getCompatiblePartsByVin(input: string) {
+  const vin = vinSchema.parse(input);
+  const vehicle = await prisma.vehicle.findFirst({
+    where: {
+      vin,
+      deletedAt: null,
+    },
+    select: {
+      id: true,
+      vin: true,
+      plate: true,
+      make: true,
+      model: true,
+      year: true,
+      client: {
+        select: {
+          fullName: true,
+          isWorkshopClient: true,
+        },
+      },
+      compatibleParts: {
+        include: {
+          repuesto: true,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      },
+    },
+  });
+
+  if (!vehicle) {
+    throw new NotFoundError("Vehiculo no encontrado para el VIN indicado");
+  }
+
+  return {
+    vehicle: {
+      id: vehicle.id,
+      vin: vehicle.vin,
+      plate: vehicle.plate,
+      make: vehicle.make,
+      model: vehicle.model,
+      year: vehicle.year,
+      clientName: vehicle.client.fullName,
+      isWorkshopClient: vehicle.client.isWorkshopClient,
+    },
+    compatibleParts: vehicle.compatibleParts.map((compatibility) => ({
+      id: compatibility.repuesto.id,
+      name: compatibility.repuesto.name,
+      code: compatibility.repuesto.code,
+      unitPrice: compatibility.repuesto.unitPrice,
+      currentStock: compatibility.repuesto.currentStock,
+      minimumStock: compatibility.repuesto.minimumStock,
+      source: compatibility.source,
+      notes: compatibility.notes,
+    })),
+  };
+}
+
 export async function listRecentStockMovements(limit?: number) {
   return inventoryRepository.listRecentMovements(limit);
 }
@@ -132,6 +208,35 @@ export async function createRepuesto(input: unknown, actorId: string) {
       });
     }
 
+    if (data.compatibleVehicleId) {
+      const vehicle = await tx.vehicle.findFirst({
+        where: {
+          id: data.compatibleVehicleId,
+          deletedAt: null,
+        },
+        select: {
+          vin: true,
+        },
+      });
+
+      if (!vehicle) {
+        throw new NotFoundError("Vehiculo no encontrado");
+      }
+
+      if (!isValidVinFormat(vehicle.vin)) {
+        throw new ConflictError("El vehiculo seleccionado no tiene un VIN valido para compatibilidad");
+      }
+
+      await tx.vehiclePartCompatibility.create({
+        data: {
+          vehicleId: data.compatibleVehicleId,
+          repuestoId: repuesto.id,
+          source: VehiclePartCompatibilitySource.MANUAL,
+          notes: "Compatibilidad registrada al crear el repuesto",
+        },
+      });
+    }
+
     return tx.repuesto.findUniqueOrThrow({
       where: { id: repuesto.id },
     });
@@ -144,6 +249,72 @@ export async function createRepuesto(input: unknown, actorId: string) {
   });
 
   return repuesto;
+}
+
+export async function assignPartCompatibility(input: unknown, actorId: string) {
+  const data = assignPartCompatibilitySchema.parse(input);
+
+  const [repuesto, vehicle] = await Promise.all([
+    prisma.repuesto.findFirst({
+      where: {
+        id: data.repuestoId,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+      },
+    }),
+    prisma.vehicle.findFirst({
+      where: {
+        id: data.vehicleId,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        vin: true,
+      },
+    }),
+  ]);
+
+  if (!repuesto) {
+    throw new NotFoundError("Repuesto no encontrado");
+  }
+
+  if (!vehicle) {
+    throw new NotFoundError("Vehiculo no encontrado");
+  }
+
+  if (!isValidVinFormat(vehicle.vin)) {
+    throw new ConflictError("El vehiculo seleccionado no tiene un VIN valido para compatibilidad");
+  }
+
+  const compatibility = await prisma.vehiclePartCompatibility.upsert({
+    where: {
+      vehicleId_repuestoId: {
+        vehicleId: data.vehicleId,
+        repuestoId: data.repuestoId,
+      },
+    },
+    create: {
+      vehicleId: data.vehicleId,
+      repuestoId: data.repuestoId,
+      source: VehiclePartCompatibilitySource.MANUAL,
+      notes: data.notes,
+    },
+    update: {
+      source: VehiclePartCompatibilitySource.MANUAL,
+      notes: data.notes,
+    },
+  });
+
+  inventoryLogger.info("Part compatibility assigned", {
+    actorId,
+    compatibilityId: compatibility.id,
+    repuestoId: data.repuestoId,
+    vehicleId: data.vehicleId,
+  });
+
+  return compatibility;
 }
 
 export async function registerStockEntry(input: unknown, actorId: string) {
@@ -205,6 +376,12 @@ export async function setWorkOrderPartUsage(workOrderId: string, input: unknown,
       select: {
         id: true,
         orderNumber: true,
+        vehicleId: true,
+        vehicle: {
+          select: {
+            vin: true,
+          },
+        },
       },
     });
 
@@ -263,15 +440,35 @@ export async function setWorkOrderPartUsage(workOrderId: string, input: unknown,
     }
 
     if (existing) {
-      return tx.workOrderPart.update({
+      const updatedPart = await tx.workOrderPart.update({
         where: { id: existing.id },
         data: {
           quantity: data.quantity,
         },
       });
+
+      if (isValidVinFormat(workOrder.vehicle.vin)) {
+        await tx.vehiclePartCompatibility.upsert({
+          where: {
+            vehicleId_repuestoId: {
+              vehicleId: workOrder.vehicleId,
+              repuestoId: data.repuestoId,
+            },
+          },
+          create: {
+            vehicleId: workOrder.vehicleId,
+            repuestoId: data.repuestoId,
+            source: VehiclePartCompatibilitySource.WORK_ORDER,
+            notes: `Aprendida desde orden ${workOrder.orderNumber}`,
+          },
+          update: {},
+        });
+      }
+
+      return updatedPart;
     }
 
-    return tx.workOrderPart.create({
+    const createdPart = await tx.workOrderPart.create({
       data: {
         workOrderId,
         repuestoId: data.repuestoId,
@@ -279,6 +476,26 @@ export async function setWorkOrderPartUsage(workOrderId: string, input: unknown,
         createdById: actorId,
       },
     });
+
+    if (isValidVinFormat(workOrder.vehicle.vin)) {
+      await tx.vehiclePartCompatibility.upsert({
+        where: {
+          vehicleId_repuestoId: {
+            vehicleId: workOrder.vehicleId,
+            repuestoId: data.repuestoId,
+          },
+        },
+        create: {
+          vehicleId: workOrder.vehicleId,
+          repuestoId: data.repuestoId,
+          source: VehiclePartCompatibilitySource.WORK_ORDER,
+          notes: `Aprendida desde orden ${workOrder.orderNumber}`,
+        },
+        update: {},
+      });
+    }
+
+    return createdPart;
   });
 
   inventoryLogger.info("Work order part usage updated", {

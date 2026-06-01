@@ -150,6 +150,20 @@ export const budgetRepository = {
         where: {
           deletedAt: null,
         },
+        select: {
+          id: true,
+          name: true,
+          code: true,
+          unitPrice: true,
+          currentStock: true,
+          minimumStock: true,
+          compatibleVehicles: {
+            select: {
+              vehicleId: true,
+              source: true,
+            },
+          },
+        },
         orderBy: [{ name: "asc" }],
       }),
       prisma.selfInspection.findMany({
@@ -187,6 +201,20 @@ export const budgetRepository = {
       prisma.repuesto.findMany({
         where: {
           deletedAt: null,
+        },
+        select: {
+          id: true,
+          name: true,
+          code: true,
+          unitPrice: true,
+          currentStock: true,
+          minimumStock: true,
+          compatibleVehicles: {
+            select: {
+              vehicleId: true,
+              source: true,
+            },
+          },
         },
         orderBy: [{ name: "asc" }],
       }),

@@ -10,6 +10,7 @@ import { executeServerAction } from "@/lib/server-action";
 import { requireApiUser } from "@/modules/auth/auth.service";
 import {
   adjustStock,
+  assignPartCompatibility,
   createRepuesto,
   registerStockEntry,
 } from "@/modules/inventory/inventory.service";
@@ -28,6 +29,7 @@ export async function createRepuestoAction(
         unitPrice: String(formData.get("unitPrice") ?? ""),
         initialStock: String(formData.get("initialStock") ?? ""),
         minimumStock: String(formData.get("minimumStock") ?? ""),
+        compatibleVehicleId: String(formData.get("compatibleVehicleId") ?? ""),
       },
       session.user.id,
     );
@@ -43,6 +45,37 @@ export async function createRepuestoAction(
     tone: "success",
   });
   redirect("/inventory");
+}
+
+export async function assignPartCompatibilityAction(
+  _previousState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const result = await executeServerAction("assignPartCompatibilityAction", async () => {
+    const session = await requireApiUser([UserRole.ADMIN]);
+
+    await assignPartCompatibility(
+      {
+        repuestoId: String(formData.get("repuestoId") ?? ""),
+        vehicleId: String(formData.get("vehicleId") ?? ""),
+        notes: String(formData.get("notes") ?? ""),
+      },
+      session.user.id,
+    );
+  });
+
+  if (!result.ok) {
+    return result.state;
+  }
+
+  revalidatePath("/inventory");
+  revalidatePath("/inventory/compatibility");
+  revalidatePath("/budgets/new");
+  await setFlashMessage({
+    message: "Compatibilidad de repuesto registrada correctamente.",
+    tone: "success",
+  });
+  redirect("/inventory/compatibility");
 }
 
 export async function registerStockEntryAction(

@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { optionalDateOnly, optionalText, requiredText } from "@/lib/validation";
+import { vinSchema } from "@/lib/vin";
 
 export const createInsuranceCaseSchema = z.object({
   ownerFullName: requiredText(3, 160),
@@ -8,7 +9,7 @@ export const createInsuranceCaseSchema = z.object({
   ownerEmail: optionalText(255),
   ownerAddress: optionalText(255),
   plate: optionalText(16),
-  vin: requiredText(6, 32),
+  vin: vinSchema,
   make: requiredText(2, 80),
   model: requiredText(1, 80),
   year: z.coerce.number().int().min(1900).max(2100),

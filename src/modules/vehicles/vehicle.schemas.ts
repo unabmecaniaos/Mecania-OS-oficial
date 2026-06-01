@@ -6,13 +6,14 @@ import {
   requiredInteger,
   requiredText,
 } from "@/lib/validation";
+import { vinSchema } from "@/lib/vin";
 
 const currentYear = new Date().getFullYear() + 1;
 
 export const createVehicleSchema = z.object({
   clientId: requiredText(1, 40),
   plate: optionalText(16).transform((value) => value?.toUpperCase()),
-  vin: requiredText(8, 32).transform((value) => value.toUpperCase()),
+  vin: vinSchema,
   make: requiredText(2, 80),
   model: requiredText(1, 80),
   year: requiredInteger(1950, currentYear),

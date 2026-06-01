@@ -36,6 +36,7 @@ type InventoryPartOption = {
   unitPrice: number;
   currentStock: number;
   minimumStock: number;
+  compatibleVehicleIds: string[];
 };
 
 type WorkshopBudgetCreateFormProps = {
@@ -77,6 +78,7 @@ type LiquidatorBudgetCreateFormProps = {
     incidentDateLabel: string;
     incidentLocation: string | null;
     description: string;
+    vehicleId: string;
     vehicleName: string;
     vehicleLabel: string;
     vehicleIdentifier: string;
@@ -273,7 +275,16 @@ export function WorkshopBudgetCreateForm({
         </div>
       </Card>
 
-      <BudgetItemsBuilder inventoryParts={inventoryParts} references={references} />
+      <BudgetItemsBuilder
+        inventoryParts={inventoryParts}
+        references={references}
+        selectedVehicleId={selectedVehicleId}
+        selectedVehicleLabel={
+          selectedVehicle
+            ? `${selectedVehicle.make} ${selectedVehicle.model} / VIN ${selectedVehicle.vin}`
+            : undefined
+        }
+      />
       <BudgetSubmitCard
         error={state.error}
         heading="Presupuesto de cliente taller listo para continuar"
@@ -472,7 +483,12 @@ export function LiquidatorBudgetCreateForm({
         </div>
       </Card>
 
-      <BudgetItemsBuilder inventoryParts={inventoryParts} references={references} />
+      <BudgetItemsBuilder
+        inventoryParts={inventoryParts}
+        references={references}
+        selectedVehicleId={selectedInsuranceCase?.vehicleId}
+        selectedVehicleLabel={selectedInsuranceCase?.vehicleLabel}
+      />
       <BudgetSubmitCard
         error={state.error}
         heading="Presupuesto de cliente liquidadora listo para revision"
@@ -510,9 +526,13 @@ function buildLiquidatorBudgetSummary(
 function BudgetItemsBuilder({
   inventoryParts,
   references,
+  selectedVehicleId,
+  selectedVehicleLabel,
 }: {
   inventoryParts: InventoryPartOption[];
   references: ReferenceOption[];
+  selectedVehicleId?: string;
+  selectedVehicleLabel?: string;
 }) {
   const manualSlots = [1, 2] as const;
   const partSlots = [1, 2, 3, 4] as const;
@@ -546,6 +566,15 @@ function BudgetItemsBuilder({
     return inventoryParts.find((part) => part.id === selectedPartIds[String(slot)]);
   }
 
+  const hasSelectedVehicle = Boolean(selectedVehicleId);
+  const compatibleParts = selectedVehicleId
+    ? inventoryParts.filter((part) => part.compatibleVehicleIds.includes(selectedVehicleId))
+    : inventoryParts;
+  const incompatibleParts = selectedVehicleId
+    ? inventoryParts.filter((part) => !part.compatibleVehicleIds.includes(selectedVehicleId))
+    : [];
+  const hasCompatiblePartsForVehicle = !selectedVehicleId || compatibleParts.length > 0;
+
   function findSelectedReference(type: "LABOR" | "SUPPLY", slot: number) {
     return groupedReferences[type]?.find(
       (reference) => reference.id === selectedReferenceIds[`${type}:${slot}`],
@@ -560,6 +589,24 @@ function BudgetItemsBuilder({
             eyebrow="Repuestos conectados a inventario"
             title={BUDGET_ITEM_TYPE_LABELS[BudgetItemType.PART]}
           />
+
+          {hasSelectedVehicle ? (
+            <div
+              className={
+                hasCompatiblePartsForVehicle
+                  ? "rounded-2xl border border-[rgba(22,163,74,0.18)] bg-[#f0fdf4] p-4 text-sm text-[#166534]"
+                  : "rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"
+              }
+            >
+              {hasCompatiblePartsForVehicle
+                ? `Mostrando repuestos compatibles con ${selectedVehicleLabel ?? "el VIN seleccionado"}. Los no compatibles quedan deshabilitados.`
+                : `No hay repuestos compatibles registrados para ${selectedVehicleLabel ?? "el VIN seleccionado"}. Registra compatibilidad en Inventario > Compatibilidad VIN o usa respaldo manual.`}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-[rgba(37,99,235,0.12)] bg-white/85 p-4 text-sm text-[color:var(--muted-strong)]">
+              Selecciona un vehiculo para filtrar repuestos por VIN.
+            </div>
+          )}
 
           <div className="space-y-4">
             {partSlots.slice(0, visiblePartSlots).map((slot) => {
@@ -589,10 +636,15 @@ function BudgetItemsBuilder({
                       value={selectedPartIds[String(slot)] ?? ""}
                     >
                       <option value="">Selecciona un repuesto</option>
-                      {inventoryParts.map((part) => (
+                      {compatibleParts.map((part) => (
                         <option key={part.id} value={part.id}>
                           {part.name} / {part.code} / {formatCurrency(part.unitPrice)} / stock{" "}
                           {part.currentStock}
+                        </option>
+                      ))}
+                      {incompatibleParts.map((part) => (
+                        <option disabled key={part.id} value={part.id}>
+                          {part.name} / {part.code} / no compatible con VIN
                         </option>
                       ))}
                     </Select>

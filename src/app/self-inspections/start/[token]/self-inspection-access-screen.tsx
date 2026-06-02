@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,12 @@ type AccessScreenProps = {
   statusLabel: string;
   sessionEmail: string | null;
   sessionRole: string | null;
+};
+
+type EmailAvailability = {
+  email: string;
+  available: boolean;
+  message: string;
 };
 
 class RequestError extends Error {
@@ -45,20 +51,89 @@ export function SelfInspectionAccessScreen({
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [emailAvailability, setEmailAvailability] = useState<EmailAvailability | null>(null);
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const normalizedEmail = email.trim().toLowerCase();
+  const hasValidEmailFormat = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail);
+  const passwordsMatch = password === confirmPassword;
   const hasDifferentSession =
     Boolean(sessionEmail) && normalizedEmail.length > 0 && sessionEmail?.toLowerCase() !== normalizedEmail;
-  const canSubmitLogin = normalizedEmail.includes("@") && password.trim().length >= 8;
+  const canSubmitLogin = hasValidEmailFormat && password.trim().length >= 8;
   const canSubmitRegister =
     fullName.trim().length >= 3 &&
-    normalizedEmail.includes("@") &&
+    hasValidEmailFormat &&
+    emailAvailability?.available === true &&
     password.trim().length >= 8 &&
-    confirmPassword.trim().length >= 8;
+    confirmPassword.trim().length >= 8 &&
+    passwordsMatch;
+
+  useEffect(() => {
+    if (mode !== "register" || !hasValidEmailFormat) {
+      setEmailAvailability(null);
+      setIsCheckingEmail(false);
+      return;
+    }
+
+    let ignore = false;
+    const timeout = window.setTimeout(async () => {
+      setIsCheckingEmail(true);
+
+      try {
+        const availability = await requestJson<EmailAvailability>(
+          `/api/self-inspections/public/${token}/access/email?email=${encodeURIComponent(
+            normalizedEmail,
+          )}`,
+        );
+
+        if (!ignore) {
+          setEmailAvailability(availability);
+        }
+      } catch (availabilityError) {
+        if (!ignore) {
+          setEmailAvailability({
+            email: normalizedEmail,
+            available: false,
+            message:
+              availabilityError instanceof Error
+                ? availabilityError.message
+                : "No fue posible validar el correo",
+          });
+        }
+      } finally {
+        if (!ignore) {
+          setIsCheckingEmail(false);
+        }
+      }
+    }, 450);
+
+    return () => {
+      ignore = true;
+      window.clearTimeout(timeout);
+    };
+  }, [hasValidEmailFormat, mode, normalizedEmail, token]);
 
   async function handleSubmit() {
     setError(null);
+
+    if (mode === "register") {
+      if (!hasValidEmailFormat) {
+        setError("Ingresa un correo valido");
+        return;
+      }
+
+      if (emailAvailability?.available !== true) {
+        setError(emailAvailability?.message ?? "Revisa el correo antes de crear la cuenta");
+        return;
+      }
+
+      if (!passwordsMatch) {
+        setError("Las contrasenas no coinciden");
+        return;
+      }
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -170,10 +245,28 @@ export function SelfInspectionAccessScreen({
               </label>
               <Input
                 id="access-email"
-                onChange={(event) => setEmail(event.target.value)}
+                onChange={(event) => {
+                  setEmail(event.target.value);
+                  setError(null);
+                }}
                 type="email"
                 value={email}
               />
+              {mode === "register" && normalizedEmail.length > 0 ? (
+                <p
+                  className={`text-xs ${
+                    hasValidEmailFormat && emailAvailability?.available
+                      ? "text-emerald-700"
+                      : "text-[color:var(--accent-strong)]"
+                  }`}
+                >
+                  {!hasValidEmailFormat
+                    ? "Ingresa un correo valido."
+                    : isCheckingEmail
+                      ? "Revisando si el correo ya esta registrado..."
+                      : emailAvailability?.message}
+                </p>
+              ) : null}
             </div>
 
             <div className="space-y-2">
@@ -202,6 +295,11 @@ export function SelfInspectionAccessScreen({
                   type="password"
                   value={confirmPassword}
                 />
+                {confirmPassword.length > 0 && !passwordsMatch ? (
+                  <p className="text-xs text-[color:var(--accent-strong)]">
+                    Las contrasenas no coinciden.
+                  </p>
+                ) : null}
               </div>
             ) : null}
 
@@ -222,7 +320,9 @@ export function SelfInspectionAccessScreen({
             <Button
               className="w-full"
               disabled={
-                isSubmitting || (mode === "login" ? !canSubmitLogin : !canSubmitRegister)
+                isSubmitting ||
+                isCheckingEmail ||
+                (mode === "login" ? !canSubmitLogin : !canSubmitRegister)
               }
               onClick={handleSubmit}
               type="button"

@@ -88,6 +88,7 @@ export default async function NewBudgetPage({
             vehicleName: `${insuranceCase.vehicle.make} ${insuranceCase.vehicle.model}`,
             vehicleLabel: `${insuranceCase.vehicle.make} ${insuranceCase.vehicle.model} / ${insuranceCase.vehicle.plate ?? insuranceCase.vehicle.vin}`,
             vehicleIdentifier: insuranceCase.vehicle.plate ?? insuranceCase.vehicle.vin,
+            vehicleVin: insuranceCase.vehicle.vin,
             liquidatorName: insuranceCase.liquidator.name,
             hasInitialPhotos: insuranceCase.photos.length > 0,
             initialPhotos: insuranceCase.photos.map((photo) => ({

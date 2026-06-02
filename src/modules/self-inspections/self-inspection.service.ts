@@ -11,6 +11,7 @@ import {
 } from "@prisma/client";
 import { hash } from "bcryptjs";
 import { createHash, randomBytes } from "node:crypto";
+import { z } from "zod";
 
 import {
   AppError,
@@ -1018,14 +1019,20 @@ async function updateInspectionDerivedState(selfInspectionId: string, input?: { 
   });
 }
 
-async function upsertAnswerRecords(selfInspectionId: string, answers: AnswerRecordInput[]) {
+async function upsertAnswerRecords(
+  selfInspectionId: string,
+  answers: AnswerRecordInput[],
+  tx?: Prisma.TransactionClient,
+) {
   if (answers.length === 0) {
     return;
   }
 
-  await prisma.$transaction(
+  const client = tx ?? prisma;
+
+  await Promise.all(
     answers.map((answer) =>
-      prisma.selfInspectionAnswer.upsert({
+      client.selfInspectionAnswer.upsert({
         where: {
           selfInspectionId_questionKey: {
             selfInspectionId,
@@ -1053,8 +1060,13 @@ async function upsertAnswerRecords(selfInspectionId: string, answers: AnswerReco
   );
 }
 
-async function deleteDeprecatedPublicAnswers(selfInspectionId: string) {
-  await prisma.selfInspectionAnswer.deleteMany({
+async function deleteDeprecatedPublicAnswers(
+  selfInspectionId: string,
+  tx?: Prisma.TransactionClient,
+) {
+  const client = tx ?? prisma;
+
+  await client.selfInspectionAnswer.deleteMany({
     where: {
       selfInspectionId,
       questionKey: {
@@ -1352,6 +1364,21 @@ export async function authorizePublicSelfInspectionAccess(token: string, input: 
   };
 }
 
+export async function checkPublicSelfInspectionEmailAvailability(token: string, inputEmail: unknown) {
+  await getPublicSelfInspectionEntity(token);
+
+  const email = normalizeEmail(z.email().trim().parse(inputEmail));
+  const existing = await userRepository.findByEmail(email);
+
+  return {
+    email,
+    available: !existing,
+    message: existing
+      ? "Este correo ya esta registrado en la app"
+      : "Correo disponible para crear la cuenta",
+  };
+}
+
 export async function getPublicSelfInspectionWizard(token: string) {
   const inspection = await getAuthorizedPublicSelfInspectionEntity(token);
   return buildPublicSelfInspectionWizardPayload(inspection);
@@ -1360,40 +1387,105 @@ export async function getPublicSelfInspectionWizard(token: string) {
 export async function savePublicSelfInspectionVehicle(token: string, input: unknown) {
   const inspection = await assertInspectionCustomerEditableByToken(token);
   const data = selfInspectionVehicleStepSchema.parse(input);
+  const normalizedEmail = normalizeEmail(data.email);
 
-  await prisma.selfInspectionVehicleSnapshot.upsert({
-    where: {
-      selfInspectionId: inspection.id,
-    },
-    create: {
-      selfInspectionId: inspection.id,
-      plate: data.plate,
-      vin: data.vin,
-      make: data.make,
-      model: data.model,
-      year: data.year,
-      color: inspection.vehicleSnapshot?.color ?? inspection.vehicle?.color ?? null,
-      mileage: data.mileage,
-      fuelType:
-        inspection.vehicleSnapshot?.fuelType ?? inspection.vehicle?.fuelType ?? VehicleFuelType.OTHER,
-      transmission:
-        inspection.vehicleSnapshot?.transmission ??
-        inspection.vehicle?.transmission ??
-        VehicleTransmissionType.OTHER,
-      starts: inspection.vehicleSnapshot?.starts ?? true,
-    },
-    update: {
-      plate: data.plate,
-      vin: data.vin,
-      make: data.make,
-      model: data.model,
-      year: data.year,
-      mileage: data.mileage,
-    },
+  await prisma.$transaction(async (tx) => {
+    const existingCustomer =
+      isPendingInspectionCustomer(inspection.customer)
+        ? await tx.client.findFirst({
+            where: {
+              id: {
+                not: inspection.customer.id,
+              },
+              email: {
+                equals: normalizedEmail,
+                mode: "insensitive",
+              },
+              deletedAt: null,
+            },
+            orderBy: {
+              updatedAt: "desc",
+            },
+          })
+        : null;
+    const customerId = existingCustomer?.id ?? inspection.customer.id;
+
+    await tx.client.update({
+      where: {
+        id: customerId,
+      },
+      data: {
+        fullName: data.fullName.trim(),
+        phone: data.phone.trim(),
+        email: normalizedEmail,
+        localIdentifier: null,
+      },
+    });
+
+    if (customerId !== inspection.customer.id) {
+      await tx.selfInspection.update({
+        where: {
+          id: inspection.id,
+        },
+        data: {
+          customerId,
+        },
+      });
+
+      if (isPendingInspectionCustomer(inspection.customer)) {
+        await tx.user.updateMany({
+          where: {
+            clientId: inspection.customer.id,
+          },
+          data: {
+            clientId: customerId,
+          },
+        });
+        await tx.client.delete({
+          where: {
+            id: inspection.customer.id,
+          },
+        });
+      }
+    }
+
+    await tx.selfInspectionVehicleSnapshot.upsert({
+      where: {
+        selfInspectionId: inspection.id,
+      },
+      create: {
+        selfInspectionId: inspection.id,
+        plate: data.plate,
+        vin: data.vin,
+        make: data.make,
+        model: data.model,
+        year: data.year,
+        color: inspection.vehicleSnapshot?.color ?? inspection.vehicle?.color ?? null,
+        mileage: data.mileage,
+        fuelType:
+          inspection.vehicleSnapshot?.fuelType ??
+          inspection.vehicle?.fuelType ??
+          VehicleFuelType.OTHER,
+        transmission:
+          inspection.vehicleSnapshot?.transmission ??
+          inspection.vehicle?.transmission ??
+          VehicleTransmissionType.OTHER,
+        starts: inspection.vehicleSnapshot?.starts ?? true,
+      },
+      update: {
+        plate: data.plate,
+        vin: data.vin,
+        make: data.make,
+        model: data.model,
+        year: data.year,
+        mileage: data.mileage,
+      },
+    });
+
+    await deleteDeprecatedPublicAnswers(inspection.id, tx);
+    await upsertAnswerRecords(inspection.id, buildCustomerVehicleAnswerRecords(data), tx);
   });
 
-  await deleteDeprecatedPublicAnswers(inspection.id);
-  await upsertAnswerRecords(inspection.id, buildCustomerVehicleAnswerRecords(data));
   await updateInspectionDerivedState(inspection.id, { lastCompletedStep: 1 });
 
   return getPublicSelfInspectionWizard(token);

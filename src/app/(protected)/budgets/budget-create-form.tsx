@@ -7,6 +7,7 @@ import {
   createLiquidatorBudgetDraftAction,
   createWorkshopBudgetDraftAction,
 } from "@/app/(protected)/budgets/actions";
+import { ExternalSuggestionsPanel } from "@/app/(protected)/budgets/external-suggestions-panel";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { FormMessage } from "@/components/ui/form-message";
@@ -82,6 +83,7 @@ type LiquidatorBudgetCreateFormProps = {
     vehicleName: string;
     vehicleLabel: string;
     vehicleIdentifier: string;
+    vehicleVin: string;
     liquidatorName: string;
     hasInitialPhotos: boolean;
     initialPhotos: Array<{
@@ -284,6 +286,7 @@ export function WorkshopBudgetCreateForm({
             ? `${selectedVehicle.make} ${selectedVehicle.model} / VIN ${selectedVehicle.vin}`
             : undefined
         }
+        selectedVehicleVin={selectedVehicle?.vin}
       />
       <BudgetSubmitCard
         error={state.error}
@@ -488,6 +491,7 @@ export function LiquidatorBudgetCreateForm({
         references={references}
         selectedVehicleId={selectedInsuranceCase?.vehicleId}
         selectedVehicleLabel={selectedInsuranceCase?.vehicleLabel}
+        selectedVehicleVin={selectedInsuranceCase?.vehicleVin}
       />
       <BudgetSubmitCard
         error={state.error}
@@ -528,11 +532,13 @@ function BudgetItemsBuilder({
   references,
   selectedVehicleId,
   selectedVehicleLabel,
+  selectedVehicleVin,
 }: {
   inventoryParts: InventoryPartOption[];
   references: ReferenceOption[];
   selectedVehicleId?: string;
   selectedVehicleLabel?: string;
+  selectedVehicleVin?: string;
 }) {
   const manualSlots = [1, 2] as const;
   const partSlots = [1, 2, 3, 4] as const;
@@ -701,6 +707,12 @@ function BudgetItemsBuilder({
           </div>
         </div>
       </Card>
+
+      {selectedVehicleVin ? (
+        <Card className="rounded-2xl bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(247,250,254,0.96))]">
+          <ExternalSuggestionsPanel defaultVin={selectedVehicleVin} />
+        </Card>
+      ) : null}
 
       {([BudgetItemType.LABOR, BudgetItemType.SUPPLY] as const).map((type) => {
         const slots = type === BudgetItemType.LABOR ? laborSlots : supplySlots;

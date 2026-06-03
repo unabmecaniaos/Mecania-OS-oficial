@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,10 @@ import { Input } from "@/components/ui/input";
 type SuggestionResponse = {
   data?: {
     sourceNotice: string;
+    selectedPart: {
+      name: string | null;
+      code: string | null;
+    };
     decodedVehicle: {
       vin: string;
       make: string | null;
@@ -20,9 +24,18 @@ type SuggestionResponse = {
       errorText: string | null;
     };
     search: {
-      query: string;
+      strategy: "code-first" | "name-first";
+      preferredQuery: string;
+      codeQuery: string | null;
+      descriptiveQuery: string | null;
       site: string;
     };
+    purchaseLinks: Array<{
+      label: string;
+      query: string;
+      description: string;
+      url: string;
+    }>;
     mercadoLibre: {
       status: "ok" | "missing-token" | "unavailable";
       message: string | null;
@@ -43,14 +56,35 @@ type SuggestionResponse = {
 
 type ExternalSuggestionsPanelProps = {
   defaultVin?: string;
+  defaultPartName?: string;
+  defaultPartCode?: string;
+  selectedPartStock?: number | null;
 };
 
-export function ExternalSuggestionsPanel({ defaultVin = "" }: ExternalSuggestionsPanelProps) {
+export function ExternalSuggestionsPanel({
+  defaultVin = "",
+  defaultPartName = "",
+  defaultPartCode = "",
+  selectedPartStock = null,
+}: ExternalSuggestionsPanelProps) {
   const [vin, setVin] = useState(defaultVin);
-  const [query, setQuery] = useState("filtro aceite");
+  const [query, setQuery] = useState(defaultPartName || "filtro aceite");
+  const [partCode, setPartCode] = useState(defaultPartCode);
   const [result, setResult] = useState<SuggestionResponse["data"] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setVin(defaultVin);
+  }, [defaultVin]);
+
+  useEffect(() => {
+    setQuery(defaultPartName || "filtro aceite");
+  }, [defaultPartName]);
+
+  useEffect(() => {
+    setPartCode(defaultPartCode);
+  }, [defaultPartCode]);
 
   async function handleSearch() {
     setLoading(true);
@@ -60,6 +94,7 @@ export function ExternalSuggestionsPanel({ defaultVin = "" }: ExternalSuggestion
     const params = new URLSearchParams({
       vin,
       query,
+      partCode,
       limit: "8",
     });
     try {
@@ -89,13 +124,21 @@ export function ExternalSuggestionsPanel({ defaultVin = "" }: ExternalSuggestion
           Buscar sugerencias externas por VIN
         </h2>
         <p className="mt-2 text-sm text-[color:var(--muted-strong)]">
-          Usa esta busqueda cuando el taller no tenga cargado el repuesto necesario. NHTSA
-          identifica el vehiculo y Mercado Libre Chile puede sugerir publicaciones reales cuando
-          exista un token oficial.
+          Usa esta busqueda cuando el taller no tenga el repuesto necesario o el stock llegue a
+          cero. NHTSA identifica el vehiculo y luego MecaniaOS arma busquedas listas para comprar,
+          priorizando el codigo del repuesto cuando ya existe.
         </p>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_1fr_auto]">
+      {selectedPartStock !== null ? (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          {selectedPartStock <= 0
+            ? "El repuesto seleccionado esta sin stock. Usa estas busquedas para encontrar una compra externa."
+            : `Stock actual del repuesto seleccionado: ${selectedPartStock}. Puedes usar estas busquedas para comparar proveedores.`}
+        </div>
+      ) : null}
+
+      <div className="grid gap-4 lg:grid-cols-[1fr_1fr_1fr_auto]">
         <div className="space-y-2">
           <label className="text-sm font-medium text-[color:var(--muted-strong)]" htmlFor="externalVin">
             VIN
@@ -105,6 +148,21 @@ export function ExternalSuggestionsPanel({ defaultVin = "" }: ExternalSuggestion
             onChange={(event) => setVin(event.target.value)}
             placeholder="Ej. 8AJBA3CD6N1234567"
             value={vin}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label
+            className="text-sm font-medium text-[color:var(--muted-strong)]"
+            htmlFor="externalPartCode"
+          >
+            Codigo del repuesto
+          </label>
+          <Input
+            id="externalPartCode"
+            onChange={(event) => setPartCode(event.target.value)}
+            placeholder="Ej. 04465-0K390"
+            value={partCode}
           />
         </div>
 
@@ -150,10 +208,40 @@ export function ExternalSuggestionsPanel({ defaultVin = "" }: ExternalSuggestion
                 .filter(Boolean)
                 .join(" ") || "Sin decodificar"}
             />
-            <InfoTile label="Busqueda" value={result.search.query} />
+            <InfoTile label="Busqueda principal" value={result.search.preferredQuery} />
+          </div>
+
+          <div className="grid gap-3 lg:grid-cols-3">
+            <InfoTile
+              label="Estrategia"
+              value={result.search.strategy === "code-first" ? "Codigo primero" : "Nombre primero"}
+            />
+            <InfoTile label="Codigo" value={result.selectedPart.code ?? "Sin codigo"} />
+            <InfoTile label="Repuesto" value={result.selectedPart.name ?? "Consulta manual"} />
           </div>
 
           <p className="text-sm text-[color:var(--muted-strong)]">{result.sourceNotice}</p>
+
+          <div className="space-y-3">
+            <p className="text-sm font-semibold text-[color:var(--foreground)]">
+              Links de compra y busqueda
+            </p>
+            <div className="grid gap-3 lg:grid-cols-2">
+              {result.purchaseLinks.map((link) => (
+                <a
+                  className="rounded-xl border border-[color:var(--border)] bg-white p-4 transition hover:border-[#2563eb]"
+                  href={link.url}
+                  key={`${link.label}-${link.query}`}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  <p className="text-sm font-semibold text-[color:var(--foreground)]">{link.label}</p>
+                  <p className="mt-1 text-sm text-[color:var(--muted-strong)]">{link.query}</p>
+                  <p className="mt-2 text-xs text-[color:var(--muted)]">{link.description}</p>
+                </a>
+              ))}
+            </div>
+          </div>
 
           {result.mercadoLibre.status !== "ok" ? (
             <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">

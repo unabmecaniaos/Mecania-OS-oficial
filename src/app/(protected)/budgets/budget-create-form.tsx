@@ -580,6 +580,11 @@ function BudgetItemsBuilder({
     ? inventoryParts.filter((part) => !part.compatibleVehicleIds.includes(selectedVehicleId))
     : [];
   const hasCompatiblePartsForVehicle = !selectedVehicleId || compatibleParts.length > 0;
+  const selectedParts = Object.values(selectedPartIds)
+    .map((partId) => inventoryParts.find((part) => part.id === partId))
+    .filter((part): part is InventoryPartOption => Boolean(part));
+  const externalSearchTargetPart =
+    selectedParts.find((part) => part.currentStock <= 0) ?? selectedParts[0] ?? null;
 
   function findSelectedReference(type: "LABOR" | "SUPPLY", slot: number) {
     return groupedReferences[type]?.find(
@@ -655,9 +660,16 @@ function BudgetItemsBuilder({
                       ))}
                     </Select>
                     {selectedPart ? (
-                      <p className="text-sm text-[color:var(--muted)]">
-                        Stock actual {selectedPart.currentStock} / minimo {selectedPart.minimumStock}
-                      </p>
+                      <div className="space-y-1 text-sm">
+                        <p className="text-[color:var(--muted)]">
+                          Stock actual {selectedPart.currentStock} / minimo {selectedPart.minimumStock}
+                        </p>
+                        {selectedPart.currentStock <= 0 ? (
+                          <p className="font-medium text-amber-700">
+                            Sin stock. Usa la busqueda externa para encontrar compra por codigo o nombre.
+                          </p>
+                        ) : null}
+                      </div>
                     ) : null}
                   </div>
 
@@ -710,7 +722,12 @@ function BudgetItemsBuilder({
 
       {selectedVehicleVin ? (
         <Card className="rounded-2xl bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(247,250,254,0.96))]">
-          <ExternalSuggestionsPanel defaultVin={selectedVehicleVin} />
+          <ExternalSuggestionsPanel
+            defaultPartCode={externalSearchTargetPart?.code}
+            defaultPartName={externalSearchTargetPart?.name}
+            defaultVin={selectedVehicleVin}
+            selectedPartStock={externalSearchTargetPart?.currentStock ?? null}
+          />
         </Card>
       ) : null}
 

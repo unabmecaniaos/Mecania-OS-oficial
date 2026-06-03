@@ -36,8 +36,20 @@ type MercadoLibreResponse = {
 type ExternalPartSuggestionsInput = {
   vin: string;
   query?: string;
+  partCode?: string;
   limit?: number;
 };
+
+type PurchaseLink = {
+  label: string;
+  query: string;
+  description: string;
+  url: string;
+};
+
+function normalizeSearchTerm(value?: string | null) {
+  return value?.trim().replace(/\s+/g, " ") ?? "";
+}
 
 function buildMercadoLibreQuery(input: {
   query?: string;
@@ -50,6 +62,33 @@ function buildMercadoLibreQuery(input: {
     .join(" ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function buildMercadoLibreUrl(query: string) {
+  return `https://listado.mercadolibre.cl/jm/search?as_word=${encodeURIComponent(query)}`;
+}
+
+function buildGoogleUrl(query: string) {
+  return `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+}
+
+function pushPurchaseLink(
+  target: PurchaseLink[],
+  existingQueries: Set<string>,
+  link: PurchaseLink | null,
+) {
+  if (!link) {
+    return;
+  }
+
+  const normalizedQuery = normalizeSearchTerm(link.query).toLowerCase();
+
+  if (!normalizedQuery || existingQueries.has(normalizedQuery)) {
+    return;
+  }
+
+  existingQueries.add(normalizedQuery);
+  target.push(link);
 }
 
 async function decodeVinWithNhtsa(vin: string) {
@@ -91,7 +130,7 @@ async function searchMercadoLibre(input: { query: string; limit: number }) {
     return {
       status: "missing-token" as const,
       message:
-        "Mercado Libre requiere un access token oficial para consultar productos desde este entorno.",
+        "No hay token de Mercado Libre en este entorno. Aun asi puedes usar los links directos de compra y busqueda.",
       items: [],
     };
   }
@@ -137,30 +176,91 @@ async function searchMercadoLibre(input: { query: string; limit: number }) {
 export async function getExternalPartSuggestions(input: ExternalPartSuggestionsInput) {
   const vin = vinSchema.parse(input.vin);
   const decodedVehicle = await decodeVinWithNhtsa(vin);
-  const query = buildMercadoLibreQuery({
+  const partName = normalizeSearchTerm(input.query);
+  const partCode = normalizeSearchTerm(input.partCode);
+  const descriptiveQuery = buildMercadoLibreQuery({
     query: input.query,
     make: decodedVehicle.make,
     model: decodedVehicle.model,
     year: decodedVehicle.year,
   });
+  const codeOnlyQuery = partCode;
+  const codeWithVehicleQuery = buildMercadoLibreQuery({
+    query: [partCode, partName].filter(Boolean).join(" "),
+    make: decodedVehicle.make,
+    model: decodedVehicle.model,
+    year: decodedVehicle.year,
+  });
+  const preferredQuery = codeWithVehicleQuery || descriptiveQuery || codeOnlyQuery;
 
-  if (!query) {
-    throw new AppError("Ingresa un repuesto o una consulta para buscar sugerencias", 422);
+  if (!preferredQuery) {
+    throw new AppError("Ingresa un repuesto o selecciona uno con codigo para buscar sugerencias", 422);
   }
 
   const mercadoLibre = await searchMercadoLibre({
-    query,
+    query: preferredQuery,
     limit: Math.min(Math.max(input.limit ?? 8, 1), 20),
   });
+  const purchaseLinks: PurchaseLink[] = [];
+  const existingQueries = new Set<string>();
+
+  pushPurchaseLink(purchaseLinks, existingQueries, codeOnlyQuery
+    ? {
+        label: "Buscar codigo en Mercado Libre",
+        query: codeOnlyQuery,
+        description: "Prioriza coincidencias exactas cuando el repuesto ya tiene codigo registrado.",
+        url: buildMercadoLibreUrl(codeOnlyQuery),
+      }
+    : null);
+  pushPurchaseLink(purchaseLinks, existingQueries, codeWithVehicleQuery
+    ? {
+        label: "Buscar codigo con vehiculo",
+        query: codeWithVehicleQuery,
+        description: "Combina codigo, nombre y contexto del vehiculo para reducir resultados ambiguos.",
+        url: buildMercadoLibreUrl(codeWithVehicleQuery),
+      }
+    : null);
+  pushPurchaseLink(purchaseLinks, existingQueries, descriptiveQuery
+    ? {
+        label: "Buscar nombre en Mercado Libre",
+        query: descriptiveQuery,
+        description: "Sirve como respaldo cuando no existe codigo exacto del repuesto.",
+        url: buildMercadoLibreUrl(descriptiveQuery),
+      }
+    : null);
+  pushPurchaseLink(purchaseLinks, existingQueries, codeOnlyQuery
+    ? {
+        label: "Buscar codigo en Google",
+        query: codeOnlyQuery,
+        description: "Abre resultados externos para encontrar proveedores fuera de Mercado Libre.",
+        url: buildGoogleUrl(`${codeOnlyQuery} repuesto chile`),
+      }
+    : null);
+  pushPurchaseLink(purchaseLinks, existingQueries, preferredQuery
+    ? {
+        label: "Buscar repuesto en Google",
+        query: preferredQuery,
+        description: "Amplia la busqueda a tiendas, catalogos y resultados web por texto libre.",
+        url: buildGoogleUrl(`${preferredQuery} repuesto chile`),
+      }
+    : null);
 
   return {
     sourceNotice:
-      "Estas sugerencias vienen de APIs oficiales y deben ser confirmadas por el taller antes de guardarse como compatibilidad.",
+      "Estas sugerencias usan decodificacion oficial del VIN y busquedas abiertas. El taller debe confirmar compatibilidad y proveedor antes de comprar o guardar la referencia.",
     decodedVehicle,
+    selectedPart: {
+      name: partName || null,
+      code: partCode || null,
+    },
     search: {
-      query,
+      strategy: partCode ? "code-first" : "name-first",
+      preferredQuery,
+      codeQuery: codeOnlyQuery || null,
+      descriptiveQuery: descriptiveQuery || null,
       site: "MLC",
     },
+    purchaseLinks,
     mercadoLibre,
   };
 }

@@ -12,6 +12,7 @@ export const GET = handleApiRoute(async (request: Request) => {
     await getExternalPartSuggestions({
       vin: searchParams.get("vin") ?? "",
       query: searchParams.get("query") ?? "",
+      partCode: searchParams.get("partCode") ?? "",
       limit: Number(searchParams.get("limit") ?? 8),
     }),
   );

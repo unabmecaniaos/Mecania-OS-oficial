@@ -65,7 +65,7 @@ function buildMercadoLibreQuery(input: {
 }
 
 function buildMercadoLibreUrl(query: string) {
-  return `https://listado.mercadolibre.cl/jm/search?as_word=${encodeURIComponent(query)}`;
+  return `https://listado.mercadolibre.cl/search?as_word=${encodeURIComponent(query)}`;
 }
 
 function buildGoogleUrl(query: string) {

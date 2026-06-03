@@ -51,6 +51,16 @@ function normalizeSearchTerm(value?: string | null) {
   return value?.trim().replace(/\s+/g, " ") ?? "";
 }
 
+function slugifyMercadoLibreQuery(query: string) {
+  return query
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 function buildMercadoLibreQuery(input: {
   query?: string;
   make?: string | null;
@@ -65,7 +75,11 @@ function buildMercadoLibreQuery(input: {
 }
 
 function buildMercadoLibreUrl(query: string) {
-  return `https://listado.mercadolibre.cl/search?as_word=${encodeURIComponent(query)}`;
+  const normalizedQuery = normalizeSearchTerm(query);
+  const slug = slugifyMercadoLibreQuery(normalizedQuery);
+  const encodedQuery = encodeURIComponent(normalizedQuery);
+
+  return `https://listado.mercadolibre.cl/${slug}#D[A:${encodedQuery}]`;
 }
 
 function buildGoogleUrl(query: string) {

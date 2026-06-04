@@ -4,56 +4,68 @@ import { prisma } from "@/lib/prisma";
 
 export const workOrderRepository = {
   list(filters?: { search?: string; status?: WorkOrderStatus; actorId?: string; actorRole?: UserRole }) {
+    const andFilters: Prisma.WorkOrderWhereInput[] = [];
+
+    if (filters?.actorRole === UserRole.MECHANIC && filters.actorId) {
+      andFilters.push({
+        OR: [
+          {
+            assignedTechnicianId: filters.actorId,
+          },
+          {
+            assignedPainterId: filters.actorId,
+          },
+        ],
+      });
+    }
+
+    if (filters?.search) {
+      andFilters.push({
+        OR: [
+          {
+            orderNumber: {
+              contains: filters.search,
+              mode: "insensitive",
+            },
+          },
+          {
+            reason: {
+              contains: filters.search,
+              mode: "insensitive",
+            },
+          },
+          {
+            vehicle: {
+              vin: {
+                contains: filters.search,
+                mode: "insensitive",
+              },
+            },
+          },
+          {
+            vehicle: {
+              plate: {
+                contains: filters.search,
+                mode: "insensitive",
+              },
+            },
+          },
+          {
+            client: {
+              fullName: {
+                contains: filters.search,
+                mode: "insensitive",
+              },
+            },
+          },
+        ],
+      });
+    }
+
     const where: Prisma.WorkOrderWhereInput = {
       deletedAt: null,
-      ...(filters?.actorRole === UserRole.MECHANIC && filters.actorId
-        ? {
-            assignedTechnicianId: filters.actorId,
-          }
-        : {}),
       ...(filters?.status ? { status: filters.status } : {}),
-      ...(filters?.search
-        ? {
-            OR: [
-              {
-                orderNumber: {
-                  contains: filters.search,
-                  mode: "insensitive",
-                },
-              },
-              {
-                reason: {
-                  contains: filters.search,
-                  mode: "insensitive",
-                },
-              },
-              {
-                vehicle: {
-                  vin: {
-                    contains: filters.search,
-                    mode: "insensitive",
-                  },
-                },
-              },
-              {
-                vehicle: {
-                  plate: {
-                    contains: filters.search,
-                    mode: "insensitive",
-                  },
-                },
-              },
-              {
-                client: {
-                  fullName: {
-                    contains: filters.search,
-                    mode: "insensitive",
-                  },
-                },
-              },
-            ],
-          }
-        : {}),
+      ...(andFilters.length > 0 ? { AND: andFilters } : {}),
     };
 
     return prisma.workOrder.findMany({
@@ -84,6 +96,15 @@ export const workOrderRepository = {
           },
         },
         assignedTechnician: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            active: true,
+          },
+        },
+        assignedPainter: {
           select: {
             id: true,
             name: true,
@@ -152,6 +173,15 @@ export const workOrderRepository = {
           },
         },
         assignedTechnician: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            active: true,
+          },
+        },
+        assignedPainter: {
           select: {
             id: true,
             name: true,

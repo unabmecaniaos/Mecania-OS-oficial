@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { AssignmentForm } from "@/app/(protected)/work-orders/assignment-form";
 import { EvidenceUploadForm } from "@/app/(protected)/work-orders/evidence-upload-form";
 import {
   ExistingPartUsageForm,
@@ -9,9 +8,11 @@ import {
 } from "@/app/(protected)/work-orders/parts-usage-form";
 import { PromisedDateForm } from "@/app/(protected)/work-orders/promised-date-form";
 import { StatusForm } from "@/app/(protected)/work-orders/status-form";
+import { WorkOrderFlowForm } from "@/app/(protected)/work-orders/work-order-flow-form";
 import { WorkOrderTaskForm } from "@/app/(protected)/work-orders/work-order-task-form";
 import { WorkOrderTaskStatusForm } from "@/app/(protected)/work-orders/work-order-task-status-form";
 import { MoveToTrashButton } from "@/components/trash/trash-ui";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -22,6 +23,8 @@ import { listInventoryOptions } from "@/modules/inventory/inventory.service";
 import {
   getWorkOrderAutomaticProgressPercent,
   isWorkOrderDelayed,
+  WORK_ORDER_AREA_STATUS_LABELS,
+  WORK_ORDER_SERVICE_FLOW_SHORT_LABELS,
   WORK_ORDER_STATUS_LABELS,
   WORK_ORDER_TASK_STATUS_LABELS,
 } from "@/modules/work-orders/work-order.constants";
@@ -76,6 +79,7 @@ export default async function WorkOrderDetailPage({ params }: WorkOrderDetailPag
             <div className="mt-2 flex flex-wrap items-center gap-3">
               <h1 className="font-heading text-3xl font-semibold">{workOrder.orderNumber}</h1>
               <StatusBadge status={workOrder.status} />
+              <Badge tone="info">{WORK_ORDER_SERVICE_FLOW_SHORT_LABELS[workOrder.serviceFlow]}</Badge>
               {isDelayed ? (
                 <span className="rounded-full border border-[rgba(220,38,38,0.22)] bg-[rgba(220,38,38,0.10)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#b91c1c]">
                   Atrasada
@@ -186,8 +190,12 @@ export default async function WorkOrderDetailPage({ params }: WorkOrderDetailPag
                 {workOrder.createdBy.name}
               </p>
               <p>
-                <span className="font-semibold text-[color:var(--foreground)]">Responsable actual:</span>{" "}
+                <span className="font-semibold text-[color:var(--foreground)]">Mecanica:</span>{" "}
                 {workOrder.assignedTechnician?.name ?? "Sin asignar"}
+              </p>
+              <p>
+                <span className="font-semibold text-[color:var(--foreground)]">Pintura:</span>{" "}
+                {workOrder.assignedPainter?.name ?? "Sin asignar"}
               </p>
               <p>
                 <span className="font-semibold text-[color:var(--foreground)]">Observaciones:</span>{" "}
@@ -286,16 +294,42 @@ export default async function WorkOrderDetailPage({ params }: WorkOrderDetailPag
           ) : null}
 
           <Card className="rounded-2xl">
-            <h2 className="font-heading text-2xl font-semibold">Responsable de la orden</h2>
+            <h2 className="font-heading text-2xl font-semibold">Flujo mecanica / pintura</h2>
             <p className="mt-2 text-sm text-[color:var(--muted)]">
-              Define o reasigna el responsable principal activo de esta orden. El cambio se refleja
-              de inmediato y la OT siempre conserva un responsable actual o el estado explicito
-              &quot;Sin asignar&quot;.
+              Define si la orden requiere mecanica, pintura o ambos, y separa responsables y estados
+              para cada area.
             </p>
 
+            <div className="mt-5 grid gap-3 md:grid-cols-2">
+              <div className="rounded-xl border border-[rgba(37,99,235,0.14)] bg-[rgba(37,99,235,0.05)] p-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-[#1d4ed8]">Mecanica</p>
+                <p className="mt-2 text-sm font-semibold text-[color:var(--foreground)]">
+                  {WORK_ORDER_AREA_STATUS_LABELS[workOrder.mechanicsStatus]}
+                </p>
+                <p className="mt-1 text-sm text-[color:var(--muted)]">
+                  {workOrder.assignedTechnician?.name ?? "Sin asignar"}
+                </p>
+              </div>
+              <div className="rounded-xl border border-[rgba(200,92,42,0.16)] bg-[rgba(200,92,42,0.06)] p-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--accent-strong)]">
+                  Pintura
+                </p>
+                <p className="mt-2 text-sm font-semibold text-[color:var(--foreground)]">
+                  {WORK_ORDER_AREA_STATUS_LABELS[workOrder.paintStatus]}
+                </p>
+                <p className="mt-1 text-sm text-[color:var(--muted)]">
+                  {workOrder.assignedPainter?.name ?? "Sin asignar"}
+                </p>
+              </div>
+            </div>
+
             <div className="mt-5">
-              <AssignmentForm
+              <WorkOrderFlowForm
+                currentAssignedPainterId={workOrder.assignedPainterId}
                 currentAssignedTechnicianId={workOrder.assignedTechnicianId}
+                currentMechanicsStatus={workOrder.mechanicsStatus}
+                currentPaintStatus={workOrder.paintStatus}
+                currentServiceFlow={workOrder.serviceFlow}
                 mechanics={mechanics.map((mechanic) => ({
                   id: mechanic.id,
                   name: mechanic.name,

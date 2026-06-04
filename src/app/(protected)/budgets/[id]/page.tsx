@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card";
 import { formatDateTime } from "@/lib/utils";
 import { BudgetDetailForm } from "@/app/(protected)/budgets/budget-detail-form";
 import { BUDGET_STATUS_LABELS } from "@/modules/budgets/budget.constants";
-import { getBudgetById } from "@/modules/budgets/budget.service";
+import { getBudgetById, getBudgetWorkOrderStockPlan } from "@/modules/budgets/budget.service";
 
 type BudgetDetailPageProps = {
   params: Promise<{
@@ -12,7 +12,10 @@ type BudgetDetailPageProps = {
 
 export default async function BudgetDetailPage({ params }: BudgetDetailPageProps) {
   const { id } = await params;
-  const budget = await getBudgetById(id);
+  const [budget, workOrderStockPlan] = await Promise.all([
+    getBudgetById(id),
+    getBudgetWorkOrderStockPlan(id),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -67,6 +70,7 @@ export default async function BudgetDetailPage({ params }: BudgetDetailPageProps
             note: item.note,
           })),
         }}
+        workOrderStockPlan={workOrderStockPlan}
       />
 
       <Card className="rounded-2xl">

@@ -36,6 +36,15 @@ export const clientRepository = {
     return prisma.client.findMany({
       where,
       include: {
+        workOrders: {
+          where: {
+            deletedAt: null,
+          },
+          orderBy: {
+            intakeDate: "desc",
+          },
+          take: 1,
+        },
         _count: {
           select: {
             vehicles: {

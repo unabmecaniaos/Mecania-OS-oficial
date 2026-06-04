@@ -1,8 +1,17 @@
-import { BudgetItemType, BudgetStatus, UserRole, WorkOrderStatus } from "@prisma/client";
+import {
+  BudgetItemType,
+  BudgetStatus,
+  StockMovementSourceType,
+  StockMovementType,
+  UserRole,
+  VehiclePartCompatibilitySource,
+  WorkOrderStatus,
+} from "@prisma/client";
 
 import { AppError, ConflictError, NotFoundError } from "@/lib/errors";
 import { createLogger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
+import { isValidVinFormat } from "@/lib/vin";
 import { budgetRepository } from "@/modules/budgets/budget.repository";
 import { findLatestInsuranceCaseLink } from "@/modules/insurance-cases/insurance-case.service";
 import {
@@ -36,6 +45,9 @@ type DraftLineUpdate = {
   unitPrice: number;
   note?: string;
 };
+
+type BudgetDetail = NonNullable<Awaited<ReturnType<typeof budgetRepository.findById>>>;
+type BudgetDetailItem = BudgetDetail["items"][number];
 
 function startOfToday() {
   const value = new Date();
@@ -77,6 +89,138 @@ async function createWorkOrderNumber() {
   const nextSequence = lastOrder ? Number(lastOrder.orderNumber.slice(-4)) + 1 : 1;
 
   return `${prefix}${String(nextSequence).padStart(4, "0")}`;
+}
+
+function normalizeReferenceCode(value?: string | null) {
+  return value?.trim().toUpperCase() ?? "";
+}
+
+function collectBudgetPartGroups(items: BudgetDetailItem[]) {
+  const inventoryGroups = new Map<
+    string,
+    {
+      code: string;
+      requestedQuantity: number;
+      descriptions: string[];
+      budgetItemIds: string[];
+    }
+  >();
+  const unlinkedParts: Array<{
+    id: string;
+    description: string;
+    referenceCode: string | null;
+    quantity: number;
+    sourceLabel: string | null;
+    reason: string;
+  }> = [];
+
+  for (const item of items) {
+    if (item.itemType !== BudgetItemType.PART) {
+      continue;
+    }
+
+    const code = normalizeReferenceCode(item.referenceCode);
+    const isInventoryPart = item.sourceLabel === "Inventario" && code.length > 0;
+
+    if (!isInventoryPart) {
+      unlinkedParts.push({
+        id: item.id,
+        description: item.description,
+        referenceCode: item.referenceCode,
+        quantity: item.quantity,
+        sourceLabel: item.sourceLabel,
+        reason: "Repuesto manual o sin vinculo directo con inventario",
+      });
+      continue;
+    }
+
+    const current = inventoryGroups.get(code);
+
+    if (current) {
+      current.requestedQuantity += item.quantity;
+      current.descriptions.push(item.description);
+      current.budgetItemIds.push(item.id);
+      continue;
+    }
+
+    inventoryGroups.set(code, {
+      code,
+      requestedQuantity: item.quantity,
+      descriptions: [item.description],
+      budgetItemIds: [item.id],
+    });
+  }
+
+  return {
+    inventoryGroups,
+    unlinkedParts,
+  };
+}
+
+export async function getBudgetWorkOrderStockPlan(budgetId: string) {
+  const budget = await getBudgetById(budgetId);
+  const { inventoryGroups, unlinkedParts } = collectBudgetPartGroups(budget.items);
+  const codes = Array.from(inventoryGroups.keys());
+  const repuestos =
+    codes.length > 0
+      ? await prisma.repuesto.findMany({
+          where: {
+            deletedAt: null,
+            code: {
+              in: codes,
+            },
+          },
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            currentStock: true,
+            minimumStock: true,
+            unitPrice: true,
+          },
+        })
+      : [];
+  const repuestosByCode = new Map(
+    repuestos.map((repuesto) => [normalizeReferenceCode(repuesto.code), repuesto]),
+  );
+  const inventoryParts = Array.from(inventoryGroups.values()).flatMap((group) => {
+    const repuesto = repuestosByCode.get(group.code);
+
+    if (!repuesto) {
+      unlinkedParts.push({
+        id: group.budgetItemIds.join(":"),
+        description: group.descriptions.join(", "),
+        referenceCode: group.code,
+        quantity: group.requestedQuantity,
+        sourceLabel: "Inventario",
+        reason: "El codigo ya no existe en inventario activo",
+      });
+      return [];
+    }
+
+    const missingQuantity = Math.max(group.requestedQuantity - repuesto.currentStock, 0);
+
+    return [
+      {
+        repuestoId: repuesto.id,
+        name: repuesto.name,
+        code: repuesto.code,
+        requestedQuantity: group.requestedQuantity,
+        currentStock: repuesto.currentStock,
+        minimumStock: repuesto.minimumStock,
+        unitPrice: repuesto.unitPrice,
+        missingQuantity,
+        descriptions: group.descriptions,
+      },
+    ];
+  });
+
+  return {
+    inventoryParts,
+    unlinkedParts,
+    hasMissingStock: inventoryParts.some((part) => part.missingQuantity > 0),
+    missingParts: inventoryParts.filter((part) => part.missingQuantity > 0),
+  };
 }
 
 function calculateTotals(
@@ -517,8 +661,53 @@ export async function createWorkOrderFromBudget(budgetId: string, actorId: strin
     )
     .slice(0, 3)
     .join(", ");
+  const { inventoryGroups } = collectBudgetPartGroups(budget.items);
+  const inventoryCodes = Array.from(inventoryGroups.keys());
 
   const workOrder = await prisma.$transaction(async (tx) => {
+    const repuestos =
+      inventoryCodes.length > 0
+        ? await tx.repuesto.findMany({
+            where: {
+              deletedAt: null,
+              code: {
+                in: inventoryCodes,
+              },
+            },
+            select: {
+              id: true,
+              name: true,
+              code: true,
+              currentStock: true,
+            },
+          })
+        : [];
+    const repuestosByCode = new Map(
+      repuestos.map((repuesto) => [normalizeReferenceCode(repuesto.code), repuesto]),
+    );
+    const workOrderPartRequests = Array.from(inventoryGroups.values()).flatMap((group) => {
+      const repuesto = repuestosByCode.get(group.code);
+
+      return repuesto
+        ? [
+            {
+              ...group,
+              repuesto,
+            },
+          ]
+        : [];
+    });
+
+    for (const request of workOrderPartRequests) {
+      if (request.requestedQuantity > request.repuesto.currentStock) {
+        const missingQuantity = request.requestedQuantity - request.repuesto.currentStock;
+
+        throw new ConflictError(
+          `Falta stock para crear la orden: ${request.repuesto.name} necesita ${request.requestedQuantity}, disponible ${request.repuesto.currentStock}. Ingresa ${missingQuantity} unidad(es) antes de crear la orden de trabajo.`,
+        );
+      }
+    }
+
     if (!budget.client.isWorkshopClient) {
       const liquidatorName = budget.insuranceCase?.liquidator.name ?? "Liquidadora";
       await tx.client.update({
@@ -562,6 +751,69 @@ export async function createWorkOrderFromBudget(budgetId: string, actorId: strin
         changedById: actorId,
       },
     });
+
+    for (const request of workOrderPartRequests) {
+      const previousStock = request.repuesto.currentStock;
+      const newStock = previousStock - request.requestedQuantity;
+      const updateResult = await tx.repuesto.updateMany({
+        where: {
+          id: request.repuesto.id,
+          currentStock: previousStock,
+        },
+        data: {
+          currentStock: {
+            decrement: request.requestedQuantity,
+          },
+        },
+      });
+
+      if (updateResult.count !== 1) {
+        throw new ConflictError(
+          `El stock de ${request.repuesto.name} cambio mientras se creaba la orden. Revisa el stock e intentalo de nuevo.`,
+        );
+      }
+
+      await tx.stockMovement.create({
+        data: {
+          repuestoId: request.repuesto.id,
+          type: StockMovementType.OUT,
+          quantity: -request.requestedQuantity,
+          previousStock,
+          newStock,
+          reason: `Consumo automatico al crear orden ${workOrder.orderNumber} desde presupuesto ${budget.budgetNumber}`,
+          sourceType: StockMovementSourceType.WORK_ORDER,
+          sourceId: workOrder.id,
+          createdById: actorId,
+        },
+      });
+
+      await tx.workOrderPart.create({
+        data: {
+          workOrderId: workOrder.id,
+          repuestoId: request.repuesto.id,
+          quantity: request.requestedQuantity,
+          createdById: actorId,
+        },
+      });
+
+      if (isValidVinFormat(budget.vehicle.vin)) {
+        await tx.vehiclePartCompatibility.upsert({
+          where: {
+            vehicleId_repuestoId: {
+              vehicleId: budget.vehicleId,
+              repuestoId: request.repuesto.id,
+            },
+          },
+          create: {
+            vehicleId: budget.vehicleId,
+            repuestoId: request.repuesto.id,
+            source: VehiclePartCompatibilitySource.WORK_ORDER,
+            notes: `Aprendida desde orden ${workOrder.orderNumber}`,
+          },
+          update: {},
+        });
+      }
+    }
 
     await tx.budget.update({
       where: { id: budget.id },

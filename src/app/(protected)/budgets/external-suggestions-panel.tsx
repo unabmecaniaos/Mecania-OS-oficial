@@ -58,14 +58,12 @@ type ExternalSuggestionsPanelProps = {
   defaultVin?: string;
   defaultPartName?: string;
   defaultPartCode?: string;
-  selectedPartStock?: number | null;
 };
 
 export function ExternalSuggestionsPanel({
   defaultVin = "",
   defaultPartName = "",
   defaultPartCode = "",
-  selectedPartStock = null,
 }: ExternalSuggestionsPanelProps) {
   const [vin, setVin] = useState(defaultVin);
   const [query, setQuery] = useState(defaultPartName || "filtro aceite");
@@ -129,14 +127,6 @@ export function ExternalSuggestionsPanel({
           priorizando el codigo del repuesto cuando ya existe.
         </p>
       </div>
-
-      {selectedPartStock !== null ? (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-          {selectedPartStock <= 0
-            ? "El repuesto seleccionado esta sin stock. Usa estas busquedas para encontrar una compra externa."
-            : `Stock actual del repuesto seleccionado: ${selectedPartStock}. Puedes usar estas busquedas para comparar proveedores.`}
-        </div>
-      ) : null}
 
       <div className="grid gap-4 lg:grid-cols-[1fr_1fr_1fr_auto]">
         <div className="space-y-2">
@@ -244,7 +234,7 @@ export function ExternalSuggestionsPanel({
           </div>
 
           {result.mercadoLibre.status !== "ok" ? (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+            <div className="rounded-xl border border-[rgba(15,23,42,0.08)] bg-white/85 p-4 text-sm text-[color:var(--muted-strong)]">
               {result.mercadoLibre.message}
             </div>
           ) : null}

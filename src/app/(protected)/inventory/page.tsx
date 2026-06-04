@@ -36,40 +36,44 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
             <h1 className="mt-2 font-heading text-3xl font-semibold">Inventario</h1>
           </div>
 
-          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-            <div className="flex flex-wrap items-center gap-3 xl:flex-nowrap">
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-center gap-3">
               {isAdmin ? (
                 <>
                   <Link href="/inventory/new">
-                    <Button className="whitespace-nowrap">Nuevo repuesto</Button>
+                    <Button className="min-w-[150px] whitespace-nowrap">Nuevo repuesto</Button>
                   </Link>
                   <Link href="/inventory/stock/new">
-                    <Button className="whitespace-nowrap" variant="secondary">
+                    <Button className="min-w-[150px] whitespace-nowrap" variant="secondary">
                       Ajuste de stock
                     </Button>
                   </Link>
                   <Link href="/inventory/compatibility">
-                    <Button className="whitespace-nowrap" variant="secondary">
+                    <Button className="min-w-[170px] whitespace-nowrap" variant="secondary">
                       Compatibilidad VIN
                     </Button>
                   </Link>
                 </>
               ) : null}
               <Link href="/inventory/movements">
-                <Button className="whitespace-nowrap" variant="secondary">
+                <Button className="min-w-[190px] whitespace-nowrap" variant="secondary">
                   Movimientos recientes
                 </Button>
               </Link>
             </div>
 
-            <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-end xl:flex-nowrap">
+            <div className="grid min-w-0 gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
               <InventoryFilters
                 key={`${q ?? ""}:${lowStock ?? ""}`}
                 lowStock={lowStock}
                 q={q}
               />
 
-              {isAdmin ? <SectionTrashLink href="/inventory/trash" /> : null}
+              {isAdmin ? (
+                <div className="flex lg:justify-end">
+                  <SectionTrashLink href="/inventory/trash" />
+                </div>
+              ) : null}
             </div>
           </div>
         </div>

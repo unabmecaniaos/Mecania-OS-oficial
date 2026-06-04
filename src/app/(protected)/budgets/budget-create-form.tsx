@@ -606,12 +606,12 @@ function BudgetItemsBuilder({
               className={
                 hasCompatiblePartsForVehicle
                   ? "rounded-2xl border border-[rgba(22,163,74,0.18)] bg-[#f0fdf4] p-4 text-sm text-[#166534]"
-                  : "rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"
+                  : "rounded-2xl border border-[rgba(15,23,42,0.10)] bg-white/85 p-4 text-sm text-[color:var(--muted-strong)]"
               }
             >
               {hasCompatiblePartsForVehicle
                 ? `Mostrando repuestos compatibles con ${selectedVehicleLabel ?? "el VIN seleccionado"}. Los no compatibles quedan deshabilitados.`
-                : `No hay repuestos compatibles registrados para ${selectedVehicleLabel ?? "el VIN seleccionado"}. Registra compatibilidad en Inventario > Compatibilidad VIN o usa respaldo manual.`}
+                : `No hay repuestos compatibles registrados para ${selectedVehicleLabel ?? "el VIN seleccionado"}. Puedes cotizar el repuesto como manual o usar la busqueda externa sin salir del presupuesto.`}
             </div>
           ) : (
             <div className="rounded-2xl border border-[rgba(37,99,235,0.12)] bg-white/85 p-4 text-sm text-[color:var(--muted-strong)]">
@@ -625,7 +625,7 @@ function BudgetItemsBuilder({
 
               return (
                 <div
-                  className="grid gap-4 rounded-2xl border border-[rgba(37,99,235,0.10)] bg-white/95 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.04)] lg:grid-cols-[1.8fr_180px_140px]"
+                  className="grid gap-4 rounded-2xl border border-[rgba(37,99,235,0.10)] bg-white/95 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.04)] lg:grid-cols-[minmax(0,1.8fr)_160px_150px]"
                   key={`part-slot-${slot}`}
                 >
                   <div className="space-y-2">
@@ -660,15 +660,13 @@ function BudgetItemsBuilder({
                       ))}
                     </Select>
                     {selectedPart ? (
-                      <div className="space-y-1 text-sm">
-                        <p className="text-[color:var(--muted)]">
-                          Stock actual {selectedPart.currentStock} / minimo {selectedPart.minimumStock}
-                        </p>
-                        {selectedPart.currentStock <= 0 ? (
-                          <p className="font-medium text-amber-700">
-                            Sin stock. Usa la busqueda externa para encontrar compra por codigo o nombre.
-                          </p>
-                        ) : null}
+                      <div className="flex flex-wrap gap-2 text-xs">
+                        <span className="rounded-full border border-[rgba(37,99,235,0.16)] bg-[#eff6ff] px-3 py-1 font-semibold text-[#1d4ed8]">
+                          Stock {selectedPart.currentStock}
+                        </span>
+                        <span className="rounded-full border border-[rgba(15,23,42,0.08)] bg-white px-3 py-1 text-[color:var(--muted-strong)]">
+                          Minimo {selectedPart.minimumStock}
+                        </span>
                       </div>
                     ) : null}
                   </div>
@@ -716,6 +714,7 @@ function BudgetItemsBuilder({
                 Agregar otro repuesto
               </Button>
             ) : null}
+
           </div>
         </div>
       </Card>
@@ -726,10 +725,44 @@ function BudgetItemsBuilder({
             defaultPartCode={externalSearchTargetPart?.code}
             defaultPartName={externalSearchTargetPart?.name}
             defaultVin={selectedVehicleVin}
-            selectedPartStock={externalSearchTargetPart?.currentStock ?? null}
           />
         </Card>
       ) : null}
+
+      {showPartManual ? (
+        <Card className="rounded-2xl bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(247,250,254,0.96))]">
+          <div className="space-y-4">
+            <SectionHeading
+              eyebrow="Respaldo manual"
+              title={`${BUDGET_ITEM_TYPE_LABELS[BudgetItemType.PART]} fuera del inventario`}
+            />
+
+            <ManualFallbackRows
+              itemType={BudgetItemType.PART}
+              manualSlots={manualSlots.slice(0, visiblePartManualSlots)}
+              onAddMore={
+                visiblePartManualSlots < manualSlots.length
+                  ? () =>
+                      setVisiblePartManualSlots((current) =>
+                        Math.min(current + 1, manualSlots.length),
+                      )
+                  : undefined
+              }
+              placeholderDescription="Ej. Pastillas Brembo delanteras"
+              placeholderNote="Ej. Repuesto pendiente de cargar en inventario"
+            />
+          </div>
+        </Card>
+      ) : (
+        <Button
+          className="w-full sm:w-auto"
+          onClick={() => setShowPartManual(true)}
+          type="button"
+          variant="secondary"
+        >
+          Agregar repuesto manual
+        </Button>
+      )}
 
       {([BudgetItemType.LABOR, BudgetItemType.SUPPLY] as const).map((type) => {
         const slots = type === BudgetItemType.LABOR ? laborSlots : supplySlots;
@@ -747,8 +780,9 @@ function BudgetItemsBuilder({
               <SectionHeading eyebrow="Catalogo referencial" title={BUDGET_ITEM_TYPE_LABELS[type]} />
 
               {groupedReferences[type].length === 0 ? (
-                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-                  No hay items cargados en esta categoria.
+                <div className="rounded-2xl border border-[rgba(15,23,42,0.08)] bg-white/80 p-4 text-sm text-[color:var(--muted-strong)]">
+                  Catalogo sin referencias cargadas. Puedes agregar este item manualmente sin
+                  salir del presupuesto.
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -895,41 +929,6 @@ function BudgetItemsBuilder({
           </Card>
         );
       })}
-
-      {showPartManual ? (
-        <Card className="rounded-2xl bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(247,250,254,0.96))]">
-          <div className="space-y-4">
-            <SectionHeading
-              eyebrow="Respaldo manual"
-              title={`${BUDGET_ITEM_TYPE_LABELS[BudgetItemType.PART]} fuera del inventario`}
-            />
-
-            <ManualFallbackRows
-              itemType={BudgetItemType.PART}
-              manualSlots={manualSlots.slice(0, visiblePartManualSlots)}
-              onAddMore={
-                visiblePartManualSlots < manualSlots.length
-                  ? () =>
-                      setVisiblePartManualSlots((current) =>
-                        Math.min(current + 1, manualSlots.length),
-                      )
-                  : undefined
-              }
-              placeholderDescription="Ej. Pastillas Brembo delanteras"
-              placeholderNote="Ej. Repuesto pendiente de cargar en inventario"
-            />
-          </div>
-        </Card>
-      ) : (
-        <Button
-          className="w-full sm:w-auto"
-          onClick={() => setShowPartManual(true)}
-          type="button"
-          variant="secondary"
-        >
-          Agregar repuesto manual
-        </Button>
-      )}
     </>
   );
 }

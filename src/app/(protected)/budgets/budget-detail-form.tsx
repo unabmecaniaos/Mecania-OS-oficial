@@ -1,10 +1,12 @@
 "use client";
 
 import { BudgetItemType, BudgetStatus } from "@prisma/client";
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 import {
   createWorkOrderFromBudgetAction,
+  registerBudgetPartStockEntryAction,
   transitionBudgetStatusAction,
   updateBudgetDraftAction,
 } from "@/app/(protected)/budgets/actions";
@@ -65,9 +67,31 @@ type BudgetDetailFormProps = {
       note: string | null;
     }>;
   };
+  workOrderStockPlan: {
+    inventoryParts: Array<{
+      repuestoId: string;
+      name: string;
+      code: string;
+      requestedQuantity: number;
+      currentStock: number;
+      minimumStock: number;
+      unitPrice: number;
+      missingQuantity: number;
+      descriptions: string[];
+    }>;
+    unlinkedParts: Array<{
+      id: string;
+      description: string;
+      referenceCode: string | null;
+      quantity: number;
+      sourceLabel: string | null;
+      reason: string;
+    }>;
+    hasMissingStock: boolean;
+  };
 };
 
-export function BudgetDetailForm({ budget }: BudgetDetailFormProps) {
+export function BudgetDetailForm({ budget, workOrderStockPlan }: BudgetDetailFormProps) {
   const [state, formAction] = useActionState(
     updateBudgetDraftAction.bind(null, budget.id),
     initialActionState,
@@ -208,18 +232,33 @@ export function BudgetDetailForm({ budget }: BudgetDetailFormProps) {
         )}
 
         {canCreateWorkOrder ? (
-          <form action={createWorkOrderAction} className="mt-4 border-t border-[color:var(--border)] pt-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm font-medium text-[color:var(--foreground)]">
-                Crear orden de trabajo
-              </p>
-              <SubmitButton
-                label="Crear orden de trabajo"
-                pendingLabel="Creando orden..."
-              />
-            </div>
-            <FormMessage message={createWorkOrderState.error} />
-          </form>
+          <div className="mt-4 space-y-4 border-t border-[color:var(--border)] pt-4">
+            <WorkOrderStockPlanPanel budgetId={budget.id} plan={workOrderStockPlan} />
+
+            <form action={createWorkOrderAction}>
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-[color:var(--foreground)]">
+                    Crear orden de trabajo
+                  </p>
+                  <p className="mt-1 text-sm text-[color:var(--muted)]">
+                    Al crearla se descontaran automaticamente los repuestos vinculados a inventario.
+                  </p>
+                </div>
+                <SubmitButton
+                  disabled={workOrderStockPlan.hasMissingStock}
+                  label="Crear orden de trabajo"
+                  pendingLabel="Creando orden..."
+                />
+              </div>
+              {workOrderStockPlan.hasMissingStock ? (
+                <p className="mt-3 text-sm text-[#991b1b]">
+                  Resuelve los faltantes de stock antes de crear la orden.
+                </p>
+              ) : null}
+              <FormMessage message={createWorkOrderState.error} />
+            </form>
+          </div>
         ) : null}
 
         {budget.workOrder ? (
@@ -373,6 +412,223 @@ export function BudgetDetailForm({ budget }: BudgetDetailFormProps) {
           <SubmitButton label="Guardar ajustes del borrador" pendingLabel="Actualizando..." />
         ) : null}
       </form>
+    </div>
+  );
+}
+
+function WorkOrderStockPlanPanel({
+  budgetId,
+  plan,
+}: {
+  budgetId: string;
+  plan: BudgetDetailFormProps["workOrderStockPlan"];
+}) {
+  const linkedCount = plan.inventoryParts.length;
+  const missingCount = plan.inventoryParts.filter((part) => part.missingQuantity > 0).length;
+
+  return (
+    <div className="rounded-2xl border border-[rgba(37,99,235,0.12)] bg-white/85 p-4">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--muted)]">
+            Repuestos para la orden
+          </p>
+          <h3 className="mt-2 text-xl font-semibold text-[color:var(--foreground)]">
+            Revision antes de crear la OT
+          </h3>
+          <p className="mt-1 text-sm text-[color:var(--muted-strong)]">
+            Los repuestos vinculados a inventario se descontaran al crear la orden de trabajo.
+          </p>
+        </div>
+        <div
+          className={
+            plan.hasMissingStock
+              ? "rounded-xl border border-[rgba(220,38,38,0.18)] bg-[#fef2f2] px-4 py-3 text-sm font-semibold text-[#991b1b]"
+              : "rounded-xl border border-[rgba(22,163,74,0.18)] bg-[#f0fdf4] px-4 py-3 text-sm font-semibold text-[#166534]"
+          }
+        >
+          {plan.hasMissingStock
+            ? `${missingCount} repuesto(s) con faltante`
+            : linkedCount > 0
+              ? "Stock listo para descontar"
+              : "Sin repuestos vinculados a inventario"}
+        </div>
+      </div>
+
+      <div className="mt-4 space-y-3">
+        {plan.inventoryParts.map((part) => {
+          const hasMissingStock = part.missingQuantity > 0;
+
+          return (
+            <div
+              className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-4"
+              key={part.repuestoId}
+            >
+              <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-semibold text-[color:var(--foreground)]">{part.name}</p>
+                    {hasMissingStock ? (
+                      <span className="inline-flex items-center rounded-md bg-[#fef2f2] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#991b1b]">
+                        Falta stock
+                      </span>
+                    ) : (
+                      <Badge tone="success">Disponible</Badge>
+                    )}
+                  </div>
+                  <p className="mt-1 text-sm text-[color:var(--muted-strong)]">
+                    {part.code} / {formatCurrency(part.unitPrice)}
+                  </p>
+                  <p className="mt-1 text-xs text-[color:var(--muted)]">
+                    {part.descriptions.join(", ")}
+                  </p>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                    <MiniStockStat label="Necesario" value={String(part.requestedQuantity)} />
+                    <MiniStockStat label="Disponible" value={String(part.currentStock)} />
+                    <MiniStockStat
+                      isDanger={hasMissingStock}
+                      label="Faltante"
+                      value={String(part.missingQuantity)}
+                    />
+                  </div>
+                </div>
+
+                {hasMissingStock ? (
+                  <MissingStockEntryForm budgetId={budgetId} part={part} />
+                ) : (
+                  <div className="rounded-xl border border-[rgba(22,163,74,0.14)] bg-[#f0fdf4] p-4 text-sm text-[#166534]">
+                    Este repuesto se puede descontar automaticamente cuando crees la orden.
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+
+        {plan.inventoryParts.length === 0 ? (
+          <p className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-4 text-sm text-[color:var(--muted-strong)]">
+            Este presupuesto no tiene repuestos vinculados a inventario. La orden se creara sin
+            descuento automatico de stock.
+          </p>
+        ) : null}
+
+        {plan.unlinkedParts.length > 0 ? (
+          <div className="rounded-xl border border-[color:var(--border)] bg-white p-4">
+            <p className="text-sm font-semibold text-[color:var(--foreground)]">
+              Repuestos manuales o sin vinculo automatico
+            </p>
+            <div className="mt-3 space-y-2">
+              {plan.unlinkedParts.map((part) => (
+                <div className="text-sm text-[color:var(--muted-strong)]" key={part.id}>
+                  {part.description} / cantidad {part.quantity} /{" "}
+                  {part.referenceCode ?? "sin codigo"} / {part.reason}
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function MissingStockEntryForm({
+  budgetId,
+  part,
+}: {
+  budgetId: string;
+  part: BudgetDetailFormProps["workOrderStockPlan"]["inventoryParts"][number];
+}) {
+  const [state, formAction] = useActionState(
+    registerBudgetPartStockEntryAction.bind(null, budgetId),
+    initialActionState,
+  );
+  const router = useRouter();
+
+  useEffect(() => {
+    if (state.success) {
+      router.refresh();
+    }
+  }, [router, state.success]);
+
+  return (
+    <form
+      action={formAction}
+      className="rounded-xl border border-[rgba(220,38,38,0.18)] bg-[#fef2f2] p-4"
+    >
+      <input name="repuestoId" type="hidden" value={part.repuestoId} />
+      <input name="partName" type="hidden" value={part.name} />
+      <div className="space-y-3">
+        <div>
+          <p className="text-sm font-semibold text-[#991b1b]">Ingresar faltante</p>
+          <p className="mt-1 text-xs text-[#991b1b]">
+            Agrega stock aqui y vuelve a crear la orden sin pasar por inventario.
+          </p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-[110px_minmax(0,1fr)]">
+          <div className="space-y-2">
+            <label className="text-xs font-semibold uppercase tracking-[0.14em] text-[#991b1b]">
+              Cantidad
+            </label>
+            <Input defaultValue={part.missingQuantity} min={1} name="quantity" type="number" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-semibold uppercase tracking-[0.14em] text-[#991b1b]">
+              Motivo
+            </label>
+            <Input defaultValue="Ingreso para crear OT desde presupuesto" name="reason" />
+          </div>
+        </div>
+        <SubmitButton
+          className="w-full"
+          label="Ingresar stock faltante"
+          pendingLabel="Ingresando..."
+          variant="secondary"
+        />
+        <FormMessage
+          message={state.error ?? state.success}
+          tone={state.success ? "success" : "error"}
+        />
+      </div>
+    </form>
+  );
+}
+
+function MiniStockStat({
+  isDanger = false,
+  label,
+  value,
+}: {
+  isDanger?: boolean;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div
+      className={
+        isDanger
+          ? "rounded-lg border border-[rgba(220,38,38,0.18)] bg-[#fef2f2] px-3 py-2"
+          : "rounded-lg border border-[color:var(--border)] bg-white px-3 py-2"
+      }
+    >
+      <p
+        className={
+          isDanger
+            ? "text-[11px] uppercase tracking-[0.14em] text-[#991b1b]"
+            : "text-[11px] uppercase tracking-[0.14em] text-[color:var(--muted)]"
+        }
+      >
+        {label}
+      </p>
+      <p
+        className={
+          isDanger
+            ? "mt-1 text-base font-semibold text-[#991b1b]"
+            : "mt-1 text-base font-semibold text-[color:var(--foreground)]"
+        }
+      >
+        {value}
+      </p>
     </div>
   );
 }

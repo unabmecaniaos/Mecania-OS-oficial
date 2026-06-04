@@ -15,6 +15,7 @@ import {
   createWorkOrderTask,
   createWorkOrder,
   updateWorkOrderAssignment,
+  updateWorkOrderFlow,
   updateWorkOrderPromisedDate,
   updateWorkOrderStatus,
   updateWorkOrderTaskStatus,
@@ -33,6 +34,8 @@ export async function createWorkOrderAction(
         clientId: String(formData.get("clientId") ?? ""),
         vehicleId: String(formData.get("vehicleId") ?? ""),
         assignedTechnicianId: String(formData.get("assignedTechnicianId") ?? ""),
+        assignedPainterId: String(formData.get("assignedPainterId") ?? ""),
+        serviceFlow: String(formData.get("serviceFlow") ?? ""),
         reason: String(formData.get("reason") ?? ""),
         initialDiagnosis: String(formData.get("initialDiagnosis") ?? ""),
         status: String(formData.get("status") ?? ""),
@@ -69,6 +72,7 @@ export async function updateWorkOrderAssignmentAction(
       orderId,
       {
         assignedTechnicianId: String(formData.get("assignedTechnicianId") ?? ""),
+        assignedPainterId: String(formData.get("assignedPainterId") ?? ""),
       },
       session.user.id,
     );
@@ -83,6 +87,42 @@ export async function updateWorkOrderAssignmentAction(
   revalidatePath("/liquidador");
   await setFlashMessage({
     message: "Responsable actualizado correctamente.",
+    tone: "success",
+  });
+  redirect(`/work-orders/${orderId}`);
+}
+
+export async function updateWorkOrderFlowAction(
+  _previousState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const orderId = String(formData.get("orderId") ?? "");
+  const result = await executeServerAction("updateWorkOrderFlowAction", async () => {
+    const session = await requireApiUser([UserRole.ADMIN, UserRole.MECHANIC]);
+
+    await updateWorkOrderFlow(
+      orderId,
+      {
+        serviceFlow: String(formData.get("serviceFlow") ?? ""),
+        mechanicsStatus: String(formData.get("mechanicsStatus") ?? ""),
+        paintStatus: String(formData.get("paintStatus") ?? ""),
+        assignedTechnicianId: String(formData.get("assignedTechnicianId") ?? ""),
+        assignedPainterId: String(formData.get("assignedPainterId") ?? ""),
+      },
+      session.user.id,
+    );
+  });
+
+  if (!result.ok) {
+    return result.state;
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath("/work-orders");
+  revalidatePath(`/work-orders/${orderId}`);
+  revalidatePath("/liquidador");
+  await setFlashMessage({
+    message: "Flujo operativo actualizado correctamente.",
     tone: "success",
   });
   redirect(`/work-orders/${orderId}`);

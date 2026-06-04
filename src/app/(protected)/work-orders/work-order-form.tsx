@@ -1,7 +1,7 @@
 "use client";
 
 import { ChangeEvent, useActionState, useState } from "react";
-import { WorkOrderStatus } from "@prisma/client";
+import { WorkOrderServiceFlow, WorkOrderStatus } from "@prisma/client";
 
 import { createWorkOrderAction } from "@/app/(protected)/work-orders/actions";
 import { FormMessage } from "@/components/ui/form-message";
@@ -10,7 +10,12 @@ import { Select } from "@/components/ui/select";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Textarea } from "@/components/ui/textarea";
 import { initialActionState } from "@/lib/form-state";
-import { WORK_ORDER_STATUS_OPTIONS } from "@/modules/work-orders/work-order.constants";
+import {
+  flowIncludesMechanics,
+  flowIncludesPaint,
+  WORK_ORDER_SERVICE_FLOW_OPTIONS,
+  WORK_ORDER_STATUS_OPTIONS,
+} from "@/modules/work-orders/work-order.constants";
 
 type WorkOrderFormProps = {
   clients: Array<{
@@ -50,6 +55,9 @@ export function WorkOrderForm({
   lockClientVehicle = false,
 }: WorkOrderFormProps) {
   const [state, formAction] = useActionState(createWorkOrderAction, initialActionState);
+  const [selectedServiceFlow, setSelectedServiceFlow] = useState<WorkOrderServiceFlow>(
+    WorkOrderServiceFlow.MECHANICS,
+  );
   const initialClientId =
     defaultClientId ?? vehicles.find((vehicle) => vehicle.id === defaultVehicleId)?.clientId ?? "";
   const [selectedClientId, setSelectedClientId] = useState(initialClientId);
@@ -64,6 +72,8 @@ export function WorkOrderForm({
   const availableVehicles = selectedClientId
     ? vehicles.filter((vehicle) => vehicle.clientId === selectedClientId)
     : [];
+  const hasMechanicsFlow = flowIncludesMechanics(selectedServiceFlow);
+  const hasPaintFlow = flowIncludesPaint(selectedServiceFlow);
 
   function handleClientChange(event: ChangeEvent<HTMLSelectElement>) {
     const nextClientId = event.target.value;
@@ -176,11 +186,49 @@ export function WorkOrderForm({
         <div className="space-y-2">
           <label
             className="text-sm font-medium text-[color:var(--muted-strong)]"
+            htmlFor="serviceFlow"
+          >
+            Flujo operativo
+          </label>
+          <Select
+            id="serviceFlow"
+            name="serviceFlow"
+            onChange={(event) => setSelectedServiceFlow(event.target.value as WorkOrderServiceFlow)}
+            value={selectedServiceFlow}
+          >
+            {WORK_ORDER_SERVICE_FLOW_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <label
+            className="text-sm font-medium text-[color:var(--muted-strong)]"
             htmlFor="assignedTechnicianId"
           >
-            Tecnico asignado
+            Responsable mecanica
           </label>
-          <Select id="assignedTechnicianId" name="assignedTechnicianId">
+          <Select disabled={!hasMechanicsFlow} id="assignedTechnicianId" name="assignedTechnicianId">
+            <option value="">Sin asignar</option>
+            {mechanics.map((mechanic) => (
+              <option key={mechanic.id} value={mechanic.id}>
+                {mechanic.name}
+              </option>
+            ))}
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <label
+            className="text-sm font-medium text-[color:var(--muted-strong)]"
+            htmlFor="assignedPainterId"
+          >
+            Responsable pintura
+          </label>
+          <Select disabled={!hasPaintFlow} id="assignedPainterId" name="assignedPainterId">
             <option value="">Sin asignar</option>
             {mechanics.map((mechanic) => (
               <option key={mechanic.id} value={mechanic.id}>

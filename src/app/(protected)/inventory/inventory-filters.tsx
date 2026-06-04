@@ -52,17 +52,17 @@ export function InventoryFilters({ q, lowStock }: InventoryFiltersProps) {
   return (
     <div
       aria-busy={isPending}
-      className="flex flex-col gap-3 md:flex-row xl:flex-nowrap"
+      className="grid min-w-0 gap-3 md:grid-cols-[minmax(0,1fr)_minmax(180px,240px)]"
     >
       <Input
-        className="xl:min-w-[260px]"
+        className="min-w-0"
         name="q"
         onChange={(event) => setQuery(event.target.value)}
         placeholder="Buscar por nombre o codigo"
         value={query}
       />
       <Select
-        className="xl:min-w-[200px]"
+        className="min-w-0"
         name="lowStock"
         onChange={(event) => {
           const nextLowStock = event.target.value;

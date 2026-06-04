@@ -4,12 +4,18 @@ import { ConflictError, NotFoundError } from "@/lib/errors";
 import { createLogger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { parseDateInput } from "@/lib/utils";
-import { isClosedStatus } from "@/modules/work-orders/work-order.constants";
+import {
+  flowIncludesMechanics,
+  flowIncludesPaint,
+  isClosedStatus,
+  normalizeAreaStatusForFlow,
+} from "@/modules/work-orders/work-order.constants";
 import { workOrderRepository } from "@/modules/work-orders/work-order.repository";
 import {
   createWorkOrderSchema,
   createWorkOrderTaskSchema,
   updateWorkOrderAssignmentSchema,
+  updateWorkOrderFlowSchema,
   updateWorkOrderPromisedDateSchema,
   updateWorkOrderSchema,
   updateWorkOrderStatusSchema,
@@ -81,6 +87,9 @@ export async function createWorkOrder(input: unknown, actorId: string) {
 
   const orderNumber = await getNextOrderNumber();
   const insuranceCase = await findLatestInsuranceCaseLink(data.clientId, data.vehicleId);
+  const areaStatuses = normalizeAreaStatusForFlow({
+    flow: data.serviceFlow,
+  });
 
   const workOrder = await prisma.$transaction(async (tx) => {
     const workOrder = await tx.workOrder.create({
@@ -92,11 +101,17 @@ export async function createWorkOrder(input: unknown, actorId: string) {
         reason: data.reason,
         initialDiagnosis: data.initialDiagnosis,
         status: data.status,
+        serviceFlow: data.serviceFlow,
+        mechanicsStatus: areaStatuses.mechanicsStatus,
+        paintStatus: areaStatuses.paintStatus,
         estimatedDate: parseDateInput(data.estimatedDate),
         notes: data.notes,
         createdById: actorId,
         updatedById: actorId,
-        assignedTechnicianId: data.assignedTechnicianId,
+        assignedTechnicianId: flowIncludesMechanics(data.serviceFlow)
+          ? data.assignedTechnicianId
+          : null,
+        assignedPainterId: flowIncludesPaint(data.serviceFlow) ? data.assignedPainterId : null,
       },
     });
 
@@ -135,6 +150,7 @@ export async function updateWorkOrderAssignment(id: string, input: unknown, acto
     where: { id },
     data: {
       assignedTechnicianId: data.assignedTechnicianId ?? null,
+      assignedPainterId: data.assignedPainterId ?? null,
       updatedById: actorId,
     },
   });
@@ -143,6 +159,48 @@ export async function updateWorkOrderAssignment(id: string, input: unknown, acto
     actorId,
     workOrderId: workOrder.id,
     assignedTechnicianId: workOrder.assignedTechnicianId,
+    assignedPainterId: workOrder.assignedPainterId,
+  });
+
+  return workOrder;
+}
+
+export async function updateWorkOrderFlow(id: string, input: unknown, actorId: string) {
+  const data = updateWorkOrderFlowSchema.parse(input);
+  const existing = await workOrderRepository.findByIdForAssignment(id);
+
+  if (!existing) {
+    throw new NotFoundError("Orden de trabajo no encontrada");
+  }
+
+  const areaStatuses = normalizeAreaStatusForFlow({
+    flow: data.serviceFlow,
+    mechanicsStatus: data.mechanicsStatus,
+    paintStatus: data.paintStatus,
+  });
+
+  const workOrder = await prisma.workOrder.update({
+    where: { id },
+    data: {
+      serviceFlow: data.serviceFlow,
+      mechanicsStatus: areaStatuses.mechanicsStatus,
+      paintStatus: areaStatuses.paintStatus,
+      assignedTechnicianId: flowIncludesMechanics(data.serviceFlow)
+        ? data.assignedTechnicianId
+        : null,
+      assignedPainterId: flowIncludesPaint(data.serviceFlow) ? data.assignedPainterId : null,
+      updatedById: actorId,
+    },
+  });
+
+  workOrderLogger.info("Work order flow updated", {
+    actorId,
+    workOrderId: workOrder.id,
+    serviceFlow: workOrder.serviceFlow,
+    mechanicsStatus: workOrder.mechanicsStatus,
+    paintStatus: workOrder.paintStatus,
+    assignedTechnicianId: workOrder.assignedTechnicianId,
+    assignedPainterId: workOrder.assignedPainterId,
   });
 
   return workOrder;
@@ -214,6 +272,7 @@ export async function updateWorkOrder(id: string, input: unknown, actorId: strin
     select: {
       id: true,
       status: true,
+      serviceFlow: true,
     },
   });
 
@@ -222,6 +281,12 @@ export async function updateWorkOrder(id: string, input: unknown, actorId: strin
   }
 
   const nextStatus = data.status ?? existing.status;
+  const nextFlow = data.serviceFlow ?? existing.serviceFlow;
+  const areaStatuses = normalizeAreaStatusForFlow({
+    flow: nextFlow,
+    mechanicsStatus: data.mechanicsStatus,
+    paintStatus: data.paintStatus,
+  });
 
   const workOrder = await prisma.$transaction(async (tx) => {
     const workOrder = await tx.workOrder.update({
@@ -230,9 +295,30 @@ export async function updateWorkOrder(id: string, input: unknown, actorId: strin
         reason: data.reason,
         initialDiagnosis: data.initialDiagnosis,
         status: nextStatus,
+        serviceFlow: data.serviceFlow,
+        mechanicsStatus:
+          data.serviceFlow !== undefined || data.mechanicsStatus !== undefined
+            ? areaStatuses.mechanicsStatus
+            : undefined,
+        paintStatus:
+          data.serviceFlow !== undefined || data.paintStatus !== undefined
+            ? areaStatuses.paintStatus
+            : undefined,
         estimatedDate:
           data.estimatedDate === undefined ? undefined : parseDateInput(data.estimatedDate),
         notes: data.notes,
+        assignedTechnicianId:
+          data.assignedTechnicianId === undefined
+            ? undefined
+            : flowIncludesMechanics(nextFlow)
+              ? data.assignedTechnicianId
+              : null,
+        assignedPainterId:
+          data.assignedPainterId === undefined
+            ? undefined
+            : flowIncludesPaint(nextFlow)
+              ? data.assignedPainterId
+              : null,
         updatedById: actorId,
         closedDate: isClosedStatus(nextStatus) ? new Date() : null,
       },

@@ -15,6 +15,7 @@ import {
   transitionBudgetStatus,
   updateBudgetDraft,
 } from "@/modules/budgets/budget.service";
+import { registerStockEntry } from "@/modules/inventory/inventory.service";
 
 function parseCatalogSelections(formData: FormData) {
   const partGrouped = new Map<
@@ -404,6 +405,7 @@ export async function createWorkOrderFromBudgetAction(
 
   revalidatePath("/budgets");
   revalidatePath(`/budgets/${budgetId}`);
+  revalidatePath("/inventory");
   revalidatePath("/work-orders");
   revalidatePath(`/work-orders/${result.data.id}`);
   revalidatePath("/portal");
@@ -414,4 +416,44 @@ export async function createWorkOrderFromBudgetAction(
     tone: "success",
   });
   redirect(`/work-orders/${result.data.id}`);
+}
+
+export async function registerBudgetPartStockEntryAction(
+  budgetId: string,
+  _previousState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const result = await executeServerAction("registerBudgetPartStockEntryAction", async () => {
+    const session = await requireApiUser([UserRole.ADMIN, UserRole.MECHANIC]);
+    const quantity = String(formData.get("quantity") ?? "");
+    const partName = String(formData.get("partName") ?? "repuesto");
+
+    await registerStockEntry(
+      {
+        repuestoId: String(formData.get("repuestoId") ?? ""),
+        quantity,
+        reason:
+          String(formData.get("reason") ?? "").trim() ||
+          `Ingreso de stock para crear orden desde presupuesto ${budgetId}`,
+      },
+      session.user.id,
+    );
+
+    return {
+      quantity,
+      partName,
+    };
+  });
+
+  if (!result.ok) {
+    return result.state;
+  }
+
+  revalidatePath("/inventory");
+  revalidatePath("/budgets");
+  revalidatePath(`/budgets/${budgetId}`);
+  revalidatePath("/work-orders");
+  return {
+    success: `Stock ingresado para ${result.data.partName}. Cantidad: ${result.data.quantity}.`,
+  };
 }

@@ -1,4 +1,9 @@
-import { WorkOrderStatus, WorkOrderTaskStatus } from "@prisma/client";
+import {
+  WorkOrderAreaStatus,
+  WorkOrderServiceFlow,
+  WorkOrderStatus,
+  WorkOrderTaskStatus,
+} from "@prisma/client";
 
 export const WORK_ORDER_STATUS_LABELS: Record<WorkOrderStatus, string> = {
   RECEIVED: "Recibido",
@@ -18,6 +23,69 @@ export const WORK_ORDER_STATUS_OPTIONS = Object.entries(WORK_ORDER_STATUS_LABELS
     label,
   }),
 );
+
+export const WORK_ORDER_SERVICE_FLOW_LABELS: Record<WorkOrderServiceFlow, string> = {
+  MECHANICS: "Solo mecanica",
+  PAINT: "Solo pintura",
+  MECHANICS_AND_PAINT: "Mecanica y pintura",
+};
+
+export const WORK_ORDER_SERVICE_FLOW_SHORT_LABELS: Record<WorkOrderServiceFlow, string> = {
+  MECHANICS: "Mecanica",
+  PAINT: "Pintura",
+  MECHANICS_AND_PAINT: "Mecanica + pintura",
+};
+
+export const WORK_ORDER_SERVICE_FLOW_OPTIONS = Object.entries(
+  WORK_ORDER_SERVICE_FLOW_LABELS,
+).map(([value, label]) => ({
+  value: value as WorkOrderServiceFlow,
+  label,
+}));
+
+export const WORK_ORDER_AREA_STATUS_LABELS: Record<WorkOrderAreaStatus, string> = {
+  NOT_REQUIRED: "No requerido",
+  PENDING: "Pendiente",
+  IN_PROGRESS: "En proceso",
+  COMPLETED: "Completado",
+};
+
+export const WORK_ORDER_AREA_STATUS_OPTIONS = Object.entries(
+  WORK_ORDER_AREA_STATUS_LABELS,
+).map(([value, label]) => ({
+  value: value as WorkOrderAreaStatus,
+  label,
+}));
+
+export function flowIncludesMechanics(flow: WorkOrderServiceFlow) {
+  return (
+    flow === WorkOrderServiceFlow.MECHANICS ||
+    flow === WorkOrderServiceFlow.MECHANICS_AND_PAINT
+  );
+}
+
+export function flowIncludesPaint(flow: WorkOrderServiceFlow) {
+  return flow === WorkOrderServiceFlow.PAINT || flow === WorkOrderServiceFlow.MECHANICS_AND_PAINT;
+}
+
+export function normalizeAreaStatusForFlow(input: {
+  flow: WorkOrderServiceFlow;
+  mechanicsStatus?: WorkOrderAreaStatus;
+  paintStatus?: WorkOrderAreaStatus;
+}) {
+  return {
+    mechanicsStatus: flowIncludesMechanics(input.flow)
+      ? input.mechanicsStatus === WorkOrderAreaStatus.NOT_REQUIRED
+        ? WorkOrderAreaStatus.PENDING
+        : (input.mechanicsStatus ?? WorkOrderAreaStatus.PENDING)
+      : WorkOrderAreaStatus.NOT_REQUIRED,
+    paintStatus: flowIncludesPaint(input.flow)
+      ? input.paintStatus === WorkOrderAreaStatus.NOT_REQUIRED
+        ? WorkOrderAreaStatus.PENDING
+        : (input.paintStatus ?? WorkOrderAreaStatus.PENDING)
+      : WorkOrderAreaStatus.NOT_REQUIRED,
+  };
+}
 
 export const WORK_ORDER_PROGRESS_FLOW: WorkOrderStatus[] = [
   WorkOrderStatus.RECEIVED,

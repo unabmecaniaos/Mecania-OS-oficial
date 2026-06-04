@@ -46,6 +46,19 @@ enum WorkOrderStatus {
   CANCELLED
 }
 
+enum WorkOrderServiceFlow {
+  MECHANICS
+  PAINT
+  MECHANICS_AND_PAINT
+}
+
+enum WorkOrderAreaStatus {
+  NOT_REQUIRED
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
 enum SelfInspectionStatus {
   DRAFT
   IN_PROGRESS
@@ -204,6 +217,7 @@ model User {
   createdWorkOrders           WorkOrder[]               @relation("WorkOrderCreatedBy")
   updatedWorkOrders           WorkOrder[]               @relation("WorkOrderUpdatedBy")
   assignedWorkOrders          WorkOrder[]               @relation("WorkOrderAssignedTechnician")
+  assignedPaintWorkOrders     WorkOrder[]               @relation("WorkOrderAssignedPainter")
   uploadedWorkOrderEvidences  WorkOrderEvidence[]       @relation("WorkOrderEvidenceUploadedBy")
   statusChanges               WorkOrderStatusLog[]
   reviewedSelfInspections     SelfInspection[]          @relation("SelfInspectionReviewer")
@@ -292,6 +306,9 @@ model WorkOrder {
   reason               String
   initialDiagnosis     String?
   status               WorkOrderStatus      @default(RECEIVED)
+  serviceFlow          WorkOrderServiceFlow @default(MECHANICS)
+  mechanicsStatus      WorkOrderAreaStatus  @default(PENDING)
+  paintStatus          WorkOrderAreaStatus  @default(NOT_REQUIRED)
   intakeDate           DateTime             @default(now())
   estimatedDate        DateTime?
   closedDate           DateTime?
@@ -299,6 +316,7 @@ model WorkOrder {
   createdById          String
   updatedById          String?
   assignedTechnicianId String?
+  assignedPainterId    String?
   deletedAt            DateTime?
   purgeAt              DateTime?
   createdAt            DateTime             @default(now())
@@ -309,6 +327,7 @@ model WorkOrder {
   createdBy            User                 @relation("WorkOrderCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
   updatedBy            User?                @relation("WorkOrderUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
   assignedTechnician   User?                @relation("WorkOrderAssignedTechnician", fields: [assignedTechnicianId], references: [id], onDelete: SetNull)
+  assignedPainter      User?                @relation("WorkOrderAssignedPainter", fields: [assignedPainterId], references: [id], onDelete: SetNull)
   statusLogs           WorkOrderStatusLog[]
   selfInspections      SelfInspection[]
   evidences            WorkOrderEvidence[]
@@ -320,7 +339,11 @@ model WorkOrder {
   @@index([vehicleId, intakeDate])
   @@index([insuranceCaseId, intakeDate])
   @@index([status])
+  @@index([serviceFlow])
+  @@index([mechanicsStatus])
+  @@index([paintStatus])
   @@index([assignedTechnicianId, intakeDate])
+  @@index([assignedPainterId, intakeDate])
   @@index([deletedAt, purgeAt])
 }
 

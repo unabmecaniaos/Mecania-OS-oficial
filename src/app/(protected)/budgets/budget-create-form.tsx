@@ -166,7 +166,7 @@ export function WorkshopBudgetCreateForm({
       <input name="clientId" type="hidden" value={selectedClientId} />
       <input name="vehicleId" type="hidden" value={selectedVehicleId} />
 
-      <Card className="overflow-hidden rounded-2xl bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(247,250,254,0.96))]">
+      <Card className="overflow-hidden border-[#d4def0] bg-[linear-gradient(180deg,#ffffff_0%,#f7faff_100%)] shadow-[0_18px_44px_rgba(15,23,42,0.08)]">
         <div className="space-y-6">
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <SelectionStat label="Cliente taller" value={selectedClient?.fullName ?? "Pendiente"} />
@@ -183,12 +183,12 @@ export function WorkshopBudgetCreateForm({
             <SelectionStat label="Contexto" value={selectedInspection ? "Autocompletado" : "Editable"} />
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
             <div className="space-y-2 lg:col-span-2">
               <SectionHeading eyebrow="Contexto del cliente taller" title="Origen y vinculacion" />
             </div>
 
-            <div className="space-y-2 lg:col-span-2">
+            <div className="space-y-2">
               <label
                 className="text-sm font-medium text-[color:var(--muted-strong)]"
                 htmlFor="selfInspectionId"
@@ -208,17 +208,6 @@ export function WorkshopBudgetCreateForm({
                   </option>
                 ))}
               </Select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-[color:var(--muted-strong)]" htmlFor="title">
-                Titulo del presupuesto
-              </label>
-              <Input
-                id="title"
-                name="title"
-                placeholder="Ej. Reparacion frenos delanteros y mantencion"
-              />
             </div>
 
             <div className="space-y-2">
@@ -263,7 +252,18 @@ export function WorkshopBudgetCreateForm({
               </Select>
             </div>
 
-            <div className="space-y-2 lg:col-span-2">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-[color:var(--muted-strong)]" htmlFor="title">
+                Titulo del presupuesto
+              </label>
+              <Input
+                id="title"
+                name="title"
+                placeholder="Ej. Reparacion frenos delanteros y mantencion"
+              />
+            </div>
+
+            <div className="space-y-2 lg:col-start-2">
               <label className="text-sm font-medium text-[color:var(--muted-strong)]" htmlFor="summary">
                 Resumen tecnico
               </label>
@@ -340,7 +340,7 @@ export function LiquidatorBudgetCreateForm({
 
   return (
     <form action={formAction} className="space-y-6">
-      <Card className="overflow-hidden rounded-2xl bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(247,250,254,0.96))]">
+      <Card className="overflow-hidden border-[#d4def0] bg-[linear-gradient(180deg,#ffffff_0%,#f7faff_100%)] shadow-[0_18px_44px_rgba(15,23,42,0.08)]">
         <div className="space-y-6">
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <SelectionStat
@@ -361,7 +361,7 @@ export function LiquidatorBudgetCreateForm({
             />
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
             <div className="space-y-2 lg:col-span-2">
               <SectionHeading
                 eyebrow="Contexto del cliente liquidadora"
@@ -585,6 +585,10 @@ function BudgetItemsBuilder({
     .filter((part): part is InventoryPartOption => Boolean(part));
   const externalSearchTargetPart =
     selectedParts.find((part) => part.currentStock <= 0) ?? selectedParts[0] ?? null;
+  const selectedOutOfStockParts = selectedParts.filter((part) => part.currentStock <= 0).length;
+  const selectedLowStockParts = selectedParts.filter(
+    (part) => part.currentStock > 0 && part.currentStock <= part.minimumStock,
+  ).length;
 
   function findSelectedReference(type: "LABOR" | "SUPPLY", slot: number) {
     return groupedReferences[type]?.find(
@@ -594,341 +598,450 @@ function BudgetItemsBuilder({
 
   return (
     <>
-      <Card className="rounded-2xl bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(247,250,254,0.96))]">
-        <div className="space-y-4">
-          <SectionHeading
-            eyebrow="Repuestos conectados a inventario"
-            title={BUDGET_ITEM_TYPE_LABELS[BudgetItemType.PART]}
-          />
-
-          {hasSelectedVehicle ? (
-            <div
-              className={
-                hasCompatiblePartsForVehicle
-                  ? "rounded-2xl border border-[rgba(22,163,74,0.18)] bg-[#f0fdf4] p-4 text-sm text-[#166534]"
-                  : "rounded-2xl border border-[rgba(15,23,42,0.10)] bg-white/85 p-4 text-sm text-[color:var(--muted-strong)]"
-              }
-            >
-              {hasCompatiblePartsForVehicle
-                ? `Mostrando repuestos compatibles con ${selectedVehicleLabel ?? "el VIN seleccionado"}. Los no compatibles quedan deshabilitados.`
-                : `No hay repuestos compatibles registrados para ${selectedVehicleLabel ?? "el VIN seleccionado"}. Puedes cotizar el repuesto como manual o usar la busqueda externa sin salir del presupuesto.`}
-            </div>
-          ) : (
-            <div className="rounded-2xl border border-[rgba(37,99,235,0.12)] bg-white/85 p-4 text-sm text-[color:var(--muted-strong)]">
-              Selecciona un vehiculo para filtrar repuestos por VIN.
-            </div>
-          )}
-
-          <div className="space-y-4">
-            {partSlots.slice(0, visiblePartSlots).map((slot) => {
-              const selectedPart = findSelectedPart(slot);
-
-              return (
-                <div
-                  className="grid gap-4 rounded-2xl border border-[rgba(37,99,235,0.10)] bg-white/95 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.04)] lg:grid-cols-[minmax(0,1.8fr)_160px_150px]"
-                  key={`part-slot-${slot}`}
-                >
-                  <div className="space-y-2">
-                    <label
-                      className="text-sm font-medium text-[color:var(--muted-strong)]"
-                      htmlFor={`partItem:${slot}`}
-                    >
-                      Repuesto
-                    </label>
-                    <Select
-                      id={`partItem:${slot}`}
-                      name={`partItem:${slot}`}
-                      onChange={(event) =>
-                        setSelectedPartIds((current) => ({
-                          ...current,
-                          [String(slot)]: event.target.value,
-                        }))
-                      }
-                      value={selectedPartIds[String(slot)] ?? ""}
-                    >
-                      <option value="">Selecciona un repuesto</option>
-                      {compatibleParts.map((part) => (
-                        <option key={part.id} value={part.id}>
-                          {part.name} / {part.code} / {formatCurrency(part.unitPrice)} / stock{" "}
-                          {part.currentStock}
-                        </option>
-                      ))}
-                      {incompatibleParts.map((part) => (
-                        <option disabled key={part.id} value={part.id}>
-                          {part.name} / {part.code} / no compatible con VIN
-                        </option>
-                      ))}
-                    </Select>
-                    {selectedPart ? (
-                      <div className="flex flex-wrap gap-2 text-xs">
-                        <span className="rounded-full border border-[rgba(37,99,235,0.16)] bg-[#eff6ff] px-3 py-1 font-semibold text-[#1d4ed8]">
-                          Stock {selectedPart.currentStock}
-                        </span>
-                        <span className="rounded-full border border-[rgba(15,23,42,0.08)] bg-white px-3 py-1 text-[color:var(--muted-strong)]">
-                          Minimo {selectedPart.minimumStock}
-                        </span>
-                      </div>
-                    ) : null}
-                  </div>
-
-                  <div className="space-y-2">
-                    <label
-                      className="text-sm font-medium text-[color:var(--muted-strong)]"
-                      htmlFor={`partPriceDisplay:${slot}`}
-                    >
-                      Valor unitario
-                    </label>
-                    <Input
-                      id={`partPriceDisplay:${slot}`}
-                      readOnly
-                      value={selectedPart ? String(selectedPart.unitPrice) : ""}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label
-                      className="text-sm font-medium text-[color:var(--muted-strong)]"
-                      htmlFor={`partQuantity:${slot}`}
-                    >
-                      Cantidad
-                    </label>
-                    <Input
-                      defaultValue="0"
-                      id={`partQuantity:${slot}`}
-                      min="0"
-                      name={`partQuantity:${slot}`}
-                      type="number"
-                    />
-                  </div>
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.65fr)_360px] xl:items-start">
+        <div className="space-y-6">
+          <Card className="overflow-hidden border-[#d4def0] bg-[linear-gradient(180deg,#ffffff_0%,#f7faff_100%)] shadow-[0_18px_44px_rgba(15,23,42,0.08)]">
+            <div className="space-y-5">
+              <div className="flex flex-col gap-5 border-b border-[#e3ebf7] pb-5 lg:flex-row lg:items-end lg:justify-between">
+                <div>
+                  <SectionHeading
+                    eyebrow="Repuestos conectados a inventario"
+                    title={BUDGET_ITEM_TYPE_LABELS[BudgetItemType.PART]}
+                  />
+                  <p className="mt-2 text-sm text-[color:var(--muted-strong)]">
+                    Filtrados por compatibilidad VIN y stock real del taller para acelerar el
+                    armado del presupuesto.
+                  </p>
                 </div>
-              );
-            })}
 
-            {visiblePartSlots < partSlots.length ? (
-              <Button
-                className="w-full sm:w-auto"
-                onClick={() => setVisiblePartSlots((current) => Math.min(current + 1, partSlots.length))}
-                type="button"
-                variant="secondary"
-              >
-                Agregar otro repuesto
-              </Button>
-            ) : null}
-
-          </div>
-        </div>
-      </Card>
-
-      {selectedVehicleVin ? (
-        <Card className="rounded-2xl bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(247,250,254,0.96))]">
-          <ExternalSuggestionsPanel
-            defaultPartCode={externalSearchTargetPart?.code}
-            defaultPartName={externalSearchTargetPart?.name}
-            defaultVin={selectedVehicleVin}
-          />
-        </Card>
-      ) : null}
-
-      {showPartManual ? (
-        <Card className="rounded-2xl bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(247,250,254,0.96))]">
-          <div className="space-y-4">
-            <SectionHeading
-              eyebrow="Respaldo manual"
-              title={`${BUDGET_ITEM_TYPE_LABELS[BudgetItemType.PART]} fuera del inventario`}
-            />
-
-            <ManualFallbackRows
-              itemType={BudgetItemType.PART}
-              manualSlots={manualSlots.slice(0, visiblePartManualSlots)}
-              onAddMore={
-                visiblePartManualSlots < manualSlots.length
-                  ? () =>
-                      setVisiblePartManualSlots((current) =>
-                        Math.min(current + 1, manualSlots.length),
-                      )
-                  : undefined
-              }
-              placeholderDescription="Ej. Pastillas Brembo delanteras"
-              placeholderNote="Ej. Repuesto pendiente de cargar en inventario"
-            />
-          </div>
-        </Card>
-      ) : (
-        <Button
-          className="w-full sm:w-auto"
-          onClick={() => setShowPartManual(true)}
-          type="button"
-          variant="secondary"
-        >
-          Agregar repuesto manual
-        </Button>
-      )}
-
-      {([BudgetItemType.LABOR, BudgetItemType.SUPPLY] as const).map((type) => {
-        const slots = type === BudgetItemType.LABOR ? laborSlots : supplySlots;
-        const visibleSlots = type === BudgetItemType.LABOR ? visibleLaborSlots : visibleSupplySlots;
-        const showManual = type === BudgetItemType.LABOR ? showLaborManual : showSupplyManual;
-        const visibleManualSlots =
-          type === BudgetItemType.LABOR ? visibleLaborManualSlots : visibleSupplyManualSlots;
-
-        return (
-          <Card
-            className="rounded-2xl bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(247,250,254,0.96))]"
-            key={type}
-          >
-            <div className="space-y-4">
-              <SectionHeading eyebrow="Catalogo referencial" title={BUDGET_ITEM_TYPE_LABELS[type]} />
-
-              {groupedReferences[type].length === 0 ? (
-                <div className="rounded-2xl border border-[rgba(15,23,42,0.08)] bg-white/80 p-4 text-sm text-[color:var(--muted-strong)]">
-                  Catalogo sin referencias cargadas. Puedes agregar este item manualmente sin
-                  salir del presupuesto.
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <CompactStat label="Compatibles" value={String(compatibleParts.length)} />
+                  <CompactStat label="Seleccionados" value={String(selectedParts.length)} />
+                  <CompactStat
+                    label="Sin stock"
+                    tone={selectedOutOfStockParts > 0 ? "warning" : "default"}
+                    value={String(selectedOutOfStockParts)}
+                  />
                 </div>
+              </div>
+
+              {hasSelectedVehicle ? (
+                <ContextNote tone={hasCompatiblePartsForVehicle ? "success" : "warning"}>
+                  {hasCompatiblePartsForVehicle
+                    ? `Mostrando repuestos compatibles con ${selectedVehicleLabel ?? "el VIN seleccionado"}. Los no compatibles quedan deshabilitados.`
+                    : `No hay repuestos compatibles registrados para ${selectedVehicleLabel ?? "el VIN seleccionado"}. Registra compatibilidad en Inventario > Compatibilidad VIN o usa respaldo manual.`}
+                </ContextNote>
               ) : (
-                <div className="space-y-4">
-                  {slots.slice(0, visibleSlots).map((slot) => {
-                    const selectedReference = findSelectedReference(type, slot);
+                <ContextNote tone="info">
+                  Selecciona un vehiculo para filtrar repuestos por VIN y destacar oportunidades de
+                  compra externa cuando falte stock.
+                </ContextNote>
+              )}
 
-                    return (
-                      <div
-                        className="grid gap-4 rounded-2xl border border-[rgba(37,99,235,0.10)] bg-white/95 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.04)] lg:grid-cols-[1.8fr_180px_140px]"
-                        key={`${type}-slot-${slot}`}
-                      >
-                        <div className="space-y-2">
-                          <label
-                            className="text-sm font-medium text-[color:var(--muted-strong)]"
-                            htmlFor={`referenceItem:${type}:${slot}`}
-                          >
-                            {BUDGET_ITEM_TYPE_LABELS[type]}
-                          </label>
-                          <Select
-                            id={`referenceItem:${type}:${slot}`}
-                            name={`referenceItem:${type}:${slot}`}
-                            onChange={(event) =>
-                              setSelectedReferenceIds((current) => ({
-                                ...current,
-                                [`${type}:${slot}`]: event.target.value,
-                              }))
-                            }
-                            value={selectedReferenceIds[`${type}:${slot}`] ?? ""}
-                          >
-                            <option value="">Selecciona una referencia</option>
-                            {groupedReferences[type].map((reference) => (
-                              <option key={reference.id} value={reference.id}>
-                                {reference.name} / {reference.referenceCode ?? "sin codigo"} /{" "}
-                                {formatCurrency(reference.unitPrice)}
-                              </option>
-                            ))}
-                          </Select>
-                          {selectedReference?.vehicleCompatibility ? (
-                            <p className="text-sm text-[color:var(--muted)]">
-                              Aplicacion: {selectedReference.vehicleCompatibility}
+              <div className="space-y-4">
+                {partSlots.slice(0, visiblePartSlots).map((slot) => {
+                  const selectedPart = findSelectedPart(slot);
+
+                  return (
+                    <div
+                      className="rounded-[24px] border border-[#dbe5f3] bg-[#fbfdff] p-5 shadow-[0_14px_30px_rgba(15,23,42,0.05)]"
+                      key={`part-slot-${slot}`}
+                    >
+                      <div className="flex flex-col gap-4">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div>
+                            <p className="text-[11px] uppercase tracking-[0.18em] text-[color:var(--muted)]">
+                              Slot de repuesto {slot}
                             </p>
+                            <p className="mt-2 text-base font-semibold text-[color:var(--foreground)]">
+                              {selectedPart?.name ?? "Selecciona un repuesto del inventario"}
+                            </p>
+                          </div>
+
+                          {selectedPart ? (
+                            <div className="flex flex-wrap gap-2">
+                              <InventoryStatusPill
+                                tone={
+                                  selectedPart.currentStock <= 0
+                                    ? "warning"
+                                    : selectedPart.currentStock <= selectedPart.minimumStock
+                                      ? "info"
+                                      : "success"
+                                }
+                              >
+                                {selectedPart.currentStock <= 0
+                                  ? "Sin stock"
+                                  : selectedPart.currentStock <= selectedPart.minimumStock
+                                    ? "Stock critico"
+                                    : "Disponible"}
+                              </InventoryStatusPill>
+                              <InventoryStatusPill tone="neutral">
+                                Codigo {selectedPart.code}
+                              </InventoryStatusPill>
+                            </div>
                           ) : null}
                         </div>
 
-                        <div className="space-y-2">
-                          <label
-                            className="text-sm font-medium text-[color:var(--muted-strong)]"
-                            htmlFor={`referencePriceDisplay:${type}:${slot}`}
-                          >
-                            Valor unitario
-                          </label>
-                          <Input
-                            id={`referencePriceDisplay:${type}:${slot}`}
-                            readOnly
-                            value={selectedReference ? String(selectedReference.unitPrice) : ""}
-                          />
-                        </div>
+                        <div className="grid gap-4 lg:grid-cols-[1.8fr_180px_140px]">
+                          <div className="space-y-2">
+                            <label
+                              className="text-sm font-medium text-[color:var(--muted-strong)]"
+                              htmlFor={`partItem:${slot}`}
+                            >
+                              Repuesto
+                            </label>
+                            <Select
+                              id={`partItem:${slot}`}
+                              name={`partItem:${slot}`}
+                              onChange={(event) =>
+                                setSelectedPartIds((current) => ({
+                                  ...current,
+                                  [String(slot)]: event.target.value,
+                                }))
+                              }
+                              value={selectedPartIds[String(slot)] ?? ""}
+                            >
+                              <option value="">Selecciona un repuesto</option>
+                              {compatibleParts.map((part) => (
+                                <option key={part.id} value={part.id}>
+                                  {part.name} / {part.code} / {formatCurrency(part.unitPrice)} / stock{" "}
+                                  {part.currentStock}
+                                </option>
+                              ))}
+                              {incompatibleParts.map((part) => (
+                                <option disabled key={part.id} value={part.id}>
+                                  {part.name} / {part.code} / no compatible con VIN
+                                </option>
+                              ))}
+                            </Select>
+                            {selectedPart ? (
+                              <div className="rounded-2xl border border-[#e4ecf7] bg-white px-4 py-3 text-sm text-[color:var(--muted-strong)]">
+                                <p>
+                                  Stock actual {selectedPart.currentStock} / minimo{" "}
+                                  {selectedPart.minimumStock}
+                                </p>
+                                {selectedPart.currentStock <= 0 ? (
+                                  <p className="mt-1 font-medium text-amber-700">
+                                    Sin stock. Usa la busqueda externa para encontrar compra por
+                                    codigo o nombre.
+                                  </p>
+                                ) : null}
+                              </div>
+                            ) : null}
+                          </div>
 
-                        <div className="space-y-2">
-                          <label
-                            className="text-sm font-medium text-[color:var(--muted-strong)]"
-                            htmlFor={`referenceQuantity:${type}:${slot}`}
-                          >
-                            Cantidad
-                          </label>
-                          <Input
-                            defaultValue="0"
-                            id={`referenceQuantity:${type}:${slot}`}
-                            min="0"
-                            name={`referenceQuantity:${type}:${slot}`}
-                            type="number"
-                          />
+                          <div className="space-y-2">
+                            <label
+                              className="text-sm font-medium text-[color:var(--muted-strong)]"
+                              htmlFor={`partPriceDisplay:${slot}`}
+                            >
+                              Valor unitario
+                            </label>
+                            <Input
+                              className="bg-[#f8fbff]"
+                              id={`partPriceDisplay:${slot}`}
+                              readOnly
+                              value={selectedPart ? String(selectedPart.unitPrice) : ""}
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <label
+                              className="text-sm font-medium text-[color:var(--muted-strong)]"
+                              htmlFor={`partQuantity:${slot}`}
+                            >
+                              Cantidad
+                            </label>
+                            <Input
+                              className="bg-[#f8fbff]"
+                              defaultValue="0"
+                              id={`partQuantity:${slot}`}
+                              min="0"
+                              name={`partQuantity:${slot}`}
+                              type="number"
+                            />
+                          </div>
                         </div>
                       </div>
-                    );
-                  })}
+                    </div>
+                  );
+                })}
 
-                  {visibleSlots < slots.length ? (
+                {visiblePartSlots < partSlots.length ? (
+                  <Button
+                    className="w-full sm:w-auto"
+                    onClick={() =>
+                      setVisiblePartSlots((current) => Math.min(current + 1, partSlots.length))
+                    }
+                    type="button"
+                    variant="secondary"
+                  >
+                    Agregar otro repuesto
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+          </Card>
+
+          {([BudgetItemType.LABOR, BudgetItemType.SUPPLY] as const).map((type) => {
+            const slots = type === BudgetItemType.LABOR ? laborSlots : supplySlots;
+            const visibleSlots =
+              type === BudgetItemType.LABOR ? visibleLaborSlots : visibleSupplySlots;
+            const showManual = type === BudgetItemType.LABOR ? showLaborManual : showSupplyManual;
+            const visibleManualSlots =
+              type === BudgetItemType.LABOR ? visibleLaborManualSlots : visibleSupplyManualSlots;
+
+            return (
+              <Card
+                className="overflow-hidden border-[#d4def0] bg-[linear-gradient(180deg,#ffffff_0%,#f7faff_100%)] shadow-[0_18px_44px_rgba(15,23,42,0.08)]"
+                key={type}
+              >
+                <div className="space-y-4">
+                  <SectionHeading eyebrow="Catalogo referencial" title={BUDGET_ITEM_TYPE_LABELS[type]} />
+
+                  {groupedReferences[type].length === 0 ? (
+                    <ContextNote tone="warning">No hay items cargados en esta categoria.</ContextNote>
+                  ) : (
+                    <div className="space-y-4">
+                      {slots.slice(0, visibleSlots).map((slot) => {
+                        const selectedReference = findSelectedReference(type, slot);
+
+                        return (
+                          <div
+                            className="rounded-[24px] border border-[#dbe5f3] bg-[#fbfdff] p-5 shadow-[0_14px_30px_rgba(15,23,42,0.05)]"
+                            key={`${type}-slot-${slot}`}
+                          >
+                            <div className="grid gap-4 lg:grid-cols-[1.8fr_180px_140px]">
+                              <div className="space-y-2">
+                                <label
+                                  className="text-sm font-medium text-[color:var(--muted-strong)]"
+                                  htmlFor={`referenceItem:${type}:${slot}`}
+                                >
+                                  {BUDGET_ITEM_TYPE_LABELS[type]}
+                                </label>
+                                <Select
+                                  id={`referenceItem:${type}:${slot}`}
+                                  name={`referenceItem:${type}:${slot}`}
+                                  onChange={(event) =>
+                                    setSelectedReferenceIds((current) => ({
+                                      ...current,
+                                      [`${type}:${slot}`]: event.target.value,
+                                    }))
+                                  }
+                                  value={selectedReferenceIds[`${type}:${slot}`] ?? ""}
+                                >
+                                  <option value="">Selecciona una referencia</option>
+                                  {groupedReferences[type].map((reference) => (
+                                    <option key={reference.id} value={reference.id}>
+                                      {reference.name} / {reference.referenceCode ?? "sin codigo"} /{" "}
+                                      {formatCurrency(reference.unitPrice)}
+                                    </option>
+                                  ))}
+                                </Select>
+                                {selectedReference?.vehicleCompatibility ? (
+                                  <p className="text-sm text-[color:var(--muted)]">
+                                    Aplicacion: {selectedReference.vehicleCompatibility}
+                                  </p>
+                                ) : null}
+                              </div>
+
+                              <div className="space-y-2">
+                                <label
+                                  className="text-sm font-medium text-[color:var(--muted-strong)]"
+                                  htmlFor={`referencePriceDisplay:${type}:${slot}`}
+                                >
+                                  Valor unitario
+                                </label>
+                                <Input
+                                  className="bg-[#f8fbff]"
+                                  id={`referencePriceDisplay:${type}:${slot}`}
+                                  readOnly
+                                  value={selectedReference ? String(selectedReference.unitPrice) : ""}
+                                />
+                              </div>
+
+                              <div className="space-y-2">
+                                <label
+                                  className="text-sm font-medium text-[color:var(--muted-strong)]"
+                                  htmlFor={`referenceQuantity:${type}:${slot}`}
+                                >
+                                  Cantidad
+                                </label>
+                                <Input
+                                  className="bg-[#f8fbff]"
+                                  defaultValue="0"
+                                  id={`referenceQuantity:${type}:${slot}`}
+                                  min="0"
+                                  name={`referenceQuantity:${type}:${slot}`}
+                                  type="number"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                      {visibleSlots < slots.length ? (
+                        <Button
+                          className="w-full sm:w-auto"
+                          onClick={() => {
+                            if (type === BudgetItemType.LABOR) {
+                              setVisibleLaborSlots((current) =>
+                                Math.min(current + 1, laborSlots.length),
+                              );
+                              return;
+                            }
+
+                            setVisibleSupplySlots((current) =>
+                              Math.min(current + 1, supplySlots.length),
+                            );
+                          }}
+                          type="button"
+                          variant="secondary"
+                        >
+                          Agregar otro{" "}
+                          {type === BudgetItemType.LABOR ? "item de mano de obra" : "suministro"}
+                        </Button>
+                      ) : null}
+                    </div>
+                  )}
+
+                  {showManual ? (
+                    <ManualFallbackSection
+                      itemType={type}
+                      manualSlots={manualSlots.slice(0, visibleManualSlots)}
+                      onAddMore={
+                        visibleManualSlots < manualSlots.length
+                          ? () => {
+                              if (type === BudgetItemType.LABOR) {
+                                setVisibleLaborManualSlots((current) =>
+                                  Math.min(current + 1, manualSlots.length),
+                                );
+                                return;
+                              }
+
+                              setVisibleSupplyManualSlots((current) =>
+                                Math.min(current + 1, manualSlots.length),
+                              );
+                            }
+                          : undefined
+                      }
+                      placeholderDescription={
+                        type === BudgetItemType.LABOR
+                          ? "Ej. Mano de obra cambio discos y rectificado"
+                          : "Ej. Limpiador de frenos o insumo puntual"
+                      }
+                      placeholderNote="Ej. Valor conversado con proveedor o servicio puntual"
+                      title={`${BUDGET_ITEM_TYPE_LABELS[type]} fuera del catalogo`}
+                    />
+                  ) : (
                     <Button
                       className="w-full sm:w-auto"
                       onClick={() => {
                         if (type === BudgetItemType.LABOR) {
-                          setVisibleLaborSlots((current) => Math.min(current + 1, laborSlots.length));
+                          setShowLaborManual(true);
                           return;
                         }
 
-                        setVisibleSupplySlots((current) => Math.min(current + 1, supplySlots.length));
+                        setShowSupplyManual(true);
                       }}
                       type="button"
                       variant="secondary"
                     >
-                      Agregar otro {type === BudgetItemType.LABOR ? "item de mano de obra" : "suministro"}
+                      Agregar {BUDGET_ITEM_TYPE_LABELS[type].toLowerCase()} manual
                     </Button>
-                  ) : null}
+                  )}
                 </div>
-              )}
+              </Card>
+            );
+          })}
 
-              {showManual ? (
-                <ManualFallbackSection
-                  itemType={type}
-                  manualSlots={manualSlots.slice(0, visibleManualSlots)}
+          {showPartManual ? (
+            <Card className="overflow-hidden border-[#d4def0] bg-[linear-gradient(180deg,#ffffff_0%,#f7faff_100%)] shadow-[0_18px_44px_rgba(15,23,42,0.08)]">
+              <div className="space-y-4">
+                <SectionHeading
+                  eyebrow="Respaldo manual"
+                  title={`${BUDGET_ITEM_TYPE_LABELS[BudgetItemType.PART]} fuera del inventario`}
+                />
+
+                <ManualFallbackRows
+                  itemType={BudgetItemType.PART}
+                  manualSlots={manualSlots.slice(0, visiblePartManualSlots)}
                   onAddMore={
-                    visibleManualSlots < manualSlots.length
-                      ? () => {
-                          if (type === BudgetItemType.LABOR) {
-                            setVisibleLaborManualSlots((current) =>
-                              Math.min(current + 1, manualSlots.length),
-                            );
-                            return;
-                          }
-
-                          setVisibleSupplyManualSlots((current) =>
+                    visiblePartManualSlots < manualSlots.length
+                      ? () =>
+                          setVisiblePartManualSlots((current) =>
                             Math.min(current + 1, manualSlots.length),
-                          );
-                        }
+                          )
                       : undefined
                   }
-                  placeholderDescription={
-                    type === BudgetItemType.LABOR
-                      ? "Ej. Mano de obra cambio discos y rectificado"
-                      : "Ej. Limpiador de frenos o insumo puntual"
-                  }
-                  placeholderNote="Ej. Valor conversado con proveedor o servicio puntual"
-                  title={`${BUDGET_ITEM_TYPE_LABELS[type]} fuera del catalogo`}
+                  placeholderDescription="Ej. Pastillas Brembo delanteras"
+                  placeholderNote="Ej. Repuesto pendiente de cargar en inventario"
                 />
-              ) : (
-                <Button
-                  className="w-full sm:w-auto"
-                  onClick={() => {
-                    if (type === BudgetItemType.LABOR) {
-                      setShowLaborManual(true);
-                      return;
-                    }
+              </div>
+            </Card>
+          ) : (
+            <Button
+              className="w-full sm:w-auto"
+              onClick={() => setShowPartManual(true)}
+              type="button"
+              variant="secondary"
+            >
+              Agregar repuesto manual
+            </Button>
+          )}
+        </div>
 
-                    setShowSupplyManual(true);
-                  }}
-                  type="button"
-                  variant="secondary"
-                >
-                  Agregar {BUDGET_ITEM_TYPE_LABELS[type].toLowerCase()} manual
-                </Button>
-              )}
+        <div className="space-y-6 xl:sticky xl:top-6">
+          {selectedVehicleVin ? (
+            <Card className="overflow-hidden border-[#d4def0] bg-white shadow-[0_18px_44px_rgba(15,23,42,0.08)]">
+              <ExternalSuggestionsPanel
+                defaultPartCode={externalSearchTargetPart?.code}
+                defaultPartName={externalSearchTargetPart?.name}
+                defaultVin={selectedVehicleVin}
+                selectedPartStock={externalSearchTargetPart?.currentStock ?? null}
+              />
+            </Card>
+          ) : (
+            <Card className="overflow-hidden border-[#d4def0] bg-white shadow-[0_18px_44px_rgba(15,23,42,0.08)]">
+              <div className="space-y-4">
+                <SectionHeading eyebrow="Compra externa" title="Buscar repuestos por VIN" />
+                <ContextNote tone="info">
+                  Selecciona un vehiculo para habilitar el asistente de abastecimiento y preparar
+                  enlaces de compra por VIN, nombre y codigo del repuesto.
+                </ContextNote>
+              </div>
+            </Card>
+          )}
+
+          <Card className="overflow-hidden border-[#d4def0] bg-[linear-gradient(180deg,#ffffff_0%,#f7faff_100%)] shadow-[0_18px_44px_rgba(15,23,42,0.08)]">
+            <div className="space-y-4">
+              <SectionHeading eyebrow="Estado del armado" title="Ruta operativa" />
+
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                <CompactStat label="Repuestos seleccionados" value={String(selectedParts.length)} />
+                <CompactStat label="Sin stock" value={String(selectedOutOfStockParts)} tone="warning" />
+                <CompactStat label="Stock critico" value={String(selectedLowStockParts)} tone="info" />
+                <CompactStat
+                  label="Compatibilidad VIN"
+                  value={hasCompatiblePartsForVehicle ? "Lista" : "Pendiente"}
+                  tone={hasCompatiblePartsForVehicle ? "success" : "warning"}
+                />
+              </div>
+
+              <div className="rounded-2xl border border-[#e1e9f5] bg-[#f5f8fe] p-4 text-sm text-[color:var(--muted-strong)]">
+                <p className="font-semibold text-[color:var(--foreground)]">
+                  {selectedVehicleLabel ?? "Sin vehiculo seleccionado"}
+                </p>
+                <p className="mt-2">
+                  Usa esta columna para detectar si el presupuesto se puede cerrar con inventario
+                  interno o si conviene disparar una compra externa asistida.
+                </p>
+              </div>
             </div>
           </Card>
-        );
-      })}
+        </div>
+      </div>
     </>
   );
 }
@@ -943,13 +1056,15 @@ function BudgetSubmitCard({
   submitLabel: string;
 }) {
   return (
-    <Card className="sticky bottom-4 rounded-2xl border-[rgba(37,99,235,0.14)] bg-[linear-gradient(180deg,rgba(255,255,255,0.97),rgba(239,246,255,0.96))] shadow-[0_18px_40px_rgba(15,23,42,0.10)]">
+    <Card className="sticky bottom-4 border-[#d4def0] bg-[linear-gradient(180deg,#ffffff_0%,#eef5ff_100%)] shadow-[0_22px_48px_rgba(15,23,42,0.12)]">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--muted)]">
+          <p className="text-xs uppercase tracking-[0.26em] text-[#5f7fa8]">
             Guardado del borrador
           </p>
-          <h2 className="mt-2 font-heading text-2xl font-semibold">{heading}</h2>
+          <h2 className="mt-2 font-heading text-2xl font-semibold text-[color:var(--foreground)]">
+            {heading}
+          </h2>
         </div>
 
         <div className="flex w-full flex-col gap-3 lg:w-auto lg:min-w-[280px]">
@@ -963,8 +1078,8 @@ function BudgetSubmitCard({
 
 function ReadonlyContextCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-[rgba(37,99,235,0.12)] bg-white/85 px-4 py-3 shadow-[0_10px_24px_rgba(37,99,235,0.05)]">
-      <p className="text-[11px] uppercase tracking-[0.18em] text-[color:var(--muted)]">{label}</p>
+    <div className="rounded-2xl border border-[#dbe5f3] bg-[#fbfdff] px-4 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.04)]">
+      <p className="text-[11px] uppercase tracking-[0.18em] text-[#5f7fa8]">{label}</p>
       <p className="mt-2 min-h-[2.75rem] text-sm font-semibold leading-5 text-[color:var(--foreground)]">
         {value}
       </p>
@@ -988,9 +1103,9 @@ function ManualFallbackSection({
   title: string;
 }) {
   return (
-    <div className="rounded-2xl border border-dashed border-[rgba(37,99,235,0.16)] bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(239,246,255,0.82))] p-4">
+    <div className="rounded-[24px] border border-dashed border-[#bfd0e9] bg-[linear-gradient(180deg,#fbfdff_0%,#eef5ff_100%)] p-5">
       <div>
-        <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--muted)]">
+        <p className="text-xs uppercase tracking-[0.22em] text-[#5f7fa8]">
           Respaldo manual
         </p>
         <h3 className="mt-2 text-lg font-semibold text-[color:var(--foreground)]">{title}</h3>
@@ -1026,7 +1141,7 @@ function ManualFallbackRows({
     <div className="space-y-4">
       {manualSlots.map((slot) => (
         <div
-          className="grid gap-3 rounded-2xl border border-[rgba(37,99,235,0.10)] bg-white/95 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.04)] lg:grid-cols-[2fr_140px_140px]"
+          className="grid gap-3 rounded-[22px] border border-[#dbe5f3] bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.04)] lg:grid-cols-[2fr_140px_140px]"
           key={`${itemType}-${slot}`}
         >
           <div className="space-y-2 lg:col-span-3">
@@ -1109,7 +1224,7 @@ function SectionHeading({
 }) {
   return (
     <div>
-      <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--muted)]">{eyebrow}</p>
+      <p className="text-xs uppercase tracking-[0.26em] text-[#5f7fa8]">{eyebrow}</p>
       <h2 className="mt-2 font-heading text-2xl font-semibold text-[color:var(--foreground)]">
         {title}
       </h2>
@@ -1119,11 +1234,77 @@ function SectionHeading({
 
 function SelectionStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-[rgba(37,99,235,0.12)] bg-white/85 px-4 py-3 shadow-[0_10px_24px_rgba(37,99,235,0.05)]">
-      <p className="text-[11px] uppercase tracking-[0.18em] text-[color:var(--muted)]">{label}</p>
+    <div className="rounded-2xl border border-[#dbe5f3] bg-[#fbfdff] px-4 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.04)]">
+      <p className="text-[11px] uppercase tracking-[0.18em] text-[#5f7fa8]">{label}</p>
       <p className="mt-2 min-h-[2.75rem] text-sm font-semibold leading-5 text-[color:var(--foreground)]">
         {value}
       </p>
     </div>
+  );
+}
+
+function CompactStat({
+  label,
+  value,
+  tone = "default",
+}: {
+  label: string;
+  value: string;
+  tone?: "default" | "success" | "warning" | "info";
+}) {
+  const toneClass =
+    tone === "success"
+      ? "border-[#c8ebd8] bg-[#f1fbf5] text-[#166534]"
+      : tone === "warning"
+        ? "border-[#f3d29a] bg-[#fff7e8] text-[#a16207]"
+        : tone === "info"
+          ? "border-[#d4e2ff] bg-[#eff4ff] text-[#1d4ed8]"
+          : "border-[#dbe5f3] bg-[#fbfdff] text-[color:var(--foreground)]";
+
+  return (
+    <div className={`rounded-2xl border px-4 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.04)] ${toneClass}`}>
+      <p className="text-[11px] uppercase tracking-[0.18em] text-current/70">{label}</p>
+      <p className="mt-2 text-2xl font-semibold text-current">{value}</p>
+    </div>
+  );
+}
+
+function ContextNote({
+  children,
+  tone,
+}: {
+  children: string;
+  tone: "success" | "warning" | "info";
+}) {
+  const toneClass =
+    tone === "success"
+      ? "border-[rgba(22,163,74,0.18)] bg-[#f0fdf4] text-[#166534]"
+      : tone === "warning"
+        ? "border-amber-200 bg-amber-50 text-amber-900"
+        : "border-[#d4e2ff] bg-[#eff4ff] text-[#1d4ed8]";
+
+  return <div className={`rounded-2xl border p-4 text-sm ${toneClass}`}>{children}</div>;
+}
+
+function InventoryStatusPill({
+  children,
+  tone,
+}: {
+  children: string;
+  tone: "success" | "warning" | "info" | "neutral";
+}) {
+  const toneClass =
+    tone === "success"
+      ? "bg-[#eaf9ef] text-[#166534]"
+      : tone === "warning"
+        ? "bg-[#fff3d9] text-[#a16207]"
+        : tone === "info"
+          ? "bg-[#eaf1ff] text-[#1d4ed8]"
+          : "bg-[#eef2f7] text-[#52627a]";
+
+  return (
+    <span className={`rounded-full px-3 py-1 text-xs font-semibold tracking-[0.02em] ${toneClass}`}>
+      {children}
+    </span>
   );
 }

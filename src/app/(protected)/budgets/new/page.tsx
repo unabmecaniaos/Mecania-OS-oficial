@@ -43,22 +43,26 @@ export default async function NewBudgetPage({
 
     return (
       <div className="space-y-6">
-        <Card className="overflow-hidden rounded-2xl bg-[linear-gradient(135deg,rgba(255,255,255,0.96)_0%,rgba(239,246,255,0.94)_100%)]">
+        <Card className="overflow-hidden border-[#18365f] bg-[linear-gradient(135deg,#0f2746_0%,#173b69_55%,#1f56a4_100%)] text-white shadow-[0_24px_56px_rgba(15,23,42,0.22)]">
           <div className="space-y-6">
             <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
               <div>
-              <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--muted)]">
-                Nuevo presupuesto
-              </p>
-              <h1 className="mt-2 font-heading text-3xl font-semibold">
-                Presupuesto para cliente liquidadora
-              </h1>
-            </div>
+                <p className="text-xs uppercase tracking-[0.3em] text-[#9ec1ff]">
+                  Nuevo presupuesto
+                </p>
+                <h1 className="mt-3 font-heading text-3xl font-semibold text-white sm:text-4xl">
+                  Presupuesto para cliente liquidadora
+                </h1>
+                <p className="mt-3 max-w-2xl text-sm text-[#dbe7fb] sm:text-base">
+                  Consolida referencias, contexto del siniestro y abastecimiento del taller en una
+                  sola vista operativa.
+                </p>
+              </div>
 
               <div className="grid gap-3 sm:grid-cols-3">
-                <HeroStat label="Casos liquidadora" value={context.insuranceCases.length} />
-                <HeroStat label="Repuestos catalogados" value={context.inventoryParts.length} />
-                <HeroStat label="Referencias" value={context.references.length} />
+                <HeroStat dark label="Casos liquidadora" value={context.insuranceCases.length} />
+                <HeroStat dark label="Repuestos catalogados" value={context.inventoryParts.length} />
+                <HeroStat dark label="Referencias" value={context.references.length} />
               </div>
             </div>
 
@@ -127,23 +131,27 @@ export default async function NewBudgetPage({
 
   return (
     <div className="space-y-6">
-      <Card className="overflow-hidden rounded-2xl bg-[linear-gradient(135deg,rgba(255,255,255,0.96)_0%,rgba(239,246,255,0.94)_100%)]">
+      <Card className="overflow-hidden border-[#18365f] bg-[linear-gradient(135deg,#0f2746_0%,#173b69_55%,#1f56a4_100%)] text-white shadow-[0_24px_56px_rgba(15,23,42,0.22)]">
         <div className="space-y-6">
           <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
             <div>
-              <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--muted)]">
+              <p className="text-xs uppercase tracking-[0.3em] text-[#9ec1ff]">
                 Nuevo presupuesto
               </p>
-              <h1 className="mt-2 font-heading text-3xl font-semibold">
+              <h1 className="mt-3 font-heading text-3xl font-semibold text-white sm:text-4xl">
                 Presupuesto para cliente taller
               </h1>
+              <p className="mt-3 max-w-2xl text-sm text-[#dbe7fb] sm:text-base">
+                Disena presupuestos con compatibilidad VIN, stock real y una ruta clara de compra
+                externa cuando el taller no tenga el repuesto.
+              </p>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-4">
-              <HeroStat label="Clientes taller" value={context.clients.length} />
-              <HeroStat label="Autoinspecciones" value={context.selfInspections.length} />
-              <HeroStat label="Repuestos catalogados" value={context.inventoryParts.length} />
-              <HeroStat label="Referencias" value={context.references.length} />
+              <HeroStat dark label="Clientes taller" value={context.clients.length} />
+              <HeroStat dark label="Autoinspecciones" value={context.selfInspections.length} />
+              <HeroStat dark label="Repuestos catalogados" value={context.inventoryParts.length} />
+              <HeroStat dark label="Referencias" value={context.references.length} />
             </div>
           </div>
 
@@ -219,8 +227,8 @@ function BudgetFormLink({
       className={cn(
         "rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors",
         selected
-          ? "border-[rgba(37,99,235,0.22)] bg-[linear-gradient(180deg,rgba(37,99,235,0.18),rgba(37,99,235,0.10))] text-[#1d4ed8] shadow-[0_10px_24px_rgba(37,99,235,0.10)]"
-          : "border-transparent bg-transparent text-[color:var(--muted-strong)] hover:border-[rgba(37,99,235,0.12)] hover:bg-[rgba(37,99,235,0.08)] hover:text-[#1d4ed8]",
+          ? "border-white/15 bg-white/12 text-white shadow-[0_12px_28px_rgba(15,23,42,0.18)]"
+          : "border-white/10 bg-white/5 text-[#dbe7fb] hover:border-white/20 hover:bg-white/10 hover:text-white",
       )}
       href={`/budgets/new?kind=${kind}`}
     >
@@ -229,11 +237,30 @@ function BudgetFormLink({
   );
 }
 
-function HeroStat({ label, value }: { label: string; value: number }) {
+function HeroStat({ label, value, dark = false }: { label: string; value: number; dark?: boolean }) {
   return (
-    <div className="rounded-xl border border-[rgba(37,99,235,0.12)] bg-white/80 px-4 py-3 shadow-[0_10px_24px_rgba(37,99,235,0.06)]">
-      <p className="text-[11px] uppercase tracking-[0.18em] text-[color:var(--muted)]">{label}</p>
-      <p className="mt-2 font-heading text-3xl font-semibold text-[color:var(--foreground)]">
+    <div
+      className={cn(
+        "rounded-2xl border px-4 py-4 shadow-[0_10px_24px_rgba(37,99,235,0.06)]",
+        dark
+          ? "border-white/10 bg-white/10 shadow-[0_18px_36px_rgba(10,18,38,0.14)]"
+          : "border-[rgba(37,99,235,0.12)] bg-white/80",
+      )}
+    >
+      <p
+        className={cn(
+          "text-[11px] uppercase tracking-[0.18em]",
+          dark ? "text-[#9ec1ff]" : "text-[color:var(--muted)]",
+        )}
+      >
+        {label}
+      </p>
+      <p
+        className={cn(
+          "mt-2 font-heading text-3xl font-semibold",
+          dark ? "text-white" : "text-[color:var(--foreground)]",
+        )}
+      >
         {value}
       </p>
     </div>

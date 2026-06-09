@@ -641,6 +641,20 @@ function BudgetItemsBuilder({
               <div className="space-y-4">
                 {partSlots.slice(0, visiblePartSlots).map((slot) => {
                   const selectedPart = findSelectedPart(slot);
+                  const selectedPartAvailabilityTone = !selectedPart
+                    ? "neutral"
+                    : selectedPart.currentStock <= 0
+                      ? "warning"
+                      : selectedPart.currentStock <= selectedPart.minimumStock
+                        ? "info"
+                        : "success";
+                  const selectedPartAvailabilityLabel = !selectedPart
+                    ? ""
+                    : selectedPart.currentStock <= 0
+                      ? "Sin stock"
+                      : selectedPart.currentStock <= selectedPart.minimumStock
+                        ? "Stock critico"
+                        : "Disponible";
 
                   return (
                     <div
@@ -660,20 +674,8 @@ function BudgetItemsBuilder({
 
                           {selectedPart ? (
                             <div className="flex flex-wrap gap-2">
-                              <InventoryStatusPill
-                                tone={
-                                  selectedPart.currentStock <= 0
-                                    ? "warning"
-                                    : selectedPart.currentStock <= selectedPart.minimumStock
-                                      ? "info"
-                                      : "success"
-                                }
-                              >
-                                {selectedPart.currentStock <= 0
-                                  ? "Sin stock"
-                                  : selectedPart.currentStock <= selectedPart.minimumStock
-                                    ? "Stock critico"
-                                    : "Disponible"}
+                              <InventoryStatusPill tone={selectedPartAvailabilityTone}>
+                                {selectedPartAvailabilityLabel}
                               </InventoryStatusPill>
                               <InventoryStatusPill tone="neutral">
                                 Codigo {selectedPart.code}

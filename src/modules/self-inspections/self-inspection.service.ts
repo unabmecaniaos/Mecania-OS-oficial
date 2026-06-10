@@ -4,6 +4,7 @@ import {
   SelfInspectionNoteType,
   SelfInspectionReason,
   SelfInspectionRiskLevel,
+  SelfInspectionSource,
   SelfInspectionStatus,
   UserRole,
   VehicleFuelType,
@@ -1180,6 +1181,100 @@ export async function listSelfInspections(input?: unknown) {
       criticalFindings,
     };
   });
+}
+
+export async function createStaffAssistedSelfInspection(
+  input: {
+    customerId: string;
+    vehicleId: string;
+    mainComplaint: string;
+    notes?: string;
+  },
+  actorId: string,
+) {
+  const vehicle = await prisma.vehicle.findFirst({
+    where: {
+      id: input.vehicleId,
+      clientId: input.customerId,
+      deletedAt: null,
+    },
+    include: {
+      client: true,
+    },
+  });
+
+  if (!vehicle) {
+    throw new NotFoundError("Vehiculo no encontrado para la inspeccion interna");
+  }
+
+  const summaryGenerated = [
+    `Inspeccion registrada por personal del taller para ${vehicle.client.fullName}.`,
+    `Vehiculo ${vehicle.make} ${vehicle.model}, ano ${vehicle.year}, VIN ${vehicle.vin}.`,
+    input.mainComplaint.trim() ? `Observacion principal: ${input.mainComplaint.trim()}.` : null,
+    input.notes?.trim() ? `Notas internas: ${input.notes.trim()}.` : null,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const inspection = await prisma.$transaction(async (tx) => {
+    const created = await tx.selfInspection.create({
+      data: {
+        customerId: input.customerId,
+        vehicleId: input.vehicleId,
+        status: SelfInspectionStatus.REVIEWED,
+        sourceChannel: SelfInspectionSource.STAFF_ASSISTED,
+        mainComplaint: input.mainComplaint.trim() || "Inspeccion inicial registrada en taller",
+        submittedAt: new Date(),
+        reviewedAt: new Date(),
+        reviewerId: actorId,
+        summaryGenerated,
+        completionPercent: 100,
+        lastCompletedStep: 3,
+        vehicleSnapshot: {
+          create: {
+            plate: vehicle.plate,
+            vin: vehicle.vin,
+            make: vehicle.make,
+            model: vehicle.model,
+            year: vehicle.year,
+            color: vehicle.color,
+            mileage: vehicle.mileage ?? 0,
+            fuelType: VehicleFuelType.OTHER,
+            transmission: VehicleTransmissionType.OTHER,
+            starts: true,
+          },
+        },
+        notes: input.notes?.trim()
+          ? {
+              create: {
+                noteType: SelfInspectionNoteType.INTERNAL_REVIEW,
+                content: input.notes.trim(),
+                createdById: actorId,
+              },
+            }
+          : undefined,
+        statusLogs: {
+          create: {
+            previousStatus: null,
+            nextStatus: SelfInspectionStatus.REVIEWED,
+            note: "Inspeccion interna registrada por personal del taller",
+            changedById: actorId,
+          },
+        },
+      },
+    });
+
+    return created;
+  });
+
+  selfInspectionLogger.info("Staff-assisted inspection created", {
+    actorId,
+    inspectionId: inspection.id,
+    customerId: input.customerId,
+    vehicleId: input.vehicleId,
+  });
+
+  return inspection;
 }
 
 export async function getSelfInspectionById(id: string) {

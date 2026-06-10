@@ -17,7 +17,11 @@ export function SelfInspectionRiskBadge({
 
   return (
     <Badge
-      className={level === SelfInspectionRiskLevel.CRITICAL ? "bg-[rgba(148,33,33,0.12)] text-[#8d1f1f]" : undefined}
+      className={
+        level === SelfInspectionRiskLevel.CRITICAL
+          ? "border-[rgba(180,35,24,0.2)] bg-[color:var(--danger-soft)] text-[color:var(--danger)]"
+          : undefined
+      }
       tone={tone}
     >
       Riesgo {SELF_INSPECTION_RISK_LABELS[level]}

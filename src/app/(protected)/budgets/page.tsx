@@ -1,5 +1,9 @@
 import Link from "next/link";
 
+import {
+  LiquidatorClientCard,
+  WorkshopClientCard,
+} from "@/components/clients/client-cards";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,7 +13,6 @@ import { BudgetStatusBadge } from "@/modules/budgets/budget-status-badge";
 import { listBudgets } from "@/modules/budgets/budget.service";
 import { listClients } from "@/modules/clients/client.service";
 import { listInternalInsuranceCases } from "@/modules/insurance-cases/insurance-case.service";
-import { StatusBadge } from "@/components/ui/status-badge";
 
 type BudgetView = "budgets" | "workshop-clients" | "liquidator-clients";
 
@@ -57,7 +60,6 @@ export default async function BudgetsPage({ searchParams }: BudgetsPageProps) {
     0,
   );
   const liquidatorWithBudget = liquidatorClients.filter((item) => item.latestBudget).length;
-  const liquidatorPendingBudget = liquidatorClients.filter((item) => !item.latestBudget).length;
   const liquidatorApproved = liquidatorClients.filter(
     (item) =>
       item.latestBudget?.status === "APPROVED" ||
@@ -67,40 +69,42 @@ export default async function BudgetsPage({ searchParams }: BudgetsPageProps) {
 
   return (
     <div className="space-y-6">
-      <Card className="overflow-hidden rounded-2xl bg-[linear-gradient(135deg,rgba(255,255,255,0.96)_0%,rgba(239,246,255,0.94)_100%)]">
-        <div className="space-y-5">
-          <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--muted)]">
-                Presupuestos y clientes
-              </p>
-              <h1 className="mt-2 font-heading text-3xl font-semibold">Presupuestos del taller</h1>
-            </div>
+      <section className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <h1 className="font-heading text-3xl font-semibold text-[color:var(--foreground)]">
+            Presupuestos del taller
+          </h1>
+          <p className="mt-2 text-sm text-[color:var(--muted-strong)]">
+            Elige clientes taller o liquidadora para generar presupuestos.
+          </p>
+        </div>
 
-            {currentView === "budgets" ? (
-              <div className="grid gap-3 sm:grid-cols-4">
-                <SummaryStat label="Total" tone="default" value={summary.total} />
-                <SummaryStat label="Borradores" tone="info" value={summary.drafts} />
-                <SummaryStat label="Enviados" tone="primary" value={summary.sent} />
-                <SummaryStat label="Aprobados" tone="success" value={summary.approved} />
-              </div>
-            ) : null}
-            {currentView === "workshop-clients" ? (
-              <div className="grid gap-3 sm:grid-cols-3">
-                <SummaryStat label="Clientes visibles" tone="default" value={workshopClients.length} />
-                <SummaryStat label="Vehiculos ligados" tone="info" value={totalWorkshopVehicles} />
-                <SummaryStat label="Ordenes ligadas" tone="primary" value={totalWorkshopOrders} />
-              </div>
-            ) : null}
-            {currentView === "liquidator-clients" ? (
-              <div className="grid gap-3 sm:grid-cols-3">
-                <SummaryStat label="Casos liquidadora" tone="default" value={liquidatorClients.length} />
-                <SummaryStat label="Con presupuesto" tone="info" value={liquidatorWithBudget} />
-                <SummaryStat label="Aprobados" tone="success" value={liquidatorApproved} />
-              </div>
-            ) : null}
+        {currentView === "budgets" ? (
+          <div className="grid gap-3 sm:grid-cols-4">
+            <SummaryStat label="Total" tone="default" value={summary.total} />
+            <SummaryStat label="Borradores" tone="info" value={summary.drafts} />
+            <SummaryStat label="Enviados" tone="primary" value={summary.sent} />
+            <SummaryStat label="Aprobados" tone="success" value={summary.approved} />
           </div>
+        ) : null}
+        {currentView === "workshop-clients" ? (
+          <div className="grid gap-3 sm:grid-cols-3">
+            <SummaryStat label="Clientes visibles" tone="default" value={workshopClients.length} />
+            <SummaryStat label="Vehiculos ligados" tone="info" value={totalWorkshopVehicles} />
+            <SummaryStat label="Ordenes ligadas" tone="primary" value={totalWorkshopOrders} />
+          </div>
+        ) : null}
+        {currentView === "liquidator-clients" ? (
+          <div className="grid gap-3 sm:grid-cols-3">
+            <SummaryStat label="Casos liquidadora" tone="default" value={liquidatorClients.length} />
+            <SummaryStat label="Con presupuesto" tone="info" value={liquidatorWithBudget} />
+            <SummaryStat label="Aprobados" tone="success" value={liquidatorApproved} />
+          </div>
+        ) : null}
+      </section>
 
+      <Card className="overflow-hidden rounded-[22px] bg-white">
+        <div className="space-y-5">
           <div className="flex flex-wrap gap-2">
             {BUDGET_VIEWS.map((item) => (
               <Link
@@ -226,41 +230,9 @@ export default async function BudgetsPage({ searchParams }: BudgetsPageProps) {
       ) : null}
 
       {currentView === "workshop-clients" ? (
-        <div className="space-y-4">
+        <div className="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
           {workshopClients.map((client) => (
-            <Card className="rounded-xl" key={client.id}>
-              <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-                <div className="space-y-2">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <h2 className="font-heading text-2xl font-semibold">{client.fullName}</h2>
-                    <span className="rounded-full border border-[rgba(37,99,235,0.14)] bg-[rgba(37,99,235,0.08)] px-3 py-1 text-xs font-semibold text-[#1d4ed8]">
-                      Cliente taller
-                    </span>
-                  </div>
-                  <p className="text-sm text-[color:var(--muted-strong)]">
-                    {client.phone} / {client.email}
-                  </p>
-                  <p className="text-sm text-[color:var(--muted)]">
-                    Creado el {formatDate(client.createdAt)}
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-3">
-                  <div className="rounded-xl border border-[color:var(--border)] bg-white/80 px-4 py-2 text-sm font-medium">
-                    {client._count.vehicles} vehiculos
-                  </div>
-                  <div className="rounded-xl border border-[color:var(--border)] bg-white/80 px-4 py-2 text-sm font-medium">
-                    {client._count.workOrders} ordenes
-                  </div>
-                  <Link
-                    className="text-sm font-semibold text-[#2563eb] hover:text-[#1d4ed8]"
-                    href={`/budgets/new?kind=workshop&clientId=${client.id}`}
-                  >
-                    Crear presupuesto taller
-                  </Link>
-                </div>
-              </div>
-            </Card>
+            <WorkshopClientCard client={client} key={client.id} mode="budgets" />
           ))}
 
           {workshopClients.length === 0 ? (
@@ -274,88 +246,9 @@ export default async function BudgetsPage({ searchParams }: BudgetsPageProps) {
       ) : null}
 
       {currentView === "liquidator-clients" ? (
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
           {liquidatorClients.map((insuranceCase) => (
-            <Card className="rounded-2xl" key={insuranceCase.id}>
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--muted)]">
-                    {insuranceCase.caseNumber}
-                  </p>
-                  <h2 className="mt-2 font-heading text-2xl font-semibold">
-                    {insuranceCase.ownerFullName}
-                  </h2>
-                  <p className="mt-2 text-sm text-[color:var(--muted-strong)]">
-                    Liquidadora: {insuranceCase.liquidator.name}
-                  </p>
-                  <p className="mt-1 text-sm text-[color:var(--muted)]">
-                    {insuranceCase.vehicle.make} {insuranceCase.vehicle.model} /{" "}
-                    {insuranceCase.vehicle.plate ?? insuranceCase.vehicle.vin}
-                  </p>
-                </div>
-                <span className="rounded-full border border-[rgba(37,99,235,0.16)] bg-[rgba(37,99,235,0.08)] px-3 py-1 text-xs font-semibold text-[#1d4ed8]">
-                  {insuranceCase.stageLabel}
-                </span>
-              </div>
-
-              <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                <div className="rounded-xl border border-[color:var(--border)] bg-white/75 p-3">
-                  <p className="text-[11px] uppercase tracking-[0.16em] text-[color:var(--muted)]">
-                    Choque
-                  </p>
-                  <p className="mt-2 font-semibold">{formatDate(insuranceCase.incidentDate)}</p>
-                </div>
-                <div className="rounded-xl border border-[color:var(--border)] bg-white/75 p-3">
-                  <p className="text-[11px] uppercase tracking-[0.16em] text-[color:var(--muted)]">
-                    Presupuesto
-                  </p>
-                  <div className="mt-2">
-                    {insuranceCase.latestBudget ? (
-                      <BudgetStatusBadge status={insuranceCase.latestBudget.status} />
-                    ) : (
-                      <span className="text-sm text-[color:var(--muted)]">Pendiente</span>
-                    )}
-                  </div>
-                </div>
-                <div className="rounded-xl border border-[color:var(--border)] bg-white/75 p-3">
-                  <p className="text-[11px] uppercase tracking-[0.16em] text-[color:var(--muted)]">
-                    OT
-                  </p>
-                  <div className="mt-2">
-                    {insuranceCase.currentWorkOrder ? (
-                      <StatusBadge status={insuranceCase.currentWorkOrder.status} />
-                    ) : (
-                      <span className="text-sm text-[color:var(--muted)]">Aun no creada</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <p className="mt-4 text-sm text-[color:var(--muted)]">
-                {insuranceCase.latestBudget
-                  ? `Monto actual: ${formatCurrency(insuranceCase.latestBudget.totalAmount)}`
-                  : liquidatorPendingBudget > 0
-                    ? "Todavia no existe un presupuesto conectado a este cliente de liquidadora."
-                    : "Sin presupuesto asociado."}
-              </p>
-
-              <div className="mt-6 flex flex-wrap justify-end gap-4">
-                <Link
-                  className="text-sm font-semibold text-[#2563eb] hover:text-[#1d4ed8]"
-                  href={`/budgets/new?kind=liquidator&insuranceCaseId=${insuranceCase.id}`}
-                >
-                  {insuranceCase.latestBudget ? "Crear nueva version" : "Crear presupuesto liquidadora"}
-                </Link>
-                {insuranceCase.latestBudget ? (
-                  <Link
-                    className="text-sm font-semibold text-[#2563eb] hover:text-[#1d4ed8]"
-                    href={`/budgets/${insuranceCase.latestBudget.id}`}
-                  >
-                    Ver presupuesto actual
-                  </Link>
-                ) : null}
-              </div>
-            </Card>
+            <LiquidatorClientCard insuranceCase={insuranceCase} key={insuranceCase.id} mode="budgets" />
           ))}
 
           {liquidatorClients.length === 0 ? (

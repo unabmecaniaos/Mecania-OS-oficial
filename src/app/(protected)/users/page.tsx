@@ -3,9 +3,34 @@ import { UserRole } from "@prisma/client";
 
 import { UserForm } from "@/app/(protected)/users/user-form";
 import { UserRowForm } from "@/app/(protected)/users/user-row-form";
+import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { getCurrentSession } from "@/modules/auth/auth.service";
 import { getInternalRoleLabel, listInternalUsers } from "@/modules/users/user.service";
+
+const roleCards = [
+  {
+    label: "Administrador",
+    tone: "admin",
+    items: ["Acceso total", "Gestionar usuarios", "Ver reportes"],
+  },
+  {
+    label: "Mecanico",
+    tone: "mechanic",
+    items: ["Ver vehiculos asignados", "Actualizar estado", "Subir fotos"],
+  },
+  {
+    label: "Liquidador",
+    tone: "liquidator",
+    items: ["Ver casos derivados", "Revisar presupuestos", "Responder aprobaciones"],
+  },
+  {
+    label: "Cliente",
+    tone: "customer",
+    items: ["Ver estado propio", "Autoinspeccion", "Recibir notificaciones"],
+  },
+] as const;
 
 export default async function UsersPage() {
   const session = await getCurrentSession();
@@ -15,65 +40,197 @@ export default async function UsersPage() {
   }
 
   const users = await listInternalUsers();
-  const activeUsers = users.filter((user) => user.active).length;
-  const mechanics = users.filter((user) => user.role === UserRole.MECHANIC).length;
-  const liquidators = users.filter((user) => user.role === UserRole.LIQUIDATOR).length;
 
   return (
     <div className="space-y-6">
-      <Card className="overflow-hidden rounded-2xl bg-[linear-gradient(135deg,rgba(255,255,255,0.96)_0%,rgba(239,246,255,0.94)_100%)]">
-        <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--muted)]">
-              Control de acceso
-            </p>
-            <h1 className="mt-2 font-heading text-3xl font-semibold">Usuarios internos</h1>
-          </div>
+      <section className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <h1 className="font-heading text-3xl font-semibold text-[color:var(--foreground)]">
+            Gestion de Usuarios
+          </h1>
+          <p className="mt-2 text-sm text-[color:var(--muted-strong)]">
+            Administrar usuarios y permisos del sistema
+          </p>
+        </div>
 
-          <div className="grid gap-3 sm:grid-cols-3">
-            <HeroStat label="Activos" value={activeUsers} />
-            <HeroStat label="Mecanicos" value={mechanics} />
-            <HeroStat label="Liquidadores" value={liquidators} />
-          </div>
+        <details className="group relative">
+          <summary className="inline-flex min-h-11 cursor-pointer list-none items-center justify-center gap-2 rounded-[var(--radius-control)] border border-transparent bg-[linear-gradient(180deg,var(--accent)_0%,var(--accent-strong)_100%)] px-5 py-2.5 text-sm font-semibold text-white shadow-[var(--shadow-control)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(36,88,198,0.24)] focus:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(36,88,198,0.16)] [&::-webkit-details-marker]:hidden">
+            <span className="text-xl leading-none">+</span>
+            Nuevo Usuario
+          </summary>
+
+          <Card className="absolute right-0 z-30 mt-3 w-[min(92vw,760px)]">
+            <div className="mb-5">
+              <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--muted)]">
+                Alta de usuario
+              </p>
+              <h2 className="mt-2 font-heading text-2xl font-semibold">Nuevo usuario</h2>
+            </div>
+            <UserForm />
+          </Card>
+        </details>
+      </section>
+
+      <Card>
+        <div className="flex items-center gap-3">
+          <ShieldIcon />
+          <h2 className="font-heading text-xl font-semibold text-[color:var(--foreground)]">
+            Roles y Permisos
+          </h2>
+        </div>
+
+        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {roleCards.map((role) => (
+            <div
+              className="rounded-[var(--radius-control)] border border-[color:var(--border)] bg-[color:var(--surface-elevated)] p-4"
+              key={role.label}
+            >
+              <RolePill label={role.label} tone={role.tone} />
+              <ul className="mt-4 space-y-2 text-sm leading-5 text-[color:var(--muted-strong)]">
+                {role.items.map((item) => (
+                  <li key={item}>- {item}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
       </Card>
 
-      <div className="space-y-5">
-        <Card className="rounded-2xl">
-          <h2 className="font-heading text-2xl font-semibold">Nuevo usuario</h2>
-          <div className="mt-5">
-            <UserForm />
-          </div>
-        </Card>
+      <Card className="overflow-hidden p-0">
+        <div className="hidden grid-cols-[1.35fr_1.1fr_0.85fr_0.7fr_130px] gap-4 border-b border-[color:var(--border)] bg-[color:var(--surface-muted)] px-6 py-4 text-sm font-semibold text-[color:var(--muted-strong)] lg:grid">
+          <span>Usuario</span>
+          <span>Correo</span>
+          <span>Rol</span>
+          <span>Estado</span>
+          <span>Acciones</span>
+        </div>
 
-        <div className="space-y-3">
+        <div className="divide-y divide-[color:var(--border)]">
           {users.map((user) => (
-            <Card className="rounded-xl px-5 py-4" key={user.id}>
-              <div className="flex flex-col gap-2.5">
-                <div>
-                  <h2 className="font-heading text-xl font-semibold">{user.name}</h2>
-                  <p className="mt-1.5 text-sm text-[color:var(--muted-strong)]">{user.email}</p>
-                  <p className="mt-1 text-sm text-[color:var(--muted)]">
-                    {getInternalRoleLabel(user.role)} / {user.active ? "Activo" : "Inactivo"}
+            <div
+              className="grid gap-4 px-5 py-4 lg:grid-cols-[1.35fr_1.1fr_0.85fr_0.7fr_130px] lg:items-center lg:px-6"
+              key={user.id}
+            >
+              <div className="flex min-w-0 items-center gap-4">
+                <UserAvatar />
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-[color:var(--foreground)]">
+                    {user.name}
+                  </p>
+                  <p className="mt-1 truncate text-sm text-[color:var(--muted)] lg:hidden">
+                    {user.email}
                   </p>
                 </div>
-                <UserRowForm user={user} />
               </div>
-            </Card>
+
+              <p className="hidden truncate text-sm text-[color:var(--muted-strong)] lg:block">
+                {user.email}
+              </p>
+
+              <div>
+                <RoleBadge role={user.role} />
+              </div>
+
+              <div>
+                <Badge tone={user.active ? "success" : "neutral"}>
+                  {user.active ? "Activo" : "Inactivo"}
+                </Badge>
+              </div>
+
+              <UserRowForm user={user} />
+            </div>
           ))}
+
+          {users.length === 0 ? (
+            <div className="px-6 py-10 text-center text-sm text-[color:var(--muted)]">
+              No hay usuarios internos registrados.
+            </div>
+          ) : null}
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
 
-function HeroStat({ label, value }: { label: string; value: number }) {
+function RolePill({
+  label,
+  tone,
+}: {
+  label: string;
+  tone: (typeof roleCards)[number]["tone"];
+}) {
   return (
-    <div className="rounded-xl border border-[rgba(37,99,235,0.12)] bg-white/80 px-4 py-3 shadow-[0_10px_24px_rgba(37,99,235,0.06)]">
-      <p className="text-[11px] uppercase tracking-[0.18em] text-[color:var(--muted)]">{label}</p>
-      <p className="mt-2 font-heading text-3xl font-semibold text-[color:var(--foreground)]">
-        {value}
-      </p>
+    <span
+      className={cn(
+        "inline-flex rounded-full border px-3 py-1 text-sm font-semibold",
+        tone === "admin" &&
+          "border-[rgba(147,51,234,0.18)] bg-[rgba(147,51,234,0.10)] text-[#7e22ce]",
+        tone === "mechanic" &&
+          "border-[rgba(20,122,75,0.2)] bg-[color:var(--success-soft)] text-[color:var(--success)]",
+        tone === "liquidator" &&
+          "border-[rgba(36,88,198,0.2)] bg-[color:var(--info-soft)] text-[color:var(--accent)]",
+        tone === "customer" &&
+          "border-[color:var(--border)] bg-[color:var(--surface-strong)] text-[color:var(--muted-strong)]",
+      )}
+    >
+      {label}
+    </span>
+  );
+}
+
+function RoleBadge({ role }: { role: UserRole }) {
+  if (role === UserRole.ADMIN) {
+    return (
+      <Badge className="border-[rgba(147,51,234,0.18)] bg-[rgba(147,51,234,0.10)] text-[#7e22ce]">
+        {getInternalRoleLabel(role)}
+      </Badge>
+    );
+  }
+
+  if (role === UserRole.MECHANIC) {
+    return <Badge tone="success">{getInternalRoleLabel(role)}</Badge>;
+  }
+
+  if (role === UserRole.LIQUIDATOR) {
+    return <Badge tone="info">{getInternalRoleLabel(role)}</Badge>;
+  }
+
+  return <Badge>{getInternalRoleLabel(role)}</Badge>;
+}
+
+function ShieldIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="h-5 w-5 text-[color:var(--foreground)]"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.9"
+      viewBox="0 0 24 24"
+    >
+      <path d="M12 3 5 6v5c0 5 3.5 8.5 7 10 3.5-1.5 7-5 7-10V6l-7-3Z" />
+    </svg>
+  );
+}
+
+function UserAvatar() {
+  return (
+    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[color:var(--info-soft)] text-[color:var(--accent)]">
+      <svg
+        aria-hidden="true"
+        className="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+        viewBox="0 0 24 24"
+      >
+        <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
+        <path d="M5 21a7 7 0 0 1 14 0" />
+      </svg>
     </div>
   );
 }

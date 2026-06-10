@@ -18,6 +18,20 @@ function startOfMonth(value: Date) {
   return new Date(value.getFullYear(), value.getMonth(), 1);
 }
 
+function addMonths(value: Date, months: number) {
+  return new Date(value.getFullYear(), value.getMonth() + months, 1);
+}
+
+function monthKey(value: Date) {
+  return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function monthLabel(value: Date) {
+  return value.toLocaleDateString("es-CL", {
+    month: "short",
+  });
+}
+
 export async function getDashboardSummary(input?: { actorId?: string; actorRole?: UserRole }) {
   const workOrderScope: Prisma.WorkOrderWhereInput[] = [
     {
@@ -46,6 +60,10 @@ export async function getDashboardSummary(input?: { actorId?: string; actorRole?
   });
   const today = new Date();
   const monthStart = startOfMonth(today);
+  const revenueTrendStart = addMonths(monthStart, -5);
+  const revenueTrendMonths = Array.from({ length: 6 }, (_, index) =>
+    addMonths(revenueTrendStart, index),
+  );
   const revenueStatuses = [
     BudgetStatus.APPROVED,
     BudgetStatus.PARTIALLY_APPROVED,
@@ -61,6 +79,7 @@ export async function getDashboardSummary(input?: { actorId?: string; actorRole?
     latestOrders,
     overdueOrdersRaw,
     monthlyRevenue,
+    revenueTrendBudgets,
     totalRevenue,
     mechanics,
     mechanicalWorkloadGroups,
@@ -117,8 +136,36 @@ export async function getDashboardSummary(input?: { actorId?: string; actorRole?
           },
         }),
         select: {
+          id: true,
+          orderNumber: true,
           status: true,
           estimatedDate: true,
+          client: {
+            select: {
+              fullName: true,
+            },
+          },
+          vehicle: {
+            select: {
+              make: true,
+              model: true,
+              plate: true,
+              vin: true,
+            },
+          },
+          assignedTechnician: {
+            select: {
+              name: true,
+            },
+          },
+          assignedPainter: {
+            select: {
+              name: true,
+            },
+          },
+        },
+        orderBy: {
+          estimatedDate: "asc",
         },
       }),
       prisma.budget.aggregate({
@@ -132,6 +179,21 @@ export async function getDashboardSummary(input?: { actorId?: string; actorRole?
           },
         },
         _sum: {
+          totalAmount: true,
+        },
+      }),
+      prisma.budget.findMany({
+        where: {
+          deletedAt: null,
+          status: {
+            in: revenueStatuses,
+          },
+          createdAt: {
+            gte: revenueTrendStart,
+          },
+        },
+        select: {
+          createdAt: true,
           totalAmount: true,
         },
       }),
@@ -254,12 +316,13 @@ export async function getDashboardSummary(input?: { actorId?: string; actorRole?
       }),
     ]);
 
-  const overdueOrders = overdueOrdersRaw.filter((order) =>
+  const overdueOrderList = overdueOrdersRaw.filter((order) =>
     isWorkOrderDelayed({
       status: order.status,
       promisedDate: order.estimatedDate,
     }),
-  ).length;
+  );
+  const overdueOrders = overdueOrderList.length;
   const mechanicalCounts = new Map(
     mechanicalWorkloadGroups
       .filter((group) => group.assignedTechnicianId)
@@ -287,6 +350,12 @@ export async function getDashboardSummary(input?: { actorId?: string; actorRole?
   const monthlyRevenueGross = monthlyRevenue._sum.totalAmount ?? 0;
   const monthlyRevenueNet = Math.round(monthlyRevenueGross / 1.19);
   const monthlyRevenueTax = monthlyRevenueGross - monthlyRevenueNet;
+  const revenueByMonth = new Map<string, number>();
+
+  for (const budget of revenueTrendBudgets) {
+    const key = monthKey(budget.createdAt);
+    revenueByMonth.set(key, (revenueByMonth.get(key) ?? 0) + budget.totalAmount);
+  }
 
   return {
     clients,
@@ -295,12 +364,18 @@ export async function getDashboardSummary(input?: { actorId?: string; actorRole?
     awaitingApproval,
     readyForDelivery,
     overdueOrders,
+    overdueOrderList: overdueOrderList.slice(0, 5),
     latestOrders,
     financial: {
       monthlyRevenueGross,
       monthlyRevenueNet,
       monthlyRevenueTax,
       totalApprovedRevenue: totalRevenue._sum.totalAmount ?? 0,
+      monthlyTrend: revenueTrendMonths.map((month) => ({
+        key: monthKey(month),
+        label: monthLabel(month),
+        amount: revenueByMonth.get(monthKey(month)) ?? 0,
+      })),
     },
     operational: {
       mechanicsInProcess,

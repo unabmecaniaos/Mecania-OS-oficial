@@ -17,9 +17,9 @@ export function BudgetStatusBadge({ status }: { status: BudgetStatus }) {
     <Badge
       className={
         status === BudgetStatus.REJECTED
-          ? "bg-[rgba(185,28,28,0.10)] text-[#991b1b]"
+          ? "border-[rgba(180,35,24,0.2)] bg-[color:var(--danger-soft)] text-[color:var(--danger)]"
           : status === BudgetStatus.REQUEST_CHANGES
-            ? "bg-[rgba(217,119,6,0.12)] text-[#b45309]"
+            ? "border-[rgba(161,92,7,0.2)] bg-[color:var(--warning-soft)] text-[color:var(--warning)]"
             : undefined
       }
       tone={tone}

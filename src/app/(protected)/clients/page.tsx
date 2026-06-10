@@ -1,118 +1,215 @@
 import Link from "next/link";
 
+import {
+  LiquidatorClientCard,
+  WorkshopClientCard,
+} from "@/components/clients/client-cards";
+import { SectionTrashLink } from "@/components/trash/trash-ui";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { MoveToTrashButton, SectionTrashLink } from "@/components/trash/trash-ui";
-import { formatDate } from "@/lib/utils";
+import { Select } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 import { listClients } from "@/modules/clients/client.service";
+import { listInternalInsuranceCases } from "@/modules/insurance-cases/insurance-case.service";
+
+type ClientTypeFilter = "all" | "workshop" | "liquidator";
+type ClientSort = "newest" | "oldest" | "alpha" | "activity";
 
 type ClientsPageProps = {
   searchParams: Promise<{
     q?: string;
+    sort?: string;
+    type?: string;
   }>;
 };
 
+const TYPE_FILTERS: Array<{ value: ClientTypeFilter; label: string }> = [
+  { value: "all", label: "Todos" },
+  { value: "workshop", label: "Taller" },
+  { value: "liquidator", label: "Liquidadora" },
+];
+
+function resolveType(value?: string): ClientTypeFilter {
+  if (value === "workshop" || value === "liquidator") {
+    return value;
+  }
+
+  return "all";
+}
+
+function resolveSort(value?: string): ClientSort {
+  if (value === "oldest" || value === "alpha" || value === "activity") {
+    return value;
+  }
+
+  return "newest";
+}
+
 export default async function ClientsPage({ searchParams }: ClientsPageProps) {
-  const { q } = await searchParams;
-  const clients = await listClients(q);
-  const totalVehicles = clients.reduce((sum, client) => sum + client._count.vehicles, 0);
-  const totalOrders = clients.reduce((sum, client) => sum + client._count.workOrders, 0);
+  const { q, sort, type } = await searchParams;
+  const currentType = resolveType(type);
+  const currentSort = resolveSort(sort);
+  const [workshopClients, liquidatorClients] = await Promise.all([
+    listClients(q),
+    listInternalInsuranceCases(q),
+  ]);
+
+  const entries = [
+    ...workshopClients.map((client) => ({
+      activity: client._count.vehicles + client._count.workOrders,
+      client,
+      createdAt: client.createdAt,
+      id: client.id,
+      kind: "workshop" as const,
+      name: client.fullName,
+    })),
+    ...liquidatorClients.map((insuranceCase) => ({
+      activity: Number(Boolean(insuranceCase.latestBudget)) + Number(Boolean(insuranceCase.currentWorkOrder)),
+      createdAt: insuranceCase.createdAt,
+      id: insuranceCase.id,
+      insuranceCase,
+      kind: "liquidator" as const,
+      name: insuranceCase.ownerFullName,
+    })),
+  ]
+    .filter((entry) => currentType === "all" || entry.kind === currentType)
+    .sort((a, b) => {
+      if (currentSort === "alpha") {
+        return a.name.localeCompare(b.name, "es");
+      }
+
+      if (currentSort === "activity") {
+        return b.activity - a.activity || b.createdAt.getTime() - a.createdAt.getTime();
+      }
+
+      if (currentSort === "oldest") {
+        return a.createdAt.getTime() - b.createdAt.getTime();
+      }
+
+      return b.createdAt.getTime() - a.createdAt.getTime();
+    });
+
+  const totalVehicles = workshopClients.reduce((sum, client) => sum + client._count.vehicles, 0);
+  const totalOrders = workshopClients.reduce((sum, client) => sum + client._count.workOrders, 0);
 
   return (
     <div className="space-y-6">
-      <Card className="overflow-hidden rounded-2xl bg-[linear-gradient(135deg,rgba(255,255,255,0.96)_0%,rgba(239,246,255,0.94)_100%)]">
-        <div className="space-y-6">
-          <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+      <section className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <h1 className="font-heading text-3xl font-semibold text-[color:var(--foreground)]">
+            Todos los clientes
+          </h1>
+          <p className="mt-2 text-sm text-[color:var(--muted-strong)]">
+            Administra clientes taller y clientes liquidadora desde una sola vista.
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+          <Link href="/clients/new">
+            <Button className="w-full sm:w-auto">Nuevo cliente</Button>
+          </Link>
+          <SectionTrashLink href="/clients/trash" />
+        </div>
+      </section>
+
+      <Card className="rounded-[22px] bg-white">
+        <div className="grid gap-5 xl:grid-cols-[1fr_auto] xl:items-end">
+          <form className="grid gap-4 lg:grid-cols-[1fr_170px_220px_auto]" method="get">
             <div>
-              <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--muted)]">
-                Registro comercial
-              </p>
-              <h1 className="mt-2 font-heading text-3xl font-semibold">Clientes del taller</h1>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-3">
-              <HeroStat label="Clientes visibles" value={clients.length} />
-              <HeroStat label="Vehiculos ligados" value={totalVehicles} />
-              <HeroStat label="Ordenes ligadas" value={totalOrders} />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-            <form className="flex flex-col gap-3 sm:flex-row xl:min-w-[520px]" method="get">
-              <Input defaultValue={q} name="q" placeholder="Buscar por nombre, correo o telefono" />
-              <Button className="sm:min-w-[120px]" type="submit" variant="secondary">
+              <label className="mb-2 block text-xs uppercase tracking-[0.16em] text-[color:var(--muted)]">
                 Buscar
-              </Button>
-            </form>
-
-            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-              <Link href="/clients/new">
-                <Button className="w-full sm:w-auto">Nuevo cliente</Button>
-              </Link>
-              <SectionTrashLink href="/clients/trash" />
+              </label>
+              <Input defaultValue={q} name="q" placeholder="Nombre, correo, telefono, empresa o patente" />
             </div>
+            <div>
+              <label className="mb-2 block text-xs uppercase tracking-[0.16em] text-[color:var(--muted)]">
+                Tipo
+              </label>
+              <Select defaultValue={currentType} name="type">
+                <option value="all">Todos</option>
+                <option value="workshop">Clientes taller</option>
+                <option value="liquidator">Clientes liquidadora</option>
+              </Select>
+            </div>
+            <div>
+              <label className="mb-2 block text-xs uppercase tracking-[0.16em] text-[color:var(--muted)]">
+                Ordenar
+              </label>
+              <Select defaultValue={currentSort} name="sort">
+                <option value="newest">Mas recientes</option>
+                <option value="oldest">Mas antiguos</option>
+                <option value="alpha">Alfabeticamente</option>
+                <option value="activity">Mas actividad</option>
+              </Select>
+            </div>
+            <div className="flex items-end">
+              <Button className="w-full lg:w-auto" type="submit" variant="secondary">
+                Aplicar
+              </Button>
+            </div>
+          </form>
+
+          <div className="grid gap-3 sm:grid-cols-3 xl:min-w-[430px]">
+            <HeroStat label="Resultados" value={entries.length} />
+            <HeroStat label="Taller" value={workshopClients.length} />
+            <HeroStat label="Liquidadora" value={liquidatorClients.length} />
           </div>
+        </div>
+
+        <div className="mt-5 flex flex-wrap gap-2">
+          {TYPE_FILTERS.map((item) => (
+            <Link
+              className={cn(
+                "rounded-full border px-3.5 py-2 text-sm font-medium transition-colors",
+                currentType === item.value
+                  ? "border-[#0f172a] bg-[#0f172a] !text-[#ffffff] shadow-[0_10px_24px_rgba(15,23,42,0.14)] hover:!text-[#ffffff]"
+                  : "border-[color:var(--border)] bg-white/75 text-[color:var(--muted-strong)] hover:border-[rgba(37,99,235,0.20)] hover:text-[#1d4ed8]",
+              )}
+              href={`/clients?type=${item.value}&sort=${currentSort}${q ? `&q=${encodeURIComponent(q)}` : ""}`}
+              key={item.value}
+            >
+              {item.label}
+            </Link>
+          ))}
+          <span className="rounded-full border border-[#d7e0ec] bg-white px-3.5 py-2 text-sm text-[color:var(--muted-strong)]">
+            {totalVehicles} vehiculos / {totalOrders} ordenes taller
+          </span>
         </div>
       </Card>
 
-      <div className="space-y-4">
-        {clients.map((client) => (
-          <Card className="rounded-xl" key={client.id}>
-            <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-              <div className="space-y-2">
-                <div className="flex flex-wrap items-center gap-3">
-                  <h2 className="font-heading text-2xl font-semibold">{client.fullName}</h2>
-                  <span className="rounded-full border border-[rgba(37,99,235,0.14)] bg-[rgba(37,99,235,0.08)] px-3 py-1 text-xs font-semibold text-[#1d4ed8]">
-                    Cliente taller
-                  </span>
-                </div>
-                <p className="text-sm text-[color:var(--muted-strong)]">
-                  {client.phone} / {client.email}
-                </p>
-                <p className="text-sm text-[color:var(--muted)]">
-                  Creado el {formatDate(client.createdAt)}
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between xl:items-center">
-                <MoveToTrashButton entityId={client.id} entityType="client" redirectTo="/clients" />
-                <div className="flex flex-wrap items-center gap-3">
-                  <div className="rounded-xl border border-[color:var(--border)] bg-white/80 px-4 py-2 text-sm font-medium">
-                    {client._count.vehicles} vehiculos
-                  </div>
-                  <div className="rounded-xl border border-[color:var(--border)] bg-white/80 px-4 py-2 text-sm font-medium">
-                    {client._count.workOrders} ordenes
-                  </div>
-                  <Link
-                    className="text-sm font-semibold text-[#2563eb] hover:text-[#1d4ed8]"
-                    href={`/clients/${client.id}`}
-                  >
-                    Ver ficha
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </Card>
-        ))}
-
-        {clients.length === 0 ? (
-          <Card className="rounded-xl text-center">
-            <p className="text-[color:var(--muted-strong)]">
-              No hay clientes del taller que coincidan con la busqueda.
-            </p>
-          </Card>
-        ) : null}
+      <div className="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
+        {entries.map((entry) =>
+          entry.kind === "workshop" ? (
+            <WorkshopClientCard
+              client={entry.client}
+              key={entry.id}
+              mode="clients"
+              showTrash
+              trashRedirectTo="/clients"
+            />
+          ) : (
+            <LiquidatorClientCard insuranceCase={entry.insuranceCase} key={entry.id} mode="clients" />
+          ),
+        )}
       </div>
+
+      {entries.length === 0 ? (
+        <Card className="rounded-xl text-center">
+          <p className="text-[color:var(--muted-strong)]">
+            No hay clientes que coincidan con los filtros seleccionados.
+          </p>
+        </Card>
+      ) : null}
     </div>
   );
 }
 
 function HeroStat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-xl border border-[rgba(37,99,235,0.12)] bg-white/80 px-4 py-3 shadow-[0_10px_24px_rgba(37,99,235,0.06)]">
-      <p className="text-[11px] uppercase tracking-[0.18em] text-[color:var(--muted)]">{label}</p>
-      <p className="mt-2 font-heading text-3xl font-semibold text-[color:var(--foreground)]">
+    <div className="rounded-xl border border-[#d7e0ec] bg-[#f8fbff] px-4 py-3">
+      <p className="text-[11px] uppercase tracking-[0.16em] text-[color:var(--muted)]">{label}</p>
+      <p className="mt-2 font-heading text-2xl font-semibold text-[color:var(--foreground)]">
         {value}
       </p>
     </div>

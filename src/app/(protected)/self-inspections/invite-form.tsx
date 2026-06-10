@@ -13,7 +13,7 @@ export function InviteForm() {
   return (
     <form action={formAction} className="flex flex-col items-end gap-3">
       <FormMessage
-        className="max-w-sm border-[rgba(255,255,255,0.16)] bg-[rgba(153,27,27,0.28)] text-white"
+        className="max-w-sm"
         message={state.error}
       />
       <SubmitButton label="Generar enlace seguro" pendingLabel="Generando enlace..." />

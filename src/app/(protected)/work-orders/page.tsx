@@ -2,13 +2,15 @@ import Link from "next/link";
 import { WorkOrderServiceFlow } from "@prisma/client";
 
 import { AutoSubmitFilterForm } from "@/app/(protected)/work-orders/auto-submit-filter-form";
-import { MoveToTrashButton, SectionTrashLink } from "@/components/trash/trash-ui";
+import {
+  LiquidatorClientCard,
+  WorkshopClientCard,
+} from "@/components/clients/client-cards";
+import { SectionTrashLink } from "@/components/trash/trash-ui";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { StatusBadge } from "@/components/ui/status-badge";
-import { cn, formatCurrency, formatDate } from "@/lib/utils";
-import { BudgetStatusBadge } from "@/modules/budgets/budget-status-badge";
+import { cn } from "@/lib/utils";
 import { listClients } from "@/modules/clients/client.service";
 import { listInternalInsuranceCases } from "@/modules/insurance-cases/insurance-case.service";
 import { WORK_ORDER_SERVICE_FLOW_SHORT_LABELS } from "@/modules/work-orders/work-order.constants";
@@ -169,34 +171,36 @@ export default async function WorkOrdersPage({ searchParams }: WorkOrdersPagePro
 
   return (
     <div className="space-y-6">
-      <Card className="overflow-hidden rounded-2xl bg-[linear-gradient(135deg,rgba(255,255,255,0.96)_0%,rgba(239,246,255,0.94)_100%)]">
+      <section className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <h1 className="font-heading text-3xl font-semibold text-[color:var(--foreground)]">
+            Ordenes
+          </h1>
+          <p className="mt-2 text-sm text-[color:var(--muted-strong)]">
+            Gestiona clientes taller, clientes liquidadora y el flujo operativo de las OT.
+          </p>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-3">
+          {currentView === "workshop-clients" ? (
+            <>
+              <HeroStat label="Clientes visibles" value={workshopClients.length} />
+              <HeroStat label="Vehiculos ligados" value={totalWorkshopVehicles} />
+              <HeroStat label="Ordenes ligadas" value={totalWorkshopOrders} />
+            </>
+          ) : null}
+          {currentView === "liquidator-clients" ? (
+            <>
+              <HeroStat label="Casos liquidadora" value={liquidatorClients.length} />
+              <HeroStat label="Sin presupuesto" value={liquidatorCasesWithoutBudget} />
+              <HeroStat label="En reparacion" value={liquidatorCasesInRepair} />
+            </>
+          ) : null}
+        </div>
+      </section>
+
+      <Card className="overflow-hidden rounded-[22px] bg-white">
         <div className="space-y-6">
-          <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--muted)]">
-                Centro operativo
-              </p>
-              <h1 className="mt-2 font-heading text-3xl font-semibold">Ordenes y clientes</h1>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-3">
-              {currentView === "workshop-clients" ? (
-                <>
-                  <HeroStat label="Clientes visibles" value={workshopClients.length} />
-                  <HeroStat label="Vehiculos ligados" value={totalWorkshopVehicles} />
-                  <HeroStat label="Ordenes ligadas" value={totalWorkshopOrders} />
-                </>
-              ) : null}
-              {currentView === "liquidator-clients" ? (
-                <>
-                  <HeroStat label="Casos liquidadora" value={liquidatorClients.length} />
-                  <HeroStat label="Sin presupuesto" value={liquidatorCasesWithoutBudget} />
-                  <HeroStat label="En reparacion" value={liquidatorCasesInRepair} />
-                </>
-              ) : null}
-            </div>
-          </div>
-
           <div className="flex flex-wrap gap-2">
             {WORK_ORDER_VIEWS.map((item) => (
               <Link
@@ -247,8 +251,8 @@ export default async function WorkOrdersPage({ searchParams }: WorkOrdersPagePro
               </AutoSubmitFilterForm>
 
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-                <Link href="/clients/new">
-                  <Button className="w-full sm:w-auto">Nuevo cliente</Button>
+                <Link href="/work-orders/new">
+                  <Button className="w-full sm:w-auto">Nueva orden</Button>
                 </Link>
                 <SectionTrashLink href="/clients/trash" />
               </div>
@@ -279,55 +283,16 @@ export default async function WorkOrdersPage({ searchParams }: WorkOrdersPagePro
       </Card>
 
       {currentView === "workshop-clients" ? (
-        <div className="space-y-4">
+        <div className="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
           {workshopClients.map((client) => (
-            <Card className="rounded-xl" key={client.id}>
-              <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-                <div className="space-y-2">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <h2 className="font-heading text-2xl font-semibold">{client.fullName}</h2>
-                    <span className="rounded-full border border-[rgba(37,99,235,0.14)] bg-[rgba(37,99,235,0.08)] px-3 py-1 text-xs font-semibold text-[#1d4ed8]">
-                      Cliente taller
-                    </span>
-                    <FlowBadge flow={getWorkshopClientFlow(client)} />
-                  </div>
-                  <p className="text-sm text-[color:var(--muted-strong)]">
-                    {client.phone} / {client.email}
-                  </p>
-                  <p className="text-sm text-[color:var(--muted)]">
-                    Creado el {formatDate(client.createdAt)}
-                  </p>
-                </div>
-
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between xl:items-center">
-                  <MoveToTrashButton
-                    entityId={client.id}
-                    entityType="client"
-                    redirectTo="/work-orders?view=workshop-clients"
-                  />
-                  <div className="flex flex-wrap items-center gap-3">
-                    <div className="rounded-xl border border-[color:var(--border)] bg-white/80 px-4 py-2 text-sm font-medium">
-                      {client._count.vehicles} vehiculos
-                    </div>
-                    <div className="rounded-xl border border-[color:var(--border)] bg-white/80 px-4 py-2 text-sm font-medium">
-                      {client._count.workOrders} ordenes
-                    </div>
-                    <Link
-                      className="text-sm font-semibold text-[#2563eb] hover:text-[#1d4ed8]"
-                      href={`/clients/${client.id}`}
-                    >
-                      Ver detalle
-                    </Link>
-                    <Link
-                      className="text-sm font-semibold text-[#2563eb] hover:text-[#1d4ed8]"
-                      href={`/work-orders/new?clientId=${client.id}`}
-                    >
-                      Crear orden
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </Card>
+            <WorkshopClientCard
+              badge={<FlowBadge flow={getWorkshopClientFlow(client)} />}
+              client={client}
+              key={client.id}
+              mode="work-orders"
+              showTrash
+              trashRedirectTo="/work-orders?view=workshop-clients"
+            />
           ))}
 
           {workshopClients.length === 0 ? (
@@ -341,104 +306,14 @@ export default async function WorkOrdersPage({ searchParams }: WorkOrdersPagePro
       ) : null}
 
       {currentView === "liquidator-clients" ? (
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
           {liquidatorClients.map((insuranceCase) => (
-            <Card className="rounded-2xl" key={insuranceCase.id}>
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--muted)]">
-                    {insuranceCase.caseNumber}
-                  </p>
-                  <h2 className="mt-2 font-heading text-2xl font-semibold">
-                    {insuranceCase.ownerFullName}
-                  </h2>
-                  <p className="mt-2 text-sm text-[color:var(--muted-strong)]">
-                    Liquidadora: {insuranceCase.liquidator.name}
-                  </p>
-                  <p className="mt-1 text-sm text-[color:var(--muted)]">
-                    {insuranceCase.vehicle.make} {insuranceCase.vehicle.model} /{" "}
-                    {insuranceCase.vehicle.plate ?? insuranceCase.vehicle.vin}
-                  </p>
-                </div>
-                <div className="flex shrink-0 flex-col items-end gap-2">
-                  <span className="rounded-full border border-[rgba(37,99,235,0.16)] bg-[rgba(37,99,235,0.08)] px-3 py-1 text-xs font-semibold text-[#1d4ed8]">
-                    {insuranceCase.stageLabel}
-                  </span>
-                  <FlowBadge flow={getLiquidatorClientFlow(insuranceCase)} />
-                </div>
-              </div>
-
-              <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                <div className="rounded-xl border border-[color:var(--border)] bg-white/75 p-3">
-                  <p className="text-[11px] uppercase tracking-[0.16em] text-[color:var(--muted)]">
-                    Choque
-                  </p>
-                  <p className="mt-2 font-semibold">{formatDate(insuranceCase.incidentDate)}</p>
-                </div>
-                <div className="rounded-xl border border-[color:var(--border)] bg-white/75 p-3">
-                  <p className="text-[11px] uppercase tracking-[0.16em] text-[color:var(--muted)]">
-                    Presupuesto
-                  </p>
-                  <div className="mt-2">
-                    {insuranceCase.latestBudget ? (
-                      <BudgetStatusBadge status={insuranceCase.latestBudget.status} />
-                    ) : (
-                      <span className="text-sm text-[color:var(--muted)]">Pendiente</span>
-                    )}
-                  </div>
-                </div>
-                <div className="rounded-xl border border-[color:var(--border)] bg-white/75 p-3">
-                  <p className="text-[11px] uppercase tracking-[0.16em] text-[color:var(--muted)]">
-                    OT
-                  </p>
-                  <div className="mt-2">
-                    {insuranceCase.currentWorkOrder ? (
-                      <StatusBadge status={insuranceCase.currentWorkOrder.status} />
-                    ) : (
-                      <span className="text-sm text-[color:var(--muted)]">Aun no creada</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {insuranceCase.latestBudget ? (
-                <p className="mt-4 text-sm text-[color:var(--muted)]">
-                  Monto actual: {formatCurrency(insuranceCase.latestBudget.totalAmount)}
-                </p>
-              ) : null}
-
-              <div className="mt-6 flex flex-wrap justify-end gap-4">
-                {insuranceCase.currentWorkOrder ? (
-                  <Link
-                    className="text-sm font-semibold text-[#2563eb] hover:text-[#1d4ed8]"
-                    href={`/work-orders/${insuranceCase.currentWorkOrder.id}`}
-                  >
-                    Abrir orden
-                  </Link>
-                ) : (
-                  <Link
-                    className="text-sm font-semibold text-[#2563eb] hover:text-[#1d4ed8]"
-                    href={`/work-orders/new?insuranceCaseId=${insuranceCase.id}`}
-                  >
-                    Crear orden
-                  </Link>
-                )}
-                {!insuranceCase.latestBudget ? (
-                  <Link
-                    className="text-sm font-semibold text-[#2563eb] hover:text-[#1d4ed8]"
-                    href={`/budgets/new?kind=liquidator&insuranceCaseId=${insuranceCase.id}`}
-                  >
-                    Crear presupuesto
-                  </Link>
-                ) : null}
-                <Link
-                  className="text-sm font-semibold text-[#2563eb] hover:text-[#1d4ed8]"
-                  href={`/insurance-cases/${insuranceCase.id}`}
-                >
-                  Ver cliente liquidadora
-                </Link>
-              </div>
-            </Card>
+            <LiquidatorClientCard
+              badge={<FlowBadge flow={getLiquidatorClientFlow(insuranceCase)} />}
+              insuranceCase={insuranceCase}
+              key={insuranceCase.id}
+              mode="work-orders"
+            />
           ))}
 
           {liquidatorClients.length === 0 ? (

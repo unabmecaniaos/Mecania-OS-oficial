@@ -678,7 +678,7 @@ function BudgetItemsBuilder({
                                 {selectedPartAvailabilityLabel}
                               </InventoryStatusPill>
                               <InventoryStatusPill tone="neutral">
-                                Codigo {selectedPart.code}
+                                {`Codigo ${selectedPart.code}`}
                               </InventoryStatusPill>
                             </div>
                           ) : null}

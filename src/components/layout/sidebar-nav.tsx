@@ -7,7 +7,9 @@ import { UserRole } from "@prisma/client";
 import { cn } from "@/lib/utils";
 
 const baseLinks = [
-  { href: "/dashboard", label: "Panel" },
+  { href: "/dashboard", label: "Dashboard" },
+  { href: "/kanban", label: "Kanban" },
+  { href: "/reports", label: "Reportes" },
   { href: "/self-inspections", label: "Autoinspecciones" },
   { href: "/budgets", label: "Presupuestos" },
   { href: "/work-orders", label: "Ordenes" },
@@ -39,14 +41,14 @@ export function SidebarNav({
         return (
           <Link
             className={cn(
-              "flex items-center rounded-xl border text-sm font-medium transition-colors",
+              "flex items-center rounded-[var(--radius-control)] border text-sm font-semibold outline-none transition hover:-translate-y-0.5 focus-visible:ring-4 focus-visible:ring-[rgba(36,88,198,0.14)]",
               isHorizontal ? "whitespace-nowrap px-4 py-2.5" : "w-full px-4 py-3",
               active
                 ? isHorizontal
-                  ? "border-[rgba(37,99,235,0.22)] bg-[linear-gradient(180deg,rgba(37,99,235,0.18),rgba(37,99,235,0.10))] !text-[#1d4ed8] shadow-[0_10px_24px_rgba(37,99,235,0.10)]"
+                  ? "border-[rgba(36,88,198,0.22)] bg-[color:var(--info-soft)] !text-[color:var(--accent-strong)] shadow-[var(--shadow-control)]"
                   : "border-[#4d6d99] bg-[#27466f] !text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
                 : isHorizontal
-                  ? "border-transparent bg-transparent text-[color:var(--muted-strong)] hover:border-[rgba(37,99,235,0.12)] hover:bg-[rgba(37,99,235,0.08)] hover:text-[#1d4ed8]"
+                  ? "border-transparent bg-transparent text-[color:var(--muted-strong)] hover:border-[rgba(36,88,198,0.12)] hover:bg-[color:var(--info-soft)] hover:text-[color:var(--accent-strong)]"
                   : "border-transparent !text-[#d7e5fb] hover:border-[#35567f] hover:bg-[#183557] hover:!text-white",
             )}
             href={link.href}

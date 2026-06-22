@@ -9,8 +9,8 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "Mecania | Operación clara para talleres",
-  description: "Software de gestión para talleres mecánicos que buscan operar mejor.",
+  title: "MecaniaOS",
+  description: "Sistema de seguimiento de mantenciones mecanicas para talleres",
 };
 
 export default function RootLayout({

@@ -11,6 +11,11 @@ import type { ActionState } from "@/lib/form-state";
 import { executeServerAction } from "@/lib/server-action";
 import { requireApiUser } from "@/modules/auth/auth.service";
 import {
+  createBillingDocument,
+  markWorkOrderAsPaid,
+} from "@/modules/billing/billing.service";
+import { setWorkOrderPartUsage } from "@/modules/inventory/inventory.service";
+import {
   addWorkOrderEvidence,
   createWorkOrderTask,
   createWorkOrder,
@@ -19,7 +24,6 @@ import {
   updateWorkOrderStatus,
   updateWorkOrderTaskStatus,
 } from "@/modules/work-orders/work-order.service";
-import { setWorkOrderPartUsage } from "@/modules/inventory/inventory.service";
 
 export async function createWorkOrderAction(
   _previousState: ActionState,
@@ -48,10 +52,7 @@ export async function createWorkOrderAction(
   }
 
   revalidatePath("/work-orders");
-  await setFlashMessage({
-    message: "Orden de trabajo creada correctamente.",
-    tone: "success",
-  });
+  await setFlashMessage({ message: "Orden de trabajo creada correctamente.", tone: "success" });
   redirect("/work-orders");
 }
 
@@ -65,9 +66,7 @@ export async function updateWorkOrderAssignmentAction(
 
     await updateWorkOrderAssignment(
       orderId,
-      {
-        assignedTechnicianId: String(formData.get("assignedTechnicianId") ?? ""),
-      },
+      { assignedTechnicianId: String(formData.get("assignedTechnicianId") ?? "") },
       session.user.id,
     );
   });
@@ -79,10 +78,7 @@ export async function updateWorkOrderAssignmentAction(
   revalidatePath("/work-orders");
   revalidatePath(`/work-orders/${orderId}`);
   revalidatePath("/liquidador");
-  await setFlashMessage({
-    message: "Responsable actualizado correctamente.",
-    tone: "success",
-  });
+  await setFlashMessage({ message: "Responsable actualizado correctamente.", tone: "success" });
   redirect(`/work-orders/${orderId}`);
 }
 
@@ -97,9 +93,7 @@ export async function updateWorkOrderPromisedDateAction(
 
     await updateWorkOrderPromisedDate(
       orderId,
-      {
-        estimatedDate: String(formData.get("estimatedDate") ?? ""),
-      },
+      { estimatedDate: String(formData.get("estimatedDate") ?? "") },
       session.user.id,
     );
   } catch (error) {
@@ -107,9 +101,7 @@ export async function updateWorkOrderPromisedDateAction(
       throw error;
     }
 
-    return {
-      error: getErrorMessage(error),
-    };
+    return { error: getErrorMessage(error) };
   }
 
   revalidatePath("/work-orders");
@@ -142,10 +134,7 @@ export async function updateWorkOrderStatusAction(
   revalidatePath("/work-orders");
   revalidatePath(`/work-orders/${orderId}`);
   revalidatePath("/liquidador");
-  await setFlashMessage({
-    message: "Estado de la orden actualizado correctamente.",
-    tone: "success",
-  });
+  await setFlashMessage({ message: "Estado de la orden actualizado correctamente.", tone: "success" });
   redirect(`/work-orders/${orderId}`);
 }
 
@@ -164,10 +153,7 @@ export async function addWorkOrderEvidenceAction(
 
     await addWorkOrderEvidence(
       orderId,
-      {
-        file,
-        note: String(formData.get("note") ?? ""),
-      },
+      { file, note: String(formData.get("note") ?? "") },
       session.user.id,
     );
   });
@@ -178,10 +164,7 @@ export async function addWorkOrderEvidenceAction(
 
   revalidatePath(`/work-orders/${orderId}`);
   revalidatePath("/liquidador");
-  await setFlashMessage({
-    message: "Evidencia subida correctamente.",
-    tone: "success",
-  });
+  await setFlashMessage({ message: "Evidencia subida correctamente.", tone: "success" });
   redirect(`/work-orders/${orderId}`);
 }
 
@@ -211,10 +194,7 @@ export async function setWorkOrderPartUsageAction(
   revalidatePath("/work-orders");
   revalidatePath(`/work-orders/${orderId}`);
   revalidatePath("/liquidador");
-  await setFlashMessage({
-    message: "Uso de repuesto actualizado correctamente.",
-    tone: "success",
-  });
+  await setFlashMessage({ message: "Uso de repuesto actualizado correctamente.", tone: "success" });
   redirect(`/work-orders/${orderId}`);
 }
 
@@ -242,10 +222,7 @@ export async function createWorkOrderTaskAction(
 
   revalidatePath("/work-orders");
   revalidatePath(`/work-orders/${orderId}`);
-  await setFlashMessage({
-    message: "Tarea agregada correctamente a la orden.",
-    tone: "success",
-  });
+  await setFlashMessage({ message: "Tarea agregada correctamente a la orden.", tone: "success" });
   redirect(`/work-orders/${orderId}`);
 }
 
@@ -261,8 +238,65 @@ export async function updateWorkOrderTaskStatusAction(
     await updateWorkOrderTaskStatus(
       orderId,
       taskId,
+      { status: String(formData.get("status") ?? "") },
+      session.user.id,
+    );
+  });
+
+  if (!result.ok) {
+    return result.state;
+  }
+
+  revalidatePath("/work-orders");
+  revalidatePath(`/work-orders/${orderId}`);
+  await setFlashMessage({ message: "Estado de la tarea actualizado correctamente.", tone: "success" });
+  redirect(`/work-orders/${orderId}`);
+}
+
+export async function markWorkOrderPaidAction(
+  _previousState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const orderId = String(formData.get("orderId") ?? "");
+  const result = await executeServerAction("markWorkOrderPaidAction", async () => {
+    const session = await requireApiUser([UserRole.ADMIN, UserRole.MECHANIC]);
+
+    await markWorkOrderAsPaid(
+      orderId,
+      { paymentReference: String(formData.get("paymentReference") ?? "") },
+      session.user.id,
+    );
+  });
+
+  if (!result.ok) {
+    return result.state;
+  }
+
+  revalidatePath("/work-orders");
+  revalidatePath(`/work-orders/${orderId}`);
+  revalidatePath("/budgets");
+  revalidatePath("/portal");
+  revalidatePath("/liquidador");
+  await setFlashMessage({ message: "Orden y presupuesto marcados como pagados.", tone: "success" });
+  redirect(`/work-orders/${orderId}`);
+}
+
+export async function createBillingDocumentAction(
+  _previousState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const orderId = String(formData.get("orderId") ?? "");
+  const result = await executeServerAction("createBillingDocumentAction", async () => {
+    const session = await requireApiUser([UserRole.ADMIN, UserRole.MECHANIC]);
+
+    await createBillingDocument(
+      orderId,
       {
-        status: String(formData.get("status") ?? ""),
+        type: String(formData.get("type") ?? ""),
+        folio: String(formData.get("folio") ?? ""),
+        customerTaxId: String(formData.get("customerTaxId") ?? ""),
+        customerBusinessName: String(formData.get("customerBusinessName") ?? ""),
+        notes: String(formData.get("notes") ?? ""),
       },
       session.user.id,
     );
@@ -274,9 +308,8 @@ export async function updateWorkOrderTaskStatusAction(
 
   revalidatePath("/work-orders");
   revalidatePath(`/work-orders/${orderId}`);
-  await setFlashMessage({
-    message: "Estado de la tarea actualizado correctamente.",
-    tone: "success",
-  });
+  revalidatePath("/budgets");
+  revalidatePath("/portal");
+  await setFlashMessage({ message: "Documento de cobro generado correctamente.", tone: "success" });
   redirect(`/work-orders/${orderId}`);
 }

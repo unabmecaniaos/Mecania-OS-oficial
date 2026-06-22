@@ -178,6 +178,17 @@ enum BudgetItemType {
   SUPPLY
 }
 
+enum PaymentStatus {
+  PENDING
+  REPORTED
+  PAID
+}
+
+enum BillingDocumentType {
+  INVOICE
+  RECEIPT
+}
+
 enum WorkOrderTaskStatus {
   PENDING
   COMPLETED
@@ -210,6 +221,7 @@ model User {
   updatedBudgets              Budget[]                  @relation("BudgetUpdatedBy")
   budgetStatusChanges         BudgetStatusLog[]
   insuranceCases              InsuranceCase[]           @relation("InsuranceCaseLiquidator")
+  createdBillingDocuments     BillingDocument[]         @relation("BillingDocumentCreatedBy")
 }
 
 model Session {
@@ -289,6 +301,9 @@ model WorkOrder {
   estimatedDate        DateTime?
   closedDate           DateTime?
   notes                String?
+  paymentStatus        PaymentStatus        @default(PENDING)
+  paidAt               DateTime?
+  paymentReference     String?              @db.VarChar(80)
   createdById          String
   updatedById          String?
   assignedTechnicianId String?
@@ -308,6 +323,7 @@ model WorkOrder {
   parts                WorkOrderPart[]
   tasks                WorkOrderTask[]
   budget               Budget?
+  billingDocuments     BillingDocument[]
 
   @@index([clientId, intakeDate])
   @@index([vehicleId, intakeDate])
@@ -580,6 +596,9 @@ model Budget {
   subtotalLabor     Int               @default(0)
   subtotalSupplies  Int               @default(0)
   totalAmount       Int               @default(0)
+  paymentStatus     PaymentStatus     @default(PENDING)
+  paidAt            DateTime?
+  paymentReference  String?           @db.VarChar(80)
   sentAt            DateTime?
   approvedAt        DateTime?
   rejectedAt        DateTime?
@@ -598,6 +617,7 @@ model Budget {
   updatedBy         User?             @relation("BudgetUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
   items             BudgetItem[]
   statusLogs        BudgetStatusLog[]
+  billingDocuments  BillingDocument[]
 
   @@index([clientId, createdAt])
   @@index([vehicleId, createdAt])
@@ -605,6 +625,31 @@ model Budget {
   @@index([status, createdAt])
   @@index([selfInspectionId])
   @@index([deletedAt, purgeAt])
+}
+
+model BillingDocument {
+  id                   String              @id @default(cuid())
+  budgetId             String
+  workOrderId          String
+  createdById          String
+  type                 BillingDocumentType
+  folio                String              @db.VarChar(40)
+  customerTaxId        String              @db.VarChar(32)
+  customerBusinessName String              @db.VarChar(160)
+  notes                String?
+  netAmount            Int
+  vatAmount            Int
+  totalAmount          Int
+  pdfFileName          String
+  issuedAt             DateTime            @default(now())
+  budget               Budget              @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  workOrder            WorkOrder           @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  createdBy            User                @relation("BillingDocumentCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([budgetId, issuedAt])
+  @@index([workOrderId, issuedAt])
+  @@unique([workOrderId, type])
+  @@unique([type, folio])
 }
 
 model InsuranceCase {
@@ -705,3 +750,6 @@ model BudgetReferenceCatalog {
   @@index([itemType, active])
   @@index([name])
 }
+
+
+

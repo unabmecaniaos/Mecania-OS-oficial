@@ -149,6 +149,16 @@ export const workOrderRepository = {
             items: {
               orderBy: [{ itemType: "asc" }, { description: "asc" }],
             },
+            billingDocuments: {
+              orderBy: {
+                issuedAt: "desc",
+              },
+            },
+          },
+        },
+        billingDocuments: {
+          orderBy: {
+            issuedAt: "desc",
           },
         },
         assignedTechnician: {

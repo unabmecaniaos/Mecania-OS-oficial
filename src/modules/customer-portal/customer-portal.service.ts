@@ -115,7 +115,14 @@ export async function getCustomerPortalOverview() {
             },
           },
           vehicle: true,
-          workOrder: true,
+          workOrder: {
+            select: {
+              id: true,
+              orderNumber: true,
+              paymentStatus: true,
+              paidAt: true,
+            },
+          },
           items: {
             orderBy: [{ itemType: "asc" }, { description: "asc" }],
           },
@@ -292,7 +299,19 @@ export async function getCustomerPortalBudgetDetail(budgetId: string) {
       },
       client: true,
       vehicle: true,
-      workOrder: true,
+      workOrder: {
+        select: {
+          id: true,
+          orderNumber: true,
+          paymentStatus: true,
+          paidAt: true,
+          billingDocuments: {
+            orderBy: {
+              issuedAt: "desc",
+            },
+          },
+        },
+      },
       items: {
         orderBy: [{ itemType: "asc" }, { description: "asc" }],
       },

@@ -17,6 +17,7 @@ import {
   getWorkOrderAutomaticProgressPercent,
   isClosedStatus,
 } from "@/modules/work-orders/work-order.constants";
+import { notifyBudgetResolved } from "@/modules/notifications/email.service";
 
 export const INSURANCE_CASE_STAGE_LABELS = {
   INGRESADO: "Ingresado",
@@ -407,7 +408,7 @@ export async function respondToInsuranceBudget(
     throw new AppError("Este presupuesto ya no admite respuesta del liquidador", 422);
   }
 
-  return insuranceCaseRepository.transitionBudgetForLiquidator({
+  const updatedBudget = await insuranceCaseRepository.transitionBudgetForLiquidator({
     budgetId: budget.id,
     previousStatus: budget.status,
     nextStatus: input.nextStatus,
@@ -415,4 +416,11 @@ export async function respondToInsuranceBudget(
     changedById: session.user.id,
     changedAt: new Date(),
   });
+
+  await notifyBudgetResolved(updatedBudget.id, {
+    resolvedBy: "liquidator",
+    status: updatedBudget.status,
+  });
+
+  return updatedBudget;
 }

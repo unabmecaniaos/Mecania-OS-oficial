@@ -10,6 +10,7 @@ import {
 import { ExternalSuggestionsPanel } from "@/app/(protected)/budgets/external-suggestions-panel";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { FormErrorSummary } from "@/components/ui/form-error-summary";
 import { FormMessage } from "@/components/ui/form-message";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -165,6 +166,7 @@ export function WorkshopBudgetCreateForm({
     <form action={formAction} className="space-y-6">
       <input name="clientId" type="hidden" value={selectedClientId} />
       <input name="vehicleId" type="hidden" value={selectedVehicleId} />
+      <FormErrorSummary message={state.error} />
 
       <Card className="overflow-hidden border-[#d4def0] bg-[linear-gradient(180deg,#ffffff_0%,#f7faff_100%)] shadow-[0_18px_44px_rgba(15,23,42,0.08)]">
         <div className="space-y-6">
@@ -340,6 +342,7 @@ export function LiquidatorBudgetCreateForm({
 
   return (
     <form action={formAction} className="space-y-6">
+      <FormErrorSummary message={state.error} />
       <Card className="overflow-hidden border-[#d4def0] bg-[linear-gradient(180deg,#ffffff_0%,#f7faff_100%)] shadow-[0_18px_44px_rgba(15,23,42,0.08)]">
         <div className="space-y-6">
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">

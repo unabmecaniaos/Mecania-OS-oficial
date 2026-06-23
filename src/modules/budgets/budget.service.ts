@@ -21,6 +21,7 @@ import {
   transitionBudgetStatusSchema,
   updateBudgetDraftSchema,
 } from "@/modules/budgets/budget.schemas";
+import { notifyBudgetSent } from "@/modules/notifications/email.service";
 
 const budgetLogger = createLogger("budgets");
 
@@ -511,7 +512,7 @@ export async function createLiquidatorBudgetDraft(
   );
   const totals = calculateTotals(draftItems);
 
-  return budgetRepository.createDraft({
+  const budget = await budgetRepository.createDraft({
     budgetNumber: await createBudgetNumber(),
     clientId: insuranceCase.clientId,
     vehicleId: insuranceCase.vehicleId,
@@ -524,6 +525,10 @@ export async function createLiquidatorBudgetDraft(
     items: draftItems,
     ...totals,
   });
+
+  await notifyBudgetSent(budget.id, "liquidator");
+
+  return budget;
 }
 
 export async function updateBudgetDraft(
@@ -632,6 +637,10 @@ export async function transitionBudgetStatus(
     previousStatus,
     nextStatus: updatedBudget.status,
   });
+
+  if (updatedBudget.status === BudgetStatus.SENT) {
+    await notifyBudgetSent(updatedBudget.id, updatedBudget.insuranceCase ? "liquidator" : "customer");
+  }
 
   return updatedBudget;
 }

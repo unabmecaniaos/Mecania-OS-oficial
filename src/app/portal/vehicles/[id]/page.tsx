@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { WorkOrderStatus } from "@prisma/client";
 
 import { WorkOrderProgress } from "@/components/customer-portal/work-order-progress";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,9 @@ export default async function CustomerVehicleDetailPage({
 
     throw error;
   });
+  const deliveredOrdersWithEvidence = vehicle.workOrders.filter(
+    (order) => order.status === WorkOrderStatus.DELIVERED && order.evidences.length > 0,
+  );
 
   return (
     <div className="space-y-6">
@@ -156,35 +160,53 @@ export default async function CustomerVehicleDetailPage({
 
           <Card className="rounded-2xl">
             <div>
-              <h2 className="font-heading text-2xl font-semibold">Evidencia visible</h2>
+              <h2 className="font-heading text-2xl font-semibold">Evidencia de entrega</h2>
+              <p className="mt-2 text-sm text-[color:var(--muted)]">
+                Fotos disponibles solo para ordenes finalizadas y asociadas a tu vehiculo.
+              </p>
             </div>
 
-            {vehicle.featuredOrder && vehicle.featuredOrder.evidences.length > 0 ? (
-              <div className="mt-5 grid gap-4 md:grid-cols-2">
-                {vehicle.featuredOrder.evidences.map((evidence) => (
-                  <div
-                    className="rounded-xl border border-[color:var(--border)] bg-white/70 p-3"
-                    key={evidence.id}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      alt={evidence.fileName}
-                      className="h-44 w-full rounded-xl object-cover"
-                      src={evidence.fileUrl}
-                    />
-                    <p className="mt-3 text-sm font-semibold text-[color:var(--foreground)]">
-                      {evidence.fileName}
+            {deliveredOrdersWithEvidence.length > 0 ? (
+              <div className="mt-5 space-y-5">
+                {deliveredOrdersWithEvidence.map((order) => (
+                  <div key={order.id}>
+                    <p className="mb-3 text-sm font-semibold text-[color:var(--foreground)]">
+                      {order.orderNumber} / Entregada
                     </p>
-                    {evidence.note ? (
-                      <p className="mt-1 text-xs text-[color:var(--muted-strong)]">{evidence.note}</p>
-                    ) : null}
-                    <p className="mt-2 text-xs text-[color:var(--muted)]">
-                      {evidence.uploadedBy.name} / {formatDateTime(evidence.createdAt)}
-                    </p>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {order.evidences.map((evidence) => (
+                        <div
+                          className="rounded-xl border border-[rgba(22,163,74,0.18)] bg-[color:var(--success-soft)] p-3"
+                          key={evidence.id}
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            alt={evidence.fileName}
+                            className="h-44 w-full rounded-xl object-cover"
+                            src={evidence.fileUrl}
+                          />
+                          <p className="mt-3 text-sm font-semibold text-[color:var(--foreground)]">
+                            {evidence.fileName}
+                          </p>
+                          {evidence.note ? (
+                            <p className="mt-1 text-xs text-[color:var(--muted-strong)]">
+                              {evidence.note}
+                            </p>
+                          ) : null}
+                          <p className="mt-2 text-xs text-[color:var(--muted)]">
+                            {evidence.uploadedBy.name} / {formatDateTime(evidence.createdAt)}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 ))}
               </div>
-            ) : null}
+            ) : (
+              <p className="mt-5 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-4 text-sm text-[color:var(--muted)]">
+                Aun no hay evidencias de entrega disponibles para este vehiculo.
+              </p>
+            )}
           </Card>
 
           <Card className="rounded-2xl">

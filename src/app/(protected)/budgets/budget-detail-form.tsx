@@ -13,6 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { FormErrorSummary } from "@/components/ui/form-error-summary";
 import { FormMessage } from "@/components/ui/form-message";
 import { Input } from "@/components/ui/input";
 import { SubmitButton } from "@/components/ui/submit-button";
@@ -117,6 +118,9 @@ export function BudgetDetailForm({ budget, workOrderStockPlan }: BudgetDetailFor
 
   return (
     <div className="space-y-6">
+      <FormErrorSummary
+        message={state.error ?? transitionState.error ?? createWorkOrderState.error}
+      />
       <Card className="rounded-2xl">
         <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
           <div className="space-y-2">

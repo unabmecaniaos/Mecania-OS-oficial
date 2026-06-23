@@ -1,6 +1,6 @@
 import { UserRole, WorkOrderStatus, WorkOrderTaskStatus } from "@prisma/client";
 
-import { ConflictError, NotFoundError } from "@/lib/errors";
+import { AppError, ConflictError, NotFoundError } from "@/lib/errors";
 import { createLogger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { parseDateInput } from "@/lib/utils";
@@ -55,6 +55,25 @@ async function getNextOrderNumber() {
   const nextSequence = lastOrder ? Number(lastOrder.orderNumber.slice(-4)) + 1 : 1;
 
   return `${prefix}${String(nextSequence).padStart(4, "0")}`;
+}
+
+async function assertCanMarkAsDelivered(workOrderId: string, nextStatus: WorkOrderStatus) {
+  if (nextStatus !== WorkOrderStatus.DELIVERED) {
+    return;
+  }
+
+  const evidenceCount = await prisma.workOrderEvidence.count({
+    where: {
+      workOrderId,
+    },
+  });
+
+  if (evidenceCount === 0) {
+    throw new AppError(
+      "Debes subir al menos una evidencia fotografica antes de finalizar la orden.",
+      422,
+    );
+  }
 }
 
 export async function listWorkOrders(input?: {
@@ -282,6 +301,7 @@ export async function updateWorkOrder(id: string, input: unknown, actorId: strin
 
   const nextStatus = data.status ?? existing.status;
   const nextFlow = data.serviceFlow ?? existing.serviceFlow;
+  await assertCanMarkAsDelivered(id, nextStatus);
   const areaStatuses = normalizeAreaStatusForFlow({
     flow: nextFlow,
     mechanicsStatus: data.mechanicsStatus,
@@ -368,6 +388,8 @@ export async function updateWorkOrderStatus(id: string, input: unknown, actorId:
   if (existing.status === data.status) {
     return getWorkOrderById(id);
   }
+
+  await assertCanMarkAsDelivered(id, data.status);
 
   await prisma.$transaction(async (tx) => {
     await tx.workOrder.update({

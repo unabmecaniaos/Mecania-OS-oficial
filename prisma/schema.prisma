@@ -202,6 +202,26 @@ enum WorkOrderTaskStatus {
   COMPLETED
 }
 
+enum TimeOffRequestType {
+  VACATION
+  PERMISSION
+  MEDICAL
+  OTHER
+}
+
+enum TimeOffRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum MechanicPaymentConcept {
+  BASE_SALARY
+  ORDER_BONUS
+  ADVANCE
+  OTHER
+}
+
 model User {
   id                          String                    @id @default(cuid())
   name                        String
@@ -230,6 +250,10 @@ model User {
   updatedBudgets              Budget[]                  @relation("BudgetUpdatedBy")
   budgetStatusChanges         BudgetStatusLog[]
   insuranceCases              InsuranceCase[]           @relation("InsuranceCaseLiquidator")
+  mechanicTimeOffRequests     MechanicTimeOffRequest[]  @relation("TimeOffMechanic")
+  reviewedTimeOffRequests     MechanicTimeOffRequest[]  @relation("TimeOffReviewer")
+  mechanicPayments            MechanicPayment[]         @relation("MechanicPayments")
+  issuedMechanicPayments      MechanicPayment[]         @relation("IssuedMechanicPayments")
 }
 
 model Session {
@@ -242,6 +266,45 @@ model Session {
 
   @@index([userId])
   @@index([expiresAt])
+}
+
+model MechanicTimeOffRequest {
+  id           String               @id @default(cuid())
+  mechanicId   String
+  reviewedById String?
+  type         TimeOffRequestType
+  status       TimeOffRequestStatus @default(PENDING)
+  startDate    DateTime
+  endDate      DateTime
+  reason       String?
+  reviewNote   String?
+  reviewedAt   DateTime?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  mechanic     User                 @relation("TimeOffMechanic", fields: [mechanicId], references: [id], onDelete: Cascade)
+  reviewedBy   User?                @relation("TimeOffReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([mechanicId, startDate])
+  @@index([status, startDate])
+  @@index([reviewedById])
+}
+
+model MechanicPayment {
+  id          String                 @id @default(cuid())
+  mechanicId  String
+  issuedById  String
+  concept     MechanicPaymentConcept
+  amount      Int
+  paidAt      DateTime
+  note        String?
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  mechanic    User                   @relation("MechanicPayments", fields: [mechanicId], references: [id], onDelete: Restrict)
+  issuedBy    User                   @relation("IssuedMechanicPayments", fields: [issuedById], references: [id], onDelete: Restrict)
+
+  @@index([mechanicId, paidAt])
+  @@index([issuedById, paidAt])
+  @@index([concept, paidAt])
 }
 
 model Client {

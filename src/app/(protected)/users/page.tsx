@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { UserRole } from "@prisma/client";
 
@@ -97,7 +98,7 @@ export default async function UsersPage() {
       </Card>
 
       <Card className="overflow-hidden p-0">
-        <div className="hidden grid-cols-[1.35fr_1.1fr_0.85fr_0.7fr_130px] gap-4 border-b border-[color:var(--border)] bg-[color:var(--surface-muted)] px-6 py-4 text-sm font-semibold text-[color:var(--muted-strong)] lg:grid">
+        <div className="hidden grid-cols-[1.35fr_1.1fr_0.85fr_0.7fr_170px] gap-4 border-b border-[color:var(--border)] bg-[color:var(--surface-muted)] px-6 py-4 text-sm font-semibold text-[color:var(--muted-strong)] lg:grid">
           <span>Usuario</span>
           <span>Correo</span>
           <span>Rol</span>
@@ -108,7 +109,7 @@ export default async function UsersPage() {
         <div className="divide-y divide-[color:var(--border)]">
           {users.map((user) => (
             <div
-              className="grid gap-4 px-5 py-4 lg:grid-cols-[1.35fr_1.1fr_0.85fr_0.7fr_130px] lg:items-center lg:px-6"
+              className="grid gap-4 px-5 py-4 lg:grid-cols-[1.35fr_1.1fr_0.85fr_0.7fr_170px] lg:items-center lg:px-6"
               key={user.id}
             >
               <div className="flex min-w-0 items-center gap-4">
@@ -137,7 +138,17 @@ export default async function UsersPage() {
                 </Badge>
               </div>
 
-              <UserRowForm user={user} />
+              <div className="flex items-center gap-2">
+                {user.role === UserRole.MECHANIC ? (
+                  <Link
+                    className="rounded-[var(--radius-control)] px-3 py-2 text-sm font-semibold text-[color:var(--accent)] transition hover:bg-[color:var(--info-soft)]"
+                    href={`/payroll?mechanicId=${user.id}`}
+                  >
+                    Nomina
+                  </Link>
+                ) : null}
+                <UserRowForm user={user} />
+              </div>
             </div>
           ))}
 

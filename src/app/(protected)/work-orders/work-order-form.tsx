@@ -4,6 +4,7 @@ import { ChangeEvent, useActionState, useState } from "react";
 import { WorkOrderServiceFlow, WorkOrderStatus } from "@prisma/client";
 
 import { createWorkOrderAction } from "@/app/(protected)/work-orders/actions";
+import { FormErrorSummary } from "@/components/ui/form-error-summary";
 import { FormMessage } from "@/components/ui/form-message";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -90,6 +91,7 @@ export function WorkOrderForm({
 
   return (
     <form action={formAction} className="space-y-5">
+      <FormErrorSummary message={state.error} />
       {contextSummary ? (
         <div className="rounded-2xl border border-[rgba(37,99,235,0.14)] bg-[rgba(37,99,235,0.06)] p-4">
           <p className="text-xs uppercase tracking-[0.22em] text-[#1d4ed8]">

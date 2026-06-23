@@ -7,6 +7,7 @@ import {
 } from "@prisma/client";
 
 import { updateWorkOrderFlowAction } from "@/app/(protected)/work-orders/actions";
+import { FormErrorSummary } from "@/components/ui/form-error-summary";
 import { FormMessage } from "@/components/ui/form-message";
 import { Select } from "@/components/ui/select";
 import { SubmitButton } from "@/components/ui/submit-button";
@@ -48,6 +49,7 @@ export function WorkOrderFlowForm({
   return (
     <form action={formAction} className="space-y-5">
       <input name="orderId" type="hidden" value={orderId} />
+      <FormErrorSummary message={state.error} />
 
       <div className="space-y-2">
         <label className="text-sm font-medium text-[color:var(--muted-strong)]" htmlFor="serviceFlow">

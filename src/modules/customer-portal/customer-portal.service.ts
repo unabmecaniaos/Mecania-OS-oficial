@@ -3,6 +3,7 @@ import { BudgetStatus, SelfInspectionStatus, WorkOrderStatus } from "@prisma/cli
 import { NotFoundError, UnauthorizedError } from "@/lib/errors";
 import { prisma } from "@/lib/prisma";
 import { requireCustomerUser } from "@/modules/auth/auth.service";
+import { notifyBudgetResolved } from "@/modules/notifications/email.service";
 import {
   getWorkOrderAutomaticProgressPercent,
   isClosedStatus,
@@ -341,7 +342,7 @@ export async function respondToCustomerBudget(
 
   const changedAt = new Date();
 
-  return prisma.budget.update({
+  const updatedBudget = await prisma.budget.update({
     where: {
       id: budget.id,
     },
@@ -364,4 +365,11 @@ export async function respondToCustomerBudget(
       workOrder: true,
     },
   });
+
+  await notifyBudgetResolved(updatedBudget.id, {
+    resolvedBy: "customer",
+    status: updatedBudget.status,
+  });
+
+  return updatedBudget;
 }

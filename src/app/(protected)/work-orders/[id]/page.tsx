@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { WorkOrderStatus } from "@prisma/client";
 
 import { EvidenceUploadForm } from "@/app/(protected)/work-orders/evidence-upload-form";
 import {
@@ -67,6 +68,7 @@ export default async function WorkOrderDetailPage({ params }: WorkOrderDetailPag
     status: workOrder.status,
     tasks: workOrder.tasks,
   });
+  const isDelivered = workOrder.status === WorkOrderStatus.DELIVERED;
 
   return (
     <div className="space-y-6">
@@ -471,6 +473,15 @@ export default async function WorkOrderDetailPage({ params }: WorkOrderDetailPag
           <div className="space-y-6">
             <div>
               <h2 className="font-heading text-2xl font-semibold">Evidencias de la orden</h2>
+              {isDelivered ? (
+                <p className="mt-2 rounded-[var(--radius-control)] border border-[rgba(22,163,74,0.18)] bg-[color:var(--success-soft)] px-4 py-3 text-sm font-semibold text-[color:var(--success)]">
+                  Orden entregada con evidencia fotografica registrada.
+                </p>
+              ) : (
+                <p className="mt-2 text-sm text-[color:var(--muted)]">
+                  Debes subir al menos una foto antes de marcar la OT como entregada.
+                </p>
+              )}
             </div>
 
             {evidenceUploadsEnabled ? (
@@ -488,15 +499,19 @@ export default async function WorkOrderDetailPage({ params }: WorkOrderDetailPag
             )}
 
             <div className="grid gap-4 md:grid-cols-2">
-              {workOrder.evidences.map((evidence) => (
+              {workOrder.evidences.map((evidence, index) => (
                 <div
-                  className="rounded-xl border border-[color:var(--border)] bg-white/70 p-3"
+                  className={
+                    isDelivered
+                      ? "rounded-xl border border-[rgba(22,163,74,0.22)] bg-[color:var(--success-soft)] p-3"
+                      : "rounded-xl border border-[color:var(--border)] bg-white/70 p-3"
+                  }
                   key={evidence.id}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     alt={evidence.fileName}
-                    className="h-44 w-full rounded-xl object-cover"
+                    className={index === 0 ? "h-64 w-full rounded-xl object-cover" : "h-44 w-full rounded-xl object-cover"}
                     src={evidence.fileUrl}
                   />
                   <p className="mt-3 text-sm font-semibold text-[color:var(--foreground)]">

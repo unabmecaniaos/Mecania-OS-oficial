@@ -14,6 +14,7 @@ import {
   createInsuranceCaseByLiquidator,
   respondToInsuranceBudget,
 } from "@/modules/insurance-cases/insurance-case.service";
+import { reportLiquidatorBudgetPayment } from "@/modules/payments/payment.service";
 
 export async function createInsuranceCaseAction(
   _previousState: ActionState,
@@ -107,6 +108,56 @@ export async function respondToInsuranceBudgetAction(
 
     return {
       success: successMessage,
+    };
+  } catch (error) {
+    if (isRedirectError(error)) {
+      throw error;
+    }
+
+    return {
+      error: getErrorMessage(error),
+    };
+  }
+}
+
+export async function reportLiquidatorBudgetPaymentAction(
+  budgetId: string,
+  caseId: string,
+  _previousState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    const session = await requireApiUser([UserRole.LIQUIDATOR]);
+    const file = formData.get("proof");
+
+    if (!(file instanceof File) || file.size <= 0) {
+      return {
+        error: "Debes adjuntar un comprobante en PDF o imagen.",
+      };
+    }
+
+    await reportLiquidatorBudgetPayment(
+      budgetId,
+      {
+        file,
+        paymentReference: String(formData.get("paymentReference") ?? ""),
+        note: String(formData.get("note") ?? ""),
+      },
+      session.user.id,
+    );
+
+    revalidateApplicationData();
+    revalidatePath("/liquidador");
+    revalidatePath(`/liquidador/cases/${caseId}`);
+    revalidatePath("/work-orders");
+    revalidatePath("/budgets");
+    await setFlashMessage({
+      message: "Pago reportado correctamente. El taller ya puede validar el comprobante.",
+      tone: "success",
+    });
+
+    return {
+      success: "Pago reportado correctamente. El taller ya puede validar el comprobante.",
     };
   } catch (error) {
     if (isRedirectError(error)) {

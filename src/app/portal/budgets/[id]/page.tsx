@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BudgetStatus, PaymentStatus } from "@prisma/client";
 import { notFound } from "next/navigation";
 
+import { PortalBudgetPaymentForm } from "@/app/portal/budgets/portal-budget-payment-form";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { normalizeError } from "@/lib/errors";
@@ -30,7 +31,14 @@ export default async function CustomerBudgetDetailPage({ params }: CustomerBudge
   });
 
   const paymentStatus = budget.workOrder?.paymentStatus ?? PaymentStatus.PENDING;
-  const canDownloadDocuments = paymentStatus === PaymentStatus.PAID && (budget.workOrder?.billingDocuments.length ?? 0) > 0;
+  const canDownloadDocuments =
+    paymentStatus === PaymentStatus.PAID && (budget.workOrder?.billingDocuments.length ?? 0) > 0;
+  const canTriggerPortalPayment =
+    Boolean(budget.workOrder) &&
+    (budget.status === BudgetStatus.APPROVED ||
+      budget.status === BudgetStatus.PARTIALLY_APPROVED ||
+      budget.status === BudgetStatus.CONVERTED_TO_WORK_ORDER) &&
+    paymentStatus !== PaymentStatus.PAID;
 
   return (
     <div className="space-y-6">
@@ -131,11 +139,23 @@ export default async function CustomerBudgetDetailPage({ params }: CustomerBudge
             </div>
 
             <div className="mt-4 space-y-4">
-              <div className={paymentStatus === PaymentStatus.PAID ? "rounded-xl border border-[rgba(22,163,74,0.18)] bg-[rgba(22,163,74,0.06)] p-4" : "rounded-xl border border-[rgba(217,119,6,0.18)] bg-[rgba(217,119,6,0.06)] p-4"}>
+              <div className={paymentStatus === PaymentStatus.PAID ? "rounded-xl border border-[rgba(22,163,74,0.18)] bg-[rgba(22,163,74,0.06)] p-4" : paymentStatus === PaymentStatus.REPORTED ? "rounded-xl border border-[rgba(37,99,235,0.18)] bg-[rgba(37,99,235,0.06)] p-4" : "rounded-xl border border-[rgba(217,119,6,0.18)] bg-[rgba(217,119,6,0.06)] p-4"}>
                 <p className="text-sm font-semibold text-[color:var(--foreground)]">Estado de pago: {PAYMENT_STATUS_LABELS[paymentStatus]}</p>
                 <p className="mt-1 text-sm text-[color:var(--muted-strong)]">{budget.workOrder ? `Orden asociada: ${budget.workOrder.orderNumber}` : "La orden aun no ha sido generada desde este presupuesto."}</p>
                 {budget.workOrder?.paidAt ? <p className="mt-1 text-sm text-[color:var(--muted)]">Pago confirmado {formatDateTime(budget.workOrder.paidAt)}</p> : null}
+                {paymentStatus === PaymentStatus.REPORTED ? <p className="mt-2 text-sm text-[#1d4ed8]">Tu comprobante ya fue enviado y ahora queda pendiente de validacion por parte del taller.</p> : null}
               </div>
+
+              {canTriggerPortalPayment ? (
+                <div className="rounded-xl border border-[rgba(22,163,74,0.18)] bg-[rgba(22,163,74,0.05)] p-4">
+                  <p className="text-sm font-semibold text-[#166534]">Resumen final a pagar</p>
+                  <p className="mt-2 text-3xl font-semibold text-[#14532d]">{formatCurrency(budget.totalAmount)}</p>
+                  <p className="mt-2 text-sm text-[#166534]">Para el MVP dejamos un portal de pago simulado que marca la orden y el presupuesto como pagados inmediatamente.</p>
+                  <div className="mt-4">
+                    <PortalBudgetPaymentForm budgetId={budget.id} />
+                  </div>
+                </div>
+              ) : null}
 
               {canDownloadDocuments ? (
                 budget.workOrder!.billingDocuments.map((document) => (

@@ -154,11 +154,57 @@ export const workOrderRepository = {
                 issuedAt: "desc",
               },
             },
+            paymentReports: {
+              include: {
+                reportedBy: {
+                  select: {
+                    id: true,
+                    name: true,
+                    role: true,
+                  },
+                },
+                approvedBy: {
+                  select: {
+                    id: true,
+                    name: true,
+                    role: true,
+                  },
+                },
+              },
+              orderBy: {
+                createdAt: "desc",
+              },
+            },
           },
         },
         billingDocuments: {
           orderBy: {
             issuedAt: "desc",
+          },
+        },
+        paymentReports: {
+          include: {
+            reportedBy: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                active: true,
+              },
+            },
+            approvedBy: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                active: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: "desc",
           },
         },
         assignedTechnician: {

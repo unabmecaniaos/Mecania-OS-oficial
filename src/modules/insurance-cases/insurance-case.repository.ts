@@ -117,6 +117,27 @@ const insuranceCaseDetailInclude = {
               createdAt: "desc",
             },
           },
+          paymentReports: {
+            include: {
+              reportedBy: {
+                select: {
+                  id: true,
+                  name: true,
+                  role: true,
+                },
+              },
+              approvedBy: {
+                select: {
+                  id: true,
+                  name: true,
+                  role: true,
+                },
+              },
+            },
+            orderBy: {
+              createdAt: "desc",
+            },
+          },
           statusLogs: {
             include: {
               changedBy: {
@@ -156,6 +177,27 @@ const insuranceCaseDetailInclude = {
         },
       },
       evidences: {
+        orderBy: {
+          createdAt: "desc",
+        },
+      },
+      paymentReports: {
+        include: {
+          reportedBy: {
+            select: {
+              id: true,
+              name: true,
+              role: true,
+            },
+          },
+          approvedBy: {
+            select: {
+              id: true,
+              name: true,
+              role: true,
+            },
+          },
+        },
         orderBy: {
           createdAt: "desc",
         },

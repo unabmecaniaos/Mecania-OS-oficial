@@ -15,6 +15,7 @@ import {
   markWorkOrderAsPaid,
 } from "@/modules/billing/billing.service";
 import { setWorkOrderPartUsage } from "@/modules/inventory/inventory.service";
+import { approvePaymentReport } from "@/modules/payments/payment.service";
 import {
   addWorkOrderEvidence,
   createWorkOrderTask,
@@ -278,6 +279,35 @@ export async function markWorkOrderPaidAction(
   revalidatePath("/portal");
   revalidatePath("/liquidador");
   await setFlashMessage({ message: "Orden y presupuesto marcados como pagados.", tone: "success" });
+  redirect(`/work-orders/${orderId}`);
+}
+
+export async function approvePaymentReportAction(
+  _previousState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const orderId = String(formData.get("orderId") ?? "");
+  const reportId = String(formData.get("reportId") ?? "");
+  const result = await executeServerAction("approvePaymentReportAction", async () => {
+    const session = await requireApiUser([UserRole.ADMIN, UserRole.MECHANIC]);
+
+    await approvePaymentReport(
+      reportId,
+      { paymentReference: String(formData.get("paymentReference") ?? "") },
+      session.user.id,
+    );
+  });
+
+  if (!result.ok) {
+    return result.state;
+  }
+
+  revalidatePath("/work-orders");
+  revalidatePath(`/work-orders/${orderId}`);
+  revalidatePath("/budgets");
+  revalidatePath("/portal");
+  revalidatePath("/liquidador");
+  await setFlashMessage({ message: "Comprobante validado correctamente y pago confirmado.", tone: "success" });
   redirect(`/work-orders/${orderId}`);
 }
 

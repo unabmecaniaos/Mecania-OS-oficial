@@ -189,6 +189,16 @@ enum BillingDocumentType {
   RECEIPT
 }
 
+enum PaymentReportSource {
+  CUSTOMER_PORTAL
+  LIQUIDATOR_PORTAL
+}
+
+enum PaymentReportStatus {
+  REPORTED
+  APPROVED
+}
+
 enum WorkOrderTaskStatus {
   PENDING
   COMPLETED
@@ -222,6 +232,8 @@ model User {
   budgetStatusChanges         BudgetStatusLog[]
   insuranceCases              InsuranceCase[]           @relation("InsuranceCaseLiquidator")
   createdBillingDocuments     BillingDocument[]         @relation("BillingDocumentCreatedBy")
+  reportedPaymentReports      PaymentReport[]           @relation("PaymentReportReportedBy")
+  approvedPaymentReports      PaymentReport[]           @relation("PaymentReportApprovedBy")
 }
 
 model Session {
@@ -324,6 +336,7 @@ model WorkOrder {
   tasks                WorkOrderTask[]
   budget               Budget?
   billingDocuments     BillingDocument[]
+  paymentReports       PaymentReport[]
 
   @@index([clientId, intakeDate])
   @@index([vehicleId, intakeDate])
@@ -618,6 +631,7 @@ model Budget {
   items             BudgetItem[]
   statusLogs        BudgetStatusLog[]
   billingDocuments  BillingDocument[]
+  paymentReports    PaymentReport[]
 
   @@index([clientId, createdAt])
   @@index([vehicleId, createdAt])
@@ -650,6 +664,33 @@ model BillingDocument {
   @@index([workOrderId, issuedAt])
   @@unique([workOrderId, type])
   @@unique([type, folio])
+}
+
+model PaymentReport {
+  id               String              @id @default(cuid())
+  budgetId         String
+  workOrderId      String
+  reportedById     String
+  approvedById     String?
+  source           PaymentReportSource
+  status           PaymentReportStatus @default(REPORTED)
+  paymentReference String?             @db.VarChar(80)
+  note             String?
+  fileUrl          String?
+  storageKey       String?             @unique
+  fileName         String?
+  mimeType         String?
+  sizeBytes        Int?
+  createdAt        DateTime            @default(now())
+  approvedAt       DateTime?
+  budget           Budget              @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  workOrder        WorkOrder           @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  reportedBy       User                @relation("PaymentReportReportedBy", fields: [reportedById], references: [id], onDelete: Restrict)
+  approvedBy       User?               @relation("PaymentReportApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  @@index([budgetId, createdAt])
+  @@index([workOrderId, createdAt])
+  @@index([status, createdAt])
 }
 
 model InsuranceCase {
@@ -750,6 +791,10 @@ model BudgetReferenceCatalog {
   @@index([itemType, active])
   @@index([name])
 }
+
+
+
+
 
 
 

@@ -8,7 +8,9 @@ import { getErrorMessage } from "@/lib/errors";
 import { setFlashMessage } from "@/lib/flash";
 import type { ActionState } from "@/lib/form-state";
 import { revalidateApplicationData } from "@/lib/revalidation";
+import { requireCustomerUser } from "@/modules/auth/auth.service";
 import { respondToCustomerBudget } from "@/modules/customer-portal/customer-portal.service";
+import { confirmCustomerPortalMockPayment } from "@/modules/payments/payment.service";
 
 export async function respondToCustomerBudgetAction(
   budgetId: string,
@@ -46,6 +48,55 @@ export async function respondToCustomerBudgetAction(
         nextStatus === BudgetStatus.APPROVED
           ? "Presupuesto aprobado correctamente."
           : "Presupuesto rechazado correctamente.",
+    };
+  } catch (error) {
+    if (isRedirectError(error)) {
+      throw error;
+    }
+
+    return {
+      error: getErrorMessage(error),
+    };
+  }
+}
+
+export async function confirmCustomerPortalMockPaymentAction(
+  budgetId: string,
+  _previousState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    const session = await requireCustomerUser();
+
+    if (!session.user.clientId) {
+      return {
+        error: "Tu acceso al portal aun no esta habilitado.",
+      };
+    }
+
+    await confirmCustomerPortalMockPayment(
+      budgetId,
+      {
+        paymentReference: String(formData.get("paymentReference") ?? ""),
+        note: String(formData.get("note") ?? ""),
+      },
+      session.user.id,
+      session.user.clientId,
+    );
+
+    revalidateApplicationData();
+    revalidatePath("/portal");
+    revalidatePath(`/portal/budgets/${budgetId}`);
+    revalidatePath("/budgets");
+    revalidatePath("/work-orders");
+    await setFlashMessage({
+      message: "Pago simulado correctamente. La orden y el presupuesto quedaron marcados como pagados.",
+      tone: "success",
+    });
+
+    return {
+      success:
+        "Pago simulado correctamente. La orden y el presupuesto quedaron marcados como pagados.",
     };
   } catch (error) {
     if (isRedirectError(error)) {

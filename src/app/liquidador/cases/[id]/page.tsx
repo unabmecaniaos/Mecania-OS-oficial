@@ -1,19 +1,26 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BudgetStatus, WorkOrderStatus } from "@prisma/client";
+import { BudgetStatus, PaymentStatus, WorkOrderStatus } from "@prisma/client";
 
 import { LiquidatorBudgetResponseForm } from "@/app/liquidador/liquidator-budget-response-form";
+import { LiquidatorPaymentReportForm } from "@/app/liquidador/liquidator-payment-report-form";
 import { BudgetStatusBadge } from "@/modules/budgets/budget-status-badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { normalizeError } from "@/lib/errors";
 import { formatCurrency, formatDate, formatDateTime } from "@/lib/utils";
+import { PAYMENT_STATUS_LABELS } from "@/modules/billing/billing.constants";
 import { BUDGET_ITEM_TYPE_LABELS } from "@/modules/budgets/budget.constants";
 import {
   getLiquidatorInsuranceCaseDetail,
   INSURANCE_CASE_STAGE_LABELS,
 } from "@/modules/insurance-cases/insurance-case.service";
+import {
+  PAYMENT_REPORT_SOURCE_LABELS,
+  PAYMENT_REPORT_STATUS_LABELS,
+} from "@/modules/payments/payment.constants";
+import { isPaymentProofStorageConfigured } from "@/modules/payments/payment.service";
 import { WORK_ORDER_STATUS_LABELS } from "@/modules/work-orders/work-order.constants";
 
 const timelineSteps = ["INGRESADO", "PRESUPUESTADO", "EN_REPARACION", "LISTO"] as const;
@@ -37,6 +44,8 @@ export default async function LiquidatorCaseDetailPage({
   const finalGalleryEnabled =
     currentWorkOrder?.status === WorkOrderStatus.READY_FOR_DELIVERY ||
     currentWorkOrder?.status === WorkOrderStatus.DELIVERED;
+  const paymentStorageEnabled = isPaymentProofStorageConfigured();
+  const paymentStatus = currentWorkOrder?.paymentStatus ?? PaymentStatus.PENDING;
 
   return (
     <div className="space-y-6">
@@ -257,6 +266,56 @@ export default async function LiquidatorCaseDetailPage({
                     {WORK_ORDER_STATUS_LABELS[currentWorkOrder.status]}
                   </p>
                 </div>
+
+                <div className={paymentStatus === PaymentStatus.PAID ? "rounded-xl border border-[rgba(22,163,74,0.18)] bg-[rgba(22,163,74,0.06)] p-4" : paymentStatus === PaymentStatus.REPORTED ? "rounded-xl border border-[rgba(37,99,235,0.18)] bg-[rgba(37,99,235,0.06)] p-4" : "rounded-xl border border-[rgba(217,119,6,0.18)] bg-[rgba(217,119,6,0.06)] p-4"}>
+                  <p className="text-sm font-semibold text-[color:var(--foreground)]">Estado de pago: {PAYMENT_STATUS_LABELS[paymentStatus]}</p>
+                  <p className="mt-1 text-sm text-[color:var(--muted-strong)]">{paymentStatus === PaymentStatus.REPORTED ? "El comprobante ya fue enviado al taller y esta pendiente de validacion." : paymentStatus === PaymentStatus.PAID ? "El taller ya valido el pago asociado a esta orden." : "Aun no se registra un pago para esta orden."}</p>
+                </div>
+
+                {latestBudget ? (
+                  paymentStorageEnabled ? (
+                    <div className="rounded-xl border border-[rgba(37,99,235,0.18)] bg-[rgba(37,99,235,0.05)] p-4">
+                      <p className="text-sm font-semibold text-[#1d4ed8]">Reporte de pago del liquidador</p>
+                      <p className="mt-1 text-sm text-[#1d4ed8]">Adjunta el comprobante en PDF o imagen para que el taller pueda validarlo y dejar la orden como pagada.</p>
+                      <div className="mt-4">
+                        <LiquidatorPaymentReportForm
+                          budgetId={latestBudget.id}
+                          budgetStatus={latestBudget.status}
+                          caseId={insuranceCase.id}
+                          paymentStatus={paymentStatus}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-[rgba(245,158,11,0.28)] bg-[rgba(245,158,11,0.08)] p-4">
+                      <p className="text-sm font-semibold text-[#b45309]">La carga de comprobantes no esta habilitada en este entorno.</p>
+                    </div>
+                  )
+                ) : null}
+
+                {currentWorkOrder.paymentReports.length > 0 ? (
+                  <div className="space-y-3">
+                    <p className="text-sm font-semibold text-[color:var(--foreground)]">Historial de reportes de pago</p>
+                    {currentWorkOrder.paymentReports.map((report) => (
+                      <div className="rounded-xl border border-[color:var(--border)] bg-white/75 p-4" key={report.id}>
+                        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                          <div>
+                            <p className="text-sm font-semibold text-[color:var(--foreground)]">{PAYMENT_REPORT_SOURCE_LABELS[report.source]} / {PAYMENT_REPORT_STATUS_LABELS[report.status]}</p>
+                            <p className="mt-1 text-sm text-[color:var(--muted-strong)]">Reportado por {report.reportedBy.name} / {formatDateTime(report.createdAt)}</p>
+                            {report.paymentReference ? <p className="mt-1 text-sm text-[color:var(--muted)]">Referencia: {report.paymentReference}</p> : null}
+                            {report.note ? <p className="mt-1 text-sm text-[color:var(--muted)]">{report.note}</p> : null}
+                            {report.approvedAt && report.approvedBy ? <p className="mt-1 text-sm text-[#166534]">Validado por {report.approvedBy.name} / {formatDateTime(report.approvedAt)}</p> : null}
+                          </div>
+                          {report.fileUrl ? (
+                            <a className="inline-flex items-center rounded-xl border border-[color:var(--border)] bg-white px-4 py-2 text-sm font-medium text-[color:var(--foreground)]" href={report.fileUrl} rel="noreferrer" target="_blank">
+                              Ver comprobante
+                            </a>
+                          ) : null}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
 
                 <div className="space-y-3">
                   {currentWorkOrder.statusLogs.map((log) => (

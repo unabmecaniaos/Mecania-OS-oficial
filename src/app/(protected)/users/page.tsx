@@ -144,7 +144,7 @@ export default async function UsersPage() {
                     className="rounded-[var(--radius-control)] px-3 py-2 text-sm font-semibold text-[color:var(--accent)] transition hover:bg-[color:var(--info-soft)]"
                     href={`/payroll?mechanicId=${user.id}`}
                   >
-                    Nomina
+                    Pagos
                   </Link>
                 ) : null}
                 <UserRowForm user={user} />

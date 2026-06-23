@@ -18,16 +18,7 @@ const baseLinks = [
 
 export function getSidebarLinks(role: UserRole) {
   if (role === UserRole.ADMIN) {
-    return [
-      ...baseLinks,
-      { href: "/time-off", label: "Permisos" },
-      { href: "/payroll", label: "Nomina" },
-      { href: "/users", label: "Usuarios" },
-    ];
-  }
-
-  if (role === UserRole.MECHANIC) {
-    return [...baseLinks, { href: "/time-off", label: "Mis permisos" }];
+    return [...baseLinks, { href: "/users", label: "Usuarios" }];
   }
 
   return baseLinks;

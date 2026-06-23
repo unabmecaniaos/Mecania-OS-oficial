@@ -45,7 +45,7 @@ export default async function PayrollPage({ searchParams }: PayrollPageProps) {
             Administracion
           </p>
           <h1 className="font-heading text-3xl font-semibold text-[color:var(--foreground)]">
-            Nomina de mecanicos
+            Pagos a mecanicos
           </h1>
           <p className="mt-2 text-sm text-[color:var(--muted-strong)]">
             Registra pagos internos a mecanicos sin mezclarlos con presupuestos ni pagos de clientes.

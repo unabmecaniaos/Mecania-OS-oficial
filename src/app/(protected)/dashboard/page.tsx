@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { UserRole } from "@prisma/client";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -33,7 +34,7 @@ export default async function DashboardPage() {
             </h1>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-end">
             <Link href="/clients/new">
               <Button className="w-full sm:w-auto">Nuevo cliente</Button>
             </Link>
@@ -42,11 +43,22 @@ export default async function DashboardPage() {
                 Ver clientes
               </Button>
             </Link>
-            <Link href="/kanban">
-              <Button className="w-full sm:w-auto" variant="secondary">
-                Abrir Kanban
-              </Button>
-            </Link>
+            {session?.user.role === UserRole.ADMIN || session?.user.role === UserRole.MECHANIC ? (
+              <Link href="/time-off">
+                <Button className="w-full sm:w-auto" variant="secondary">
+                  Permisos
+                </Button>
+              </Link>
+            ) : null}
+            {session?.user.role === UserRole.ADMIN ? (
+              <>
+                <Link href="/payroll">
+                  <Button className="w-full sm:w-auto" variant="secondary">
+                    Pagos
+                  </Button>
+                </Link>
+              </>
+            ) : null}
           </div>
         </div>
       </Card>

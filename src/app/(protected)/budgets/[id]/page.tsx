@@ -26,6 +26,10 @@ export default async function BudgetDetailPage({ params }: BudgetDetailPageProps
           subtotalParts: budget.subtotalParts,
           subtotalLabor: budget.subtotalLabor,
           subtotalSupplies: budget.subtotalSupplies,
+          laborCostAmount: budget.laborCostAmount,
+          workshopMarginPct: budget.workshopMarginPct,
+          discountAmount: budget.discountAmount,
+          vatAmount: budget.vatAmount,
           totalAmount: budget.totalAmount,
           workOrder: budget.workOrder
             ? {
@@ -95,3 +99,6 @@ export default async function BudgetDetailPage({ params }: BudgetDetailPageProps
     </div>
   );
 }
+
+
+

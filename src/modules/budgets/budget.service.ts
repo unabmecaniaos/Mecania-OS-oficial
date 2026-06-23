@@ -12,6 +12,7 @@ import {
   transitionBudgetStatusSchema,
   updateBudgetDraftSchema,
 } from "@/modules/budgets/budget.schemas";
+import { calculateBudgetCommercialTotals } from "@/modules/budgets/budget-calculations";
 
 const budgetLogger = createLogger("budgets");
 
@@ -79,7 +80,7 @@ async function createWorkOrderNumber() {
   return `${prefix}${String(nextSequence).padStart(4, "0")}`;
 }
 
-function calculateTotals(
+function calculateSubtotalTotals(
   items: Array<{ itemType: BudgetItemType; quantity: number; unitPrice: number }>,
 ) {
   const subtotalParts = items
@@ -96,10 +97,31 @@ function calculateTotals(
     subtotalParts,
     subtotalLabor,
     subtotalSupplies,
-    totalAmount: subtotalParts + subtotalLabor + subtotalSupplies,
   };
 }
 
+function calculateBudgetTotals(
+  items: Array<{ itemType: BudgetItemType; quantity: number; unitPrice: number }>,
+  input: { workshopMarginPct: number; discountAmount: number },
+) {
+  const subtotals = calculateSubtotalTotals(items);
+
+  return calculateBudgetCommercialTotals({
+    ...subtotals,
+    laborCostAmount: subtotals.subtotalLabor,
+    workshopMarginPct: input.workshopMarginPct,
+    discountAmount: input.discountAmount,
+  });
+}
+
+function ensureCommercialDiscountIsValid(discountAmount: number, maxDiscountAmount: number) {
+  if (discountAmount > maxDiscountAmount) {
+    throw new AppError(
+      `El descuento no puede superar ${maxDiscountAmount.toLocaleString("es-CL")} para este presupuesto`,
+      422,
+    );
+  }
+}
 const ALLOWED_STATUS_TRANSITIONS: Record<BudgetStatus, BudgetStatus[]> = {
   [BudgetStatus.DRAFT]: [BudgetStatus.SENT],
   [BudgetStatus.SENT]: [
@@ -286,7 +308,11 @@ export async function createWorkshopBudgetDraft(
   }
 
   const draftItems = buildDraftItems(references, inventoryParts, selections, manualSelections);
-  const totals = calculateTotals(draftItems);
+  const totals = calculateBudgetTotals(draftItems, {
+    workshopMarginPct: data.workshopMarginPct,
+    discountAmount: data.discountAmount,
+  });
+  ensureCommercialDiscountIsValid(data.discountAmount, totals.maxDiscountAmount);
   const insuranceCase = await findLatestInsuranceCaseLink(clientId, vehicleId);
 
   const budget = await budgetRepository.createDraft({
@@ -328,7 +354,11 @@ export async function createLiquidatorBudgetDraft(
   }
 
   const draftItems = buildDraftItems(references, inventoryParts, selections, manualSelections);
-  const totals = calculateTotals(draftItems);
+  const totals = calculateBudgetTotals(draftItems, {
+    workshopMarginPct: data.workshopMarginPct,
+    discountAmount: data.discountAmount,
+  });
+  ensureCommercialDiscountIsValid(data.discountAmount, totals.maxDiscountAmount);
 
   return budgetRepository.createDraft({
     budgetNumber: await createBudgetNumber(),
@@ -389,7 +419,11 @@ export async function updateBudgetDraft(
     };
   });
 
-  const totals = calculateTotals(items);
+  const totals = calculateBudgetTotals(items, {
+    workshopMarginPct: data.workshopMarginPct,
+    discountAmount: data.discountAmount,
+  });
+  ensureCommercialDiscountIsValid(data.discountAmount, totals.maxDiscountAmount);
 
   const updatedBudget = await budgetRepository.updateDraft(budgetId, {
     title: data.title,
@@ -553,3 +587,10 @@ export async function createWorkOrderFromBudget(budgetId: string, actorId: strin
 
   return workOrder;
 }
+
+
+
+
+
+
+

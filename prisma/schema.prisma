@@ -579,6 +579,10 @@ model Budget {
   subtotalParts     Int               @default(0)
   subtotalLabor     Int               @default(0)
   subtotalSupplies  Int               @default(0)
+  laborCostAmount   Int               @default(0)
+  workshopMarginPct Int               @default(25)
+  discountAmount    Int               @default(0)
+  vatAmount         Int               @default(0)
   totalAmount       Int               @default(0)
   sentAt            DateTime?
   approvedAt        DateTime?
@@ -705,3 +709,4 @@ model BudgetReferenceCatalog {
   @@index([itemType, active])
   @@index([name])
 }
+

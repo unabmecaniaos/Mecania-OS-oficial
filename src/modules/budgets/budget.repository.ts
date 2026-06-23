@@ -254,9 +254,13 @@ export const budgetRepository = {
       note?: string;
     }>;
     subtotalParts: number;
-    subtotalLabor: number;
-    subtotalSupplies: number;
-    totalAmount: number;
+      subtotalLabor: number;
+      subtotalSupplies: number;
+      laborCostAmount: number;
+      workshopMarginPct: number;
+      discountAmount: number;
+      vatAmount: number;
+      totalAmount: number;
   }) {
     return prisma.budget.create({
       data: {
@@ -272,6 +276,10 @@ export const budgetRepository = {
         subtotalParts: input.subtotalParts,
         subtotalLabor: input.subtotalLabor,
         subtotalSupplies: input.subtotalSupplies,
+        laborCostAmount: input.laborCostAmount,
+        workshopMarginPct: input.workshopMarginPct,
+        discountAmount: input.discountAmount,
+        vatAmount: input.vatAmount,
         totalAmount: input.totalAmount,
         items: {
           create: input.items,
@@ -297,6 +305,10 @@ export const budgetRepository = {
       subtotalParts: number;
       subtotalLabor: number;
       subtotalSupplies: number;
+      laborCostAmount: number;
+      workshopMarginPct: number;
+      discountAmount: number;
+      vatAmount: number;
       totalAmount: number;
       items: Array<{
         id: string;
@@ -327,9 +339,13 @@ export const budgetRepository = {
           summary: input.summary,
           updatedById: input.updatedById,
           subtotalParts: input.subtotalParts,
-          subtotalLabor: input.subtotalLabor,
-          subtotalSupplies: input.subtotalSupplies,
-          totalAmount: input.totalAmount,
+        subtotalLabor: input.subtotalLabor,
+        subtotalSupplies: input.subtotalSupplies,
+        laborCostAmount: input.laborCostAmount,
+        workshopMarginPct: input.workshopMarginPct,
+        discountAmount: input.discountAmount,
+        vatAmount: input.vatAmount,
+        totalAmount: input.totalAmount,
         },
         include: budgetDetailInclude,
       });
@@ -372,3 +388,7 @@ export const budgetRepository = {
     });
   },
 };
+
+
+
+

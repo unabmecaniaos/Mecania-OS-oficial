@@ -1,7 +1,7 @@
 "use client";
 
 import { BudgetItemType } from "@prisma/client";
-import { ChangeEvent, useActionState, useMemo, useState } from "react";
+import { ChangeEvent, useActionState, useMemo, useRef, useState } from "react";
 
 import {
   createLiquidatorBudgetDraftAction,
@@ -16,7 +16,16 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { Textarea } from "@/components/ui/textarea";
 import { initialActionState } from "@/lib/form-state";
 import { formatCurrency } from "@/lib/utils";
-import { BUDGET_ITEM_TYPE_LABELS } from "@/modules/budgets/budget.constants";
+import {
+  BUDGET_ITEM_TYPE_LABELS,
+  BUDGET_VAT_PERCENT,
+  DEFAULT_BUDGET_MARGIN_PCT,
+} from "@/modules/budgets/budget.constants";
+import { calculateBudgetCommercialTotals } from "@/modules/budgets/budget-calculations";
+import {
+  parseBudgetCatalogSelections,
+  parseBudgetManualSelections,
+} from "@/modules/budgets/budget-form";
 
 type ReferenceOption = {
   id: string;
@@ -88,6 +97,182 @@ type LiquidatorBudgetCreateFormProps = {
   defaultInsuranceCaseId?: string;
 };
 
+function readPreviewInteger(value: FormDataEntryValue | null, fallback: number) {
+  const parsed = Number(value ?? fallback);
+  return Number.isFinite(parsed) ? Math.max(Math.round(parsed), 0) : fallback;
+}
+
+function buildDraftBudgetPreview(
+  formData: FormData | null,
+  inventoryParts: InventoryPartOption[],
+  references: ReferenceOption[],
+) {
+  if (!formData) {
+    return calculateBudgetCommercialTotals({
+      subtotalParts: 0,
+      subtotalLabor: 0,
+      subtotalSupplies: 0,
+      workshopMarginPct: DEFAULT_BUDGET_MARGIN_PCT,
+      discountAmount: 0,
+    });
+  }
+
+  const catalogSelections = parseBudgetCatalogSelections(formData);
+  const manualSelections = parseBudgetManualSelections(formData);
+  const items = [
+    ...catalogSelections.flatMap((selection) => {
+      if (selection.source === "inventoryPart") {
+        const part = inventoryParts.find((entry) => entry.id === selection.itemId);
+        if (!part) {
+          return [];
+        }
+
+        return [
+          {
+            itemType: BudgetItemType.PART,
+            quantity: selection.quantity,
+            unitPrice: part.unitPrice,
+          },
+        ];
+      }
+
+      const reference = references.find((entry) => entry.id === selection.itemId);
+      if (!reference) {
+        return [];
+      }
+
+      return [
+        {
+          itemType: reference.itemType,
+          quantity: selection.quantity,
+          unitPrice: reference.unitPrice,
+        },
+      ];
+    }),
+    ...manualSelections.map((selection) => ({
+      itemType: selection.itemType,
+      quantity: selection.quantity,
+      unitPrice: selection.unitPrice,
+    })),
+  ];
+
+  const subtotalParts = items
+    .filter((item) => item.itemType === BudgetItemType.PART)
+    .reduce((total, item) => total + item.quantity * item.unitPrice, 0);
+  const subtotalLabor = items
+    .filter((item) => item.itemType === BudgetItemType.LABOR)
+    .reduce((total, item) => total + item.quantity * item.unitPrice, 0);
+  const subtotalSupplies = items
+    .filter((item) => item.itemType === BudgetItemType.SUPPLY)
+    .reduce((total, item) => total + item.quantity * item.unitPrice, 0);
+
+  return calculateBudgetCommercialTotals({
+    subtotalParts,
+    subtotalLabor,
+    subtotalSupplies,
+    laborCostAmount: subtotalLabor,
+    workshopMarginPct: readPreviewInteger(
+      formData.get("workshopMarginPct"),
+      DEFAULT_BUDGET_MARGIN_PCT,
+    ),
+    discountAmount: readPreviewInteger(formData.get("discountAmount"), 0),
+  });
+}
+
+function BudgetCommercialPlanner({
+  editable = true,
+  preview,
+}: {
+  editable?: boolean;
+  preview: ReturnType<typeof calculateBudgetCommercialTotals>;
+}) {
+  return (
+    <Card className="rounded-2xl border-[rgba(37,99,235,0.14)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(239,246,255,0.94))]">
+      <div className="space-y-5">
+        <div>
+          <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--muted)]">
+            Logica comercial
+          </p>
+          <h2 className="mt-2 font-heading text-2xl font-semibold">
+            Margen, descuento e IVA del presupuesto
+          </h2>
+          <p className="mt-2 text-sm text-[color:var(--muted-strong)]">
+            El total final se actualiza mientras agregas repuestos, mano de obra y suministros al borrador.
+          </p>
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-[color:var(--muted-strong)]" htmlFor="workshopMarginPct">
+              Margen del taller (%)
+            </label>
+            <Input
+              defaultValue={DEFAULT_BUDGET_MARGIN_PCT}
+              disabled={!editable}
+              id="workshopMarginPct"
+              max="999"
+              min="0"
+              name="workshopMarginPct"
+              type="number"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-[color:var(--muted-strong)]" htmlFor="discountAmount">
+              Descuento comercial
+            </label>
+            <Input
+              defaultValue="0"
+              disabled={!editable}
+              id="discountAmount"
+              max={preview.maxDiscountAmount}
+              min="0"
+              name="discountAmount"
+              type="number"
+            />
+            <p className="text-xs text-[color:var(--muted)]">
+              Maximo sugerido: {formatCurrency(preview.maxDiscountAmount)}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <PreviewStat label="Base comercial" value={formatCurrency(preview.commercialBase)} />
+          <PreviewStat label="Margen aplicado" tone="info" value={formatCurrency(preview.marginAmount)} />
+          <PreviewStat label={`IVA ${BUDGET_VAT_PERCENT}%`} tone="warning" value={formatCurrency(preview.vatAmount)} />
+          <PreviewStat label="Total final" tone="success" value={formatCurrency(preview.totalAmount)} />
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function PreviewStat({
+  label,
+  tone = "default",
+  value,
+}: {
+  label: string;
+  tone?: "default" | "info" | "warning" | "success";
+  value: string;
+}) {
+  const className =
+    tone === "info"
+      ? "rounded-xl border border-[rgba(37,99,235,0.18)] bg-[rgba(37,99,235,0.06)] p-4"
+      : tone === "warning"
+        ? "rounded-xl border border-[rgba(217,119,6,0.18)] bg-[rgba(217,119,6,0.08)] p-4"
+        : tone === "success"
+          ? "rounded-xl border border-[rgba(22,163,74,0.18)] bg-[rgba(22,163,74,0.08)] p-4"
+          : "rounded-xl border border-[color:var(--border)] bg-white p-4";
+
+  return (
+    <div className={className}>
+      <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--muted)]">{label}</p>
+      <p className="mt-3 text-2xl font-semibold text-[color:var(--foreground)]">{value}</p>
+    </div>
+  );
+}
+
 export function WorkshopBudgetCreateForm({
   clients,
   selfInspections,
@@ -100,6 +285,12 @@ export function WorkshopBudgetCreateForm({
   const [state, formAction] = useActionState(
     createWorkshopBudgetDraftAction,
     initialActionState,
+  );
+  const formRef = useRef<HTMLFormElement>(null);
+  const [previewVersion, setPreviewVersion] = useState(0);
+  const preview = useMemo(
+    () => buildDraftBudgetPreview(formRef.current ? new FormData(formRef.current) : null, inventoryParts, references),
+    [inventoryParts, previewVersion, references],
   );
   const initialInspection = selfInspections.find(
     (inspection) => inspection.id === defaultSelfInspectionId,
@@ -153,7 +344,13 @@ export function WorkshopBudgetCreateForm({
   }
 
   return (
-    <form action={formAction} className="space-y-6">
+    <form
+      action={formAction}
+      className="space-y-6"
+      onChangeCapture={() => setPreviewVersion((current) => current + 1)}
+      onInputCapture={() => setPreviewVersion((current) => current + 1)}
+      ref={formRef}
+    >
       <input name="clientId" type="hidden" value={selectedClientId} />
       <input name="vehicleId" type="hidden" value={selectedVehicleId} />
 
@@ -268,6 +465,7 @@ export function WorkshopBudgetCreateForm({
         </div>
       </Card>
 
+      <BudgetCommercialPlanner preview={preview} />
       <BudgetItemsBuilder inventoryParts={inventoryParts} references={references} />
       <BudgetSubmitCard
         error={state.error}
@@ -287,6 +485,12 @@ export function LiquidatorBudgetCreateForm({
   const [state, formAction] = useActionState(
     createLiquidatorBudgetDraftAction,
     initialActionState,
+  );
+  const formRef = useRef<HTMLFormElement>(null);
+  const [previewVersion, setPreviewVersion] = useState(0);
+  const preview = useMemo(
+    () => buildDraftBudgetPreview(formRef.current ? new FormData(formRef.current) : null, inventoryParts, references),
+    [inventoryParts, previewVersion, references],
   );
   const [selectedInsuranceCaseId, setSelectedInsuranceCaseId] = useState(
     defaultInsuranceCaseId ?? "",
@@ -320,7 +524,13 @@ export function LiquidatorBudgetCreateForm({
   }
 
   return (
-    <form action={formAction} className="space-y-6">
+    <form
+      action={formAction}
+      className="space-y-6"
+      onChangeCapture={() => setPreviewVersion((current) => current + 1)}
+      onInputCapture={() => setPreviewVersion((current) => current + 1)}
+      ref={formRef}
+    >
       <Card className="overflow-hidden rounded-2xl bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(247,250,254,0.96))]">
         <div className="space-y-6">
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -366,7 +576,7 @@ export function LiquidatorBudgetCreateForm({
                 <option value="">Selecciona un caso de liquidadora</option>
                 {insuranceCases.map((insuranceCase) => (
                   <option key={insuranceCase.id} value={insuranceCase.id}>
-                    {insuranceCase.caseNumber} / {insuranceCase.vehicleLabel} /{" "}
+                    {insuranceCase.caseNumber} / {insuranceCase.vehicleLabel} / {" "}
                     {insuranceCase.liquidatorName}
                   </option>
                 ))}
@@ -448,6 +658,7 @@ export function LiquidatorBudgetCreateForm({
         </div>
       </Card>
 
+      <BudgetCommercialPlanner preview={preview} />
       <BudgetItemsBuilder inventoryParts={inventoryParts} references={references} />
       <BudgetSubmitCard
         error={state.error}
@@ -457,7 +668,6 @@ export function LiquidatorBudgetCreateForm({
     </form>
   );
 }
-
 function buildLiquidatorBudgetTitle(insuranceCase: LiquidatorBudgetCreateFormProps["insuranceCases"][number]) {
   return `Presupuesto ${insuranceCase.vehicleName} ${insuranceCase.vehicleIdentifier}`;
 }
@@ -1023,3 +1233,4 @@ function SelectionStat({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+

@@ -3,6 +3,11 @@ import { BudgetStatus } from "@prisma/client";
 
 import { optionalText, requiredInteger, requiredText } from "@/lib/validation";
 
+const budgetCommercialSchema = z.object({
+  workshopMarginPct: requiredInteger(0, 999),
+  discountAmount: requiredInteger(0, 50_000_000),
+});
+
 export const createWorkshopBudgetSchema = z
   .object({
     clientId: optionalText(40),
@@ -11,6 +16,7 @@ export const createWorkshopBudgetSchema = z
     title: requiredText(5, 120),
     summary: optionalText(1200),
   })
+  .merge(budgetCommercialSchema)
   .superRefine((data, context) => {
     if (data.selfInspectionId) {
       return;
@@ -33,16 +39,20 @@ export const createWorkshopBudgetSchema = z
     }
   });
 
-export const createLiquidatorBudgetSchema = z.object({
-  insuranceCaseId: requiredText(1, 40),
-  title: requiredText(5, 120),
-  summary: optionalText(1200),
-});
+export const createLiquidatorBudgetSchema = z
+  .object({
+    insuranceCaseId: requiredText(1, 40),
+    title: requiredText(5, 120),
+    summary: optionalText(1200),
+  })
+  .merge(budgetCommercialSchema);
 
-export const updateBudgetDraftSchema = z.object({
-  title: requiredText(5, 120),
-  summary: optionalText(1200),
-});
+export const updateBudgetDraftSchema = z
+  .object({
+    title: requiredText(5, 120),
+    summary: optionalText(1200),
+  })
+  .merge(budgetCommercialSchema);
 
 export const budgetLineUpdateSchema = z.object({
   quantity: requiredInteger(1, 999),

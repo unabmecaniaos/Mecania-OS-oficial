@@ -42,3 +42,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+mecaniaos-main-demo.tar
+main-release.zip
+devserver.log
+devserver.err.log

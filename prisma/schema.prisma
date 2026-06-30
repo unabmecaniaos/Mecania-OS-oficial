@@ -183,6 +183,12 @@ enum WorkOrderTaskStatus {
   COMPLETED
 }
 
+enum TimeOffRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model User {
   id                          String                    @id @default(cuid())
   name                        String
@@ -210,6 +216,7 @@ model User {
   updatedBudgets              Budget[]                  @relation("BudgetUpdatedBy")
   budgetStatusChanges         BudgetStatusLog[]
   insuranceCases              InsuranceCase[]           @relation("InsuranceCaseLiquidator")
+  timeOffRequests             TimeOffRequest[]
 }
 
 model Session {
@@ -704,4 +711,19 @@ model BudgetReferenceCatalog {
 
   @@index([itemType, active])
   @@index([name])
+}
+
+model TimeOffRequest {
+  id        String               @id @default(cuid())
+  userId    String
+  startDate DateTime
+  endDate   DateTime
+  reason    String
+  status    TimeOffRequestStatus @default(PENDING)
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([status])
 }

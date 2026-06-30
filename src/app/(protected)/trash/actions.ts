@@ -39,6 +39,8 @@ const COMMON_REVALIDATE_PATHS = [
   "/budgets/trash",
   "/inventory",
   "/inventory/trash",
+  "/insurance-cases",
+  "/liquidador",
   "/self-inspections",
   "/portal",
 ] as const;

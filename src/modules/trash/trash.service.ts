@@ -54,6 +54,22 @@ async function hardDeleteWorkOrderTx(tx: TrashTx, id: string) {
   });
 }
 
+async function deleteInsuranceCasesForVehicleTx(tx: TrashTx, vehicleId: string) {
+  await tx.insuranceCase.deleteMany({
+    where: {
+      vehicleId,
+    },
+  });
+}
+
+async function deleteInsuranceCasesForClientTx(tx: TrashTx, clientId: string) {
+  await tx.insuranceCase.deleteMany({
+    where: {
+      clientId,
+    },
+  });
+}
+
 async function hardDeleteVehicleTx(tx: TrashTx, id: string) {
   const [workOrders, budgets, selfInspections] = await Promise.all([
     tx.workOrder.findMany({
@@ -82,6 +98,8 @@ async function hardDeleteVehicleTx(tx: TrashTx, id: string) {
     await hardDeleteSelfInspectionTx(tx, inspection.id);
   }
 
+  await deleteInsuranceCasesForVehicleTx(tx, id);
+
   await tx.vehicle.delete({
     where: { id },
   });
@@ -109,6 +127,8 @@ async function hardDeleteClientTx(tx: TrashTx, id: string) {
   for (const inspection of selfInspections) {
     await hardDeleteSelfInspectionTx(tx, inspection.id);
   }
+
+  await deleteInsuranceCasesForClientTx(tx, id);
 
   await tx.user.deleteMany({
     where: {
@@ -403,6 +423,11 @@ export async function trashClient(id: string) {
         },
         data: trashState,
       }),
+      tx.insuranceCase.deleteMany({
+        where: {
+          clientId: id,
+        },
+      }),
     ]);
   });
 }
@@ -520,6 +545,11 @@ export async function trashVehicle(id: string) {
           deletedAt: null,
         },
         data: trashState,
+      }),
+      tx.insuranceCase.deleteMany({
+        where: {
+          vehicleId: id,
+        },
       }),
     ]);
   });

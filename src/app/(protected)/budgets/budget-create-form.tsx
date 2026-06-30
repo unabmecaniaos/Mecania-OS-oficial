@@ -290,9 +290,11 @@ export function WorkshopBudgetCreateForm({
   const [preview, setPreview] = useState(() => buildDraftBudgetPreview(null, inventoryParts, references));
   
   function updatePreview() {
-    if (formRef.current) {
-      setPreview(buildDraftBudgetPreview(new FormData(formRef.current), inventoryParts, references));
-    }
+    setTimeout(() => {
+      if (formRef.current) {
+        setPreview(buildDraftBudgetPreview(new FormData(formRef.current), inventoryParts, references));
+      }
+    }, 0);
   }
 
   const initialInspection = selfInspections.find(
@@ -350,8 +352,7 @@ export function WorkshopBudgetCreateForm({
     <form
       action={formAction}
       className="space-y-6"
-      onChangeCapture={updatePreview}
-      onInputCapture={updatePreview}
+      onChange={updatePreview}
       ref={formRef}
     >
       <input name="clientId" type="hidden" value={selectedClientId} />
@@ -493,9 +494,11 @@ export function LiquidatorBudgetCreateForm({
   const [preview, setPreview] = useState(() => buildDraftBudgetPreview(null, inventoryParts, references));
   
   function updatePreview() {
-    if (formRef.current) {
-      setPreview(buildDraftBudgetPreview(new FormData(formRef.current), inventoryParts, references));
-    }
+    setTimeout(() => {
+      if (formRef.current) {
+        setPreview(buildDraftBudgetPreview(new FormData(formRef.current), inventoryParts, references));
+      }
+    }, 0);
   }
 
   const [selectedInsuranceCaseId, setSelectedInsuranceCaseId] = useState(
@@ -533,8 +536,7 @@ export function LiquidatorBudgetCreateForm({
     <form
       action={formAction}
       className="space-y-6"
-      onChangeCapture={updatePreview}
-      onInputCapture={updatePreview}
+      onChange={updatePreview}
       ref={formRef}
     >
       <Card className="overflow-hidden rounded-2xl bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(247,250,254,0.96))]">

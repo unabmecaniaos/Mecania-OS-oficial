@@ -4,6 +4,7 @@ import type { ChangeEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { compressImage } from "@/lib/image-compression";
 
 type PhotoSlotCardProps = {
   slot: {
@@ -30,11 +31,17 @@ export function PhotoSlotCard({
   onUpload,
   onDelete,
 }: PhotoSlotCardProps) {
-  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+  async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
 
     if (file) {
-      onUpload(file, slot.photoType);
+      try {
+        const compressedFile = await compressImage(file);
+        onUpload(compressedFile, slot.photoType);
+      } catch (error) {
+        console.error("Image compression failed:", error);
+        onUpload(file, slot.photoType);
+      }
     }
   }
 
@@ -68,7 +75,7 @@ export function PhotoSlotCard({
           <p className="text-xs text-[color:var(--muted-strong)]">{photo.fileName}</p>
           <div className="flex flex-wrap gap-3">
             <label>
-              <input accept="image/*" className="hidden" onChange={handleFileChange} type="file" />
+              <input accept="image/*" capture="environment" className="hidden" onChange={handleFileChange} type="file" />
               <span className="inline-flex min-h-11 cursor-pointer items-center rounded-full border border-[color:var(--border-strong)] bg-white px-5 text-sm font-semibold text-[color:var(--foreground)]">
                 Reemplazar
               </span>
@@ -80,7 +87,7 @@ export function PhotoSlotCard({
         </div>
       ) : (
         <label className="flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-[20px] border border-dashed border-[color:var(--border-strong)] bg-[color:var(--surface)] px-4 text-center">
-          <input accept="image/*" className="hidden" onChange={handleFileChange} type="file" />
+          <input accept="image/*" capture="environment" className="hidden" onChange={handleFileChange} type="file" />
           <span className="text-sm font-semibold text-[color:var(--foreground)]">
             {uploading ? "Subiendo imagen..." : "Seleccionar foto"}
           </span>

@@ -16,6 +16,7 @@ import { Card } from "@/components/ui/card";
 import { FormErrorSummary } from "@/components/ui/form-error-summary";
 import { FormMessage } from "@/components/ui/form-message";
 import { Input } from "@/components/ui/input";
+import { StickyFormHeader } from "@/components/ui/sticky-form-header";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Textarea } from "@/components/ui/textarea";
 import { initialActionState } from "@/lib/form-state";
@@ -121,6 +122,26 @@ export function BudgetDetailForm({ budget, workOrderStockPlan }: BudgetDetailFor
       <FormErrorSummary
         message={state.error ?? transitionState.error ?? createWorkOrderState.error}
       />
+      <StickyFormHeader
+        actions={
+          <>
+            {isEditable ? (
+              <Button form="budget-detail-update-form" type="submit" variant="secondary">
+                Guardar ajustes
+              </Button>
+            ) : null}
+            {!isLiquidatorBudget && isDraft ? (
+              <Button form="budget-transition-form" name="nextStatus" type="submit" value={BudgetStatus.SENT}>
+                Enviar al cliente
+              </Button>
+            ) : null}
+          </>
+        }
+        description={`${budget.client.fullName} / ${budget.vehicle.make} ${budget.vehicle.model} / ${budget.vehicle.plate ?? budget.vehicle.vin}`}
+        eyebrow={budget.budgetNumber}
+        status={<BudgetStatusBadge status={budget.status} />}
+        title={budget.title}
+      />
       <Card className="rounded-2xl">
         <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
           <div className="space-y-2">
@@ -197,7 +218,7 @@ export function BudgetDetailForm({ budget, workOrderStockPlan }: BudgetDetailFor
             </p>
           </div>
         ) : (
-          <form action={transitionAction} className="space-y-4">
+          <form action={transitionAction} className="space-y-4" id="budget-transition-form">
             <div className="space-y-1">
               <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--muted)]">
                 Flujo de aprobacion
@@ -280,7 +301,7 @@ export function BudgetDetailForm({ budget, workOrderStockPlan }: BudgetDetailFor
         ) : null}
       </Card>
 
-      <form action={formAction} className="space-y-6">
+      <form action={formAction} className="space-y-6" id="budget-detail-update-form">
         <Card className="rounded-2xl">
           <div className="grid gap-4">
             <div className="space-y-2">
@@ -290,7 +311,14 @@ export function BudgetDetailForm({ budget, workOrderStockPlan }: BudgetDetailFor
               >
                 Titulo
               </label>
-              <Input defaultValue={budget.title} disabled={!isEditable} id="title" name="title" />
+              <Input
+                defaultValue={budget.title}
+                disabled={!isEditable}
+                id="title"
+                minLength={5}
+                name="title"
+                required={isEditable}
+              />
             </div>
             <div className="space-y-2">
               <label
@@ -377,6 +405,7 @@ export function BudgetDetailForm({ budget, workOrderStockPlan }: BudgetDetailFor
                     id={`lineQty:${item.id}`}
                     min="1"
                     name={`lineQty:${item.id}`}
+                    required={isEditable}
                     type="number"
                   />
                   <p className="text-xs text-[color:var(--muted)]">
@@ -397,6 +426,7 @@ export function BudgetDetailForm({ budget, workOrderStockPlan }: BudgetDetailFor
                     id={`linePrice:${item.id}`}
                     min="0"
                     name={`linePrice:${item.id}`}
+                    required={isEditable}
                     type="number"
                   />
                   <p className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] px-4 py-3 text-sm font-semibold text-[color:var(--foreground)]">

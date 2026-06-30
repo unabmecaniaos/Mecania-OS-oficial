@@ -10,7 +10,9 @@ import {
 } from "@/lib/supabase-storage";
 
 const MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024;
-const ALLOWED_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+export const WORK_ORDER_EVIDENCE_ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+
+const ALLOWED_MIME_TYPES = new Set<string>(WORK_ORDER_EVIDENCE_ALLOWED_MIME_TYPES);
 
 const mimeExtensionMap: Record<string, string> = {
   "image/jpeg": ".jpg",

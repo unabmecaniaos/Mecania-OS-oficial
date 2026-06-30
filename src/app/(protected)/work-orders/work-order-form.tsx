@@ -8,6 +8,7 @@ import { FormErrorSummary } from "@/components/ui/form-error-summary";
 import { FormMessage } from "@/components/ui/form-message";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { StickyFormHeader } from "@/components/ui/sticky-form-header";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Textarea } from "@/components/ui/textarea";
 import { initialActionState } from "@/lib/form-state";
@@ -91,6 +92,18 @@ export function WorkOrderForm({
 
   return (
     <form action={formAction} className="space-y-5">
+      <StickyFormHeader
+        actions={
+          <SubmitButton
+            className="w-full sm:w-auto"
+            label="Crear orden de trabajo"
+            pendingLabel="Guardando orden..."
+          />
+        }
+        description="Registra cliente, vehiculo, flujo mecanica/pintura, responsables y fechas en una sola pagina."
+        eyebrow="Nueva OT"
+        title="Crear orden de trabajo"
+      />
       <FormErrorSummary message={state.error} />
       {contextSummary ? (
         <div className="rounded-2xl border border-[rgba(37,99,235,0.14)] bg-[rgba(37,99,235,0.06)] p-4">
@@ -125,6 +138,7 @@ export function WorkOrderForm({
             id="clientId"
             name={lockClientVehicle ? undefined : "clientId"}
             onChange={handleClientChange}
+            required={!lockClientVehicle}
             value={selectedClientId}
           >
             <option value="">Selecciona un cliente</option>
@@ -145,6 +159,7 @@ export function WorkOrderForm({
             id="vehicleId"
             name={lockClientVehicle ? undefined : "vehicleId"}
             onChange={(event) => setSelectedVehicleId(event.target.value)}
+            required={!lockClientVehicle}
             value={selectedVehicleId}
           >
             <option value="">
@@ -165,8 +180,10 @@ export function WorkOrderForm({
           <Textarea
             defaultValue={defaultReason}
             id="reason"
+            minLength={5}
             name="reason"
             placeholder="Describir el motivo principal del ingreso"
+            required
           />
         </div>
 

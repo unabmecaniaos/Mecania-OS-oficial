@@ -14,6 +14,7 @@ import { FormErrorSummary } from "@/components/ui/form-error-summary";
 import { FormMessage } from "@/components/ui/form-message";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { StickyFormHeader } from "@/components/ui/sticky-form-header";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Textarea } from "@/components/ui/textarea";
 import { initialActionState } from "@/lib/form-state";
@@ -166,6 +167,18 @@ export function WorkshopBudgetCreateForm({
     <form action={formAction} className="space-y-6">
       <input name="clientId" type="hidden" value={selectedClientId} />
       <input name="vehicleId" type="hidden" value={selectedVehicleId} />
+      <StickyFormHeader
+        actions={
+          <SubmitButton
+            className="w-full sm:w-auto"
+            label="Crear presupuesto taller"
+            pendingLabel="Creando presupuesto..."
+          />
+        }
+        description="Completa cliente, vehiculo, repuestos y referencias en una sola vista vertical."
+        eyebrow="Nuevo presupuesto"
+        title="Presupuesto cliente taller"
+      />
       <FormErrorSummary message={state.error} />
 
       <Card className="overflow-hidden border-[#d4def0] bg-[linear-gradient(180deg,#ffffff_0%,#f7faff_100%)] shadow-[0_18px_44px_rgba(15,23,42,0.08)]">
@@ -220,6 +233,7 @@ export function WorkshopBudgetCreateForm({
                 disabled={Boolean(selectedInspection)}
                 id="clientId"
                 onChange={handleClientChange}
+                required={!selectedInspection}
                 value={selectedClientId}
               >
                 <option value="">Selecciona un cliente del taller</option>
@@ -239,6 +253,7 @@ export function WorkshopBudgetCreateForm({
                 disabled={!selectedClientId || Boolean(selectedInspection)}
                 id="vehicleId"
                 onChange={(event) => setSelectedVehicleId(event.target.value)}
+                required={!selectedInspection}
                 value={selectedVehicleId}
               >
                 <option value="">
@@ -260,8 +275,10 @@ export function WorkshopBudgetCreateForm({
               </label>
               <Input
                 id="title"
+                minLength={5}
                 name="title"
                 placeholder="Ej. Reparacion frenos delanteros y mantencion"
+                required
               />
             </div>
 
@@ -342,6 +359,18 @@ export function LiquidatorBudgetCreateForm({
 
   return (
     <form action={formAction} className="space-y-6">
+      <StickyFormHeader
+        actions={
+          <SubmitButton
+            className="w-full sm:w-auto"
+            label="Crear presupuesto liquidadora"
+            pendingLabel="Creando presupuesto..."
+          />
+        }
+        description="Selecciona el caso, revisa el contexto del siniestro y arma el presupuesto en scroll continuo."
+        eyebrow="Nuevo presupuesto"
+        title="Presupuesto cliente liquidadora"
+      />
       <FormErrorSummary message={state.error} />
       <Card className="overflow-hidden border-[#d4def0] bg-[linear-gradient(180deg,#ffffff_0%,#f7faff_100%)] shadow-[0_18px_44px_rgba(15,23,42,0.08)]">
         <div className="space-y-6">
@@ -383,6 +412,7 @@ export function LiquidatorBudgetCreateForm({
                 id="insuranceCaseId"
                 name="insuranceCaseId"
                 onChange={handleInsuranceCaseChange}
+                required
                 value={selectedInsuranceCaseId}
               >
                 <option value="">Selecciona un caso de liquidadora</option>
@@ -434,9 +464,11 @@ export function LiquidatorBudgetCreateForm({
               </label>
               <Input
                 id="title"
+                minLength={5}
                 name="title"
                 onChange={(event) => setTitle(event.target.value)}
                 placeholder="Titulo del presupuesto"
+                required
                 value={title}
               />
             </div>

@@ -69,6 +69,7 @@ export default async function WorkOrderDetailPage({ params }: WorkOrderDetailPag
     tasks: workOrder.tasks,
   });
   const isDelivered = workOrder.status === WorkOrderStatus.DELIVERED;
+  const primaryEvidence = workOrder.evidences[0];
 
   return (
     <div className="space-y-6">
@@ -473,9 +474,13 @@ export default async function WorkOrderDetailPage({ params }: WorkOrderDetailPag
           <div className="space-y-6">
             <div>
               <h2 className="font-heading text-2xl font-semibold">Evidencias de la orden</h2>
-              {isDelivered ? (
+              {isDelivered && workOrder.evidences.length > 0 ? (
                 <p className="mt-2 rounded-[var(--radius-control)] border border-[rgba(22,163,74,0.18)] bg-[color:var(--success-soft)] px-4 py-3 text-sm font-semibold text-[color:var(--success)]">
                   Orden entregada con evidencia fotografica registrada.
+                </p>
+              ) : isDelivered ? (
+                <p className="mt-2 rounded-[var(--radius-control)] border border-[rgba(220,38,38,0.18)] bg-[#fef2f2] px-4 py-3 text-sm font-semibold text-[#991b1b]">
+                  Esta orden fue marcada como entregada antes del bloqueo actual y no tiene evidencia fotografica.
                 </p>
               ) : (
                 <p className="mt-2 text-sm text-[color:var(--muted)]">
@@ -498,8 +503,39 @@ export default async function WorkOrderDetailPage({ params }: WorkOrderDetailPag
               </div>
             )}
 
-            <div className="grid gap-4 md:grid-cols-2">
-              {workOrder.evidences.map((evidence, index) => (
+            {primaryEvidence ? (
+              <a
+                className="group block overflow-hidden rounded-2xl border border-[color:var(--border)] bg-white/80 p-3 transition hover:border-[color:var(--accent)]"
+                href={primaryEvidence.fileUrl}
+                rel="noreferrer"
+                target="_blank"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  alt={primaryEvidence.fileName}
+                  className="h-[min(52vh,460px)] w-full rounded-xl object-cover transition-transform group-hover:scale-[1.01]"
+                  src={primaryEvidence.fileUrl}
+                />
+                <div className="mt-3 flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-[color:var(--foreground)]">
+                      {primaryEvidence.fileName}
+                    </p>
+                    {primaryEvidence.note ? (
+                      <p className="mt-1 text-xs text-[color:var(--muted-strong)]">
+                        {primaryEvidence.note}
+                      </p>
+                    ) : null}
+                  </div>
+                  <p className="text-xs text-[color:var(--muted)]">
+                    {primaryEvidence.uploadedBy.name} / {formatDateTime(primaryEvidence.createdAt)}
+                  </p>
+                </div>
+              </a>
+            ) : null}
+
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {workOrder.evidences.slice(primaryEvidence ? 1 : 0).map((evidence) => (
                 <div
                   className={
                     isDelivered
@@ -511,7 +547,7 @@ export default async function WorkOrderDetailPage({ params }: WorkOrderDetailPag
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     alt={evidence.fileName}
-                    className={index === 0 ? "h-64 w-full rounded-xl object-cover" : "h-44 w-full rounded-xl object-cover"}
+                    className="h-44 w-full rounded-xl object-cover"
                     src={evidence.fileUrl}
                   />
                   <p className="mt-3 text-sm font-semibold text-[color:var(--foreground)]">

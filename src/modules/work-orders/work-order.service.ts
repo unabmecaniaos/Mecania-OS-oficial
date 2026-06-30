@@ -21,7 +21,10 @@ import {
   updateWorkOrderStatusSchema,
   updateWorkOrderTaskStatusSchema,
 } from "@/modules/work-orders/work-order.schemas";
-import { saveWorkOrderEvidenceFile } from "@/modules/work-orders/work-order.storage";
+import {
+  saveWorkOrderEvidenceFile,
+  WORK_ORDER_EVIDENCE_ALLOWED_MIME_TYPES,
+} from "@/modules/work-orders/work-order.storage";
 import { findLatestInsuranceCaseLink } from "@/modules/insurance-cases/insurance-case.service";
 import { listMechanics } from "@/modules/users/user.service";
 
@@ -65,6 +68,9 @@ async function assertCanMarkAsDelivered(workOrderId: string, nextStatus: WorkOrd
   const evidenceCount = await prisma.workOrderEvidence.count({
     where: {
       workOrderId,
+      mimeType: {
+        in: [...WORK_ORDER_EVIDENCE_ALLOWED_MIME_TYPES],
+      },
     },
   });
 

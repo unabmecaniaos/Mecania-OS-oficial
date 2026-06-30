@@ -10,6 +10,7 @@ import { updateWorkOrderFlowAction } from "@/app/(protected)/work-orders/actions
 import { FormErrorSummary } from "@/components/ui/form-error-summary";
 import { FormMessage } from "@/components/ui/form-message";
 import { Select } from "@/components/ui/select";
+import { StickyFormHeader } from "@/components/ui/sticky-form-header";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { initialActionState } from "@/lib/form-state";
 import {
@@ -49,6 +50,18 @@ export function WorkOrderFlowForm({
   return (
     <form action={formAction} className="space-y-5">
       <input name="orderId" type="hidden" value={orderId} />
+      <StickyFormHeader
+        actions={
+          <SubmitButton
+            className="w-full sm:w-auto"
+            label="Actualizar flujo operativo"
+            pendingLabel="Actualizando..."
+          />
+        }
+        description="Ajusta mecanica, pintura, responsables y subestados sin cambiar de pantalla."
+        eyebrow="Flujo operativo"
+        title="Mecanica y pintura"
+      />
       <FormErrorSummary message={state.error} />
 
       <div className="space-y-2">

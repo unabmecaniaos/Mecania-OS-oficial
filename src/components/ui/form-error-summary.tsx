@@ -10,11 +10,23 @@ export function FormErrorSummary({ message }: { message?: string }) {
       return;
     }
 
-    const target = document.querySelector("[data-form-error-summary]");
+    const summary = document.querySelector("[data-form-error-summary]");
+    const form = summary?.closest("form") ?? document;
+    const invalidField = form.querySelector<HTMLElement>(
+      "[aria-invalid='true'], [data-invalid='true'], input:invalid, select:invalid, textarea:invalid",
+    );
+    const target = invalidField ?? summary;
+
     target?.scrollIntoView({
       behavior: "smooth",
       block: "center",
     });
+
+    if (invalidField && "focus" in invalidField) {
+      invalidField.focus({
+        preventScroll: true,
+      });
+    }
   }, [message]);
 
   if (!message) {

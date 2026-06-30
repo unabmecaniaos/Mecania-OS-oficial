@@ -210,6 +210,8 @@ model User {
   updatedBudgets              Budget[]                  @relation("BudgetUpdatedBy")
   budgetStatusChanges         BudgetStatusLog[]
   insuranceCases              InsuranceCase[]           @relation("InsuranceCaseLiquidator")
+  paymentsReceived            MechanicPayment[]         @relation("MechanicPaymentsReceived")
+  paymentsIssued              MechanicPayment[]         @relation("MechanicPaymentsIssued")
 }
 
 model Session {
@@ -704,4 +706,28 @@ model BudgetReferenceCatalog {
 
   @@index([itemType, active])
   @@index([name])
+}
+
+enum PaymentConcept {
+  BASE_SALARY
+  ORDER_BONUS
+  ADVANCE_PAYMENT
+}
+
+model MechanicPayment {
+  id          String         @id @default(cuid())
+  mechanicId  String
+  adminId     String
+  amount      Int
+  paymentDate DateTime
+  concept     PaymentConcept
+  note        String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  mechanic    User           @relation("MechanicPaymentsReceived", fields: [mechanicId], references: [id], onDelete: Restrict)
+  admin       User           @relation("MechanicPaymentsIssued", fields: [adminId], references: [id], onDelete: Restrict)
+
+  @@index([mechanicId, paymentDate])
+  @@index([adminId, paymentDate])
 }

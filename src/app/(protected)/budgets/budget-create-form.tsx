@@ -287,11 +287,14 @@ export function WorkshopBudgetCreateForm({
     initialActionState,
   );
   const formRef = useRef<HTMLFormElement>(null);
-  const [previewVersion, setPreviewVersion] = useState(0);
-  const preview = useMemo(
-    () => buildDraftBudgetPreview(formRef.current ? new FormData(formRef.current) : null, inventoryParts, references),
-    [inventoryParts, previewVersion, references],
-  );
+  const [preview, setPreview] = useState(() => buildDraftBudgetPreview(null, inventoryParts, references));
+  
+  function updatePreview() {
+    if (formRef.current) {
+      setPreview(buildDraftBudgetPreview(new FormData(formRef.current), inventoryParts, references));
+    }
+  }
+
   const initialInspection = selfInspections.find(
     (inspection) => inspection.id === defaultSelfInspectionId,
   );
@@ -347,8 +350,8 @@ export function WorkshopBudgetCreateForm({
     <form
       action={formAction}
       className="space-y-6"
-      onChangeCapture={() => setPreviewVersion((current) => current + 1)}
-      onInputCapture={() => setPreviewVersion((current) => current + 1)}
+      onChangeCapture={updatePreview}
+      onInputCapture={updatePreview}
       ref={formRef}
     >
       <input name="clientId" type="hidden" value={selectedClientId} />
@@ -465,8 +468,8 @@ export function WorkshopBudgetCreateForm({
         </div>
       </Card>
 
-      <BudgetCommercialPlanner preview={preview} />
       <BudgetItemsBuilder inventoryParts={inventoryParts} references={references} />
+      <BudgetCommercialPlanner preview={preview} />
       <BudgetSubmitCard
         error={state.error}
         heading="Presupuesto de cliente taller listo para continuar"
@@ -487,11 +490,14 @@ export function LiquidatorBudgetCreateForm({
     initialActionState,
   );
   const formRef = useRef<HTMLFormElement>(null);
-  const [previewVersion, setPreviewVersion] = useState(0);
-  const preview = useMemo(
-    () => buildDraftBudgetPreview(formRef.current ? new FormData(formRef.current) : null, inventoryParts, references),
-    [inventoryParts, previewVersion, references],
-  );
+  const [preview, setPreview] = useState(() => buildDraftBudgetPreview(null, inventoryParts, references));
+  
+  function updatePreview() {
+    if (formRef.current) {
+      setPreview(buildDraftBudgetPreview(new FormData(formRef.current), inventoryParts, references));
+    }
+  }
+
   const [selectedInsuranceCaseId, setSelectedInsuranceCaseId] = useState(
     defaultInsuranceCaseId ?? "",
   );
@@ -527,8 +533,8 @@ export function LiquidatorBudgetCreateForm({
     <form
       action={formAction}
       className="space-y-6"
-      onChangeCapture={() => setPreviewVersion((current) => current + 1)}
-      onInputCapture={() => setPreviewVersion((current) => current + 1)}
+      onChangeCapture={updatePreview}
+      onInputCapture={updatePreview}
       ref={formRef}
     >
       <Card className="overflow-hidden rounded-2xl bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(247,250,254,0.96))]">
@@ -658,8 +664,8 @@ export function LiquidatorBudgetCreateForm({
         </div>
       </Card>
 
-      <BudgetCommercialPlanner preview={preview} />
       <BudgetItemsBuilder inventoryParts={inventoryParts} references={references} />
+      <BudgetCommercialPlanner preview={preview} />
       <BudgetSubmitCard
         error={state.error}
         heading="Presupuesto de cliente liquidadora listo para revision"

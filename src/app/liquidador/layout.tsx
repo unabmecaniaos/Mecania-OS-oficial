@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { BrandMark } from "@/components/brand/brand-mark";
 import { Button } from "@/components/ui/button";
 import { FlashMessageBanner } from "@/components/ui/flash-message-banner";
 import { consumeFlashMessage } from "@/lib/flash";
@@ -30,9 +31,7 @@ export default async function LiquidatorLayout({
       <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-6 px-4 py-4 md:px-6 lg:px-8">
         <header className="flex flex-col gap-4 rounded-2xl border border-[color:var(--border)] bg-white/[0.88] px-5 py-5 shadow-[0_10px_30px_rgba(15,23,42,0.05)] md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[linear-gradient(180deg,#0e223f_0%,#14325a_100%)] text-sm font-semibold uppercase tracking-[0.16em] text-white">
-              MO
-            </div>
+            <BrandMark priority size={48} />
             <div>
               <p className="text-xs uppercase tracking-[0.22em] text-[#5f7fa8]">Portal liquidador</p>
               <h1 className="mt-1 font-heading text-2xl font-semibold text-[color:var(--foreground)]">

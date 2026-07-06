@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { BrandMark } from "@/components/brand/brand-mark";
 import { DemoLeadForm } from "@/components/landing/demo-lead-form";
 
 export const metadata: Metadata = {
@@ -599,9 +600,11 @@ function Logo({ inverse = false }: { inverse?: boolean }) {
       className="inline-flex items-center gap-2.5"
       href="#inicio"
     >
-      <span className="grid h-9 w-9 place-items-center rounded-xl bg-[#1768db] text-white shadow-[0_8px_18px_rgba(23,104,219,0.24)]">
-        <GearIcon />
-      </span>
+      <BrandMark
+        className="drop-shadow-[0_8px_12px_rgba(23,104,219,0.18)]"
+        priority
+        size={38}
+      />
       <span
         className={`text-lg font-extrabold tracking-[-0.055em] ${
           inverse ? "text-white" : "text-[#0c2340]"
@@ -670,20 +673,6 @@ function CheckMiniIcon({ className = "" }: { className?: string }) {
         strokeLinejoin="round"
         strokeWidth="2.4"
       />
-    </svg>
-  );
-}
-
-function GearIcon() {
-  return (
-    <svg aria-hidden="true" className="h-5 w-5" fill="none" viewBox="0 0 24 24">
-      <path
-        d="M12 3v2.1m0 13.8V21M3 12h2.1m13.8 0H21M5.64 5.64l1.48 1.48m9.76 9.76 1.48 1.48M5.64 18.36l1.48-1.48m9.76-9.76 1.48-1.48"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeWidth="1.8"
-      />
-      <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.8" />
     </svg>
   );
 }

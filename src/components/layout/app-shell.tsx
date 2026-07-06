@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import { UserRole } from "@prisma/client";
 
+import { BrandMark } from "@/components/brand/brand-mark";
 import { Button } from "@/components/ui/button";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 
@@ -36,10 +37,21 @@ export function AppShell({ children, user, onLogout }: AppShellProps) {
     <div className="mx-auto flex min-h-screen w-full max-w-[1600px] gap-4 px-4 py-4 md:px-6 lg:px-8">
       <aside className="hidden w-[284px] shrink-0 rounded-2xl border border-[#17345e] bg-[linear-gradient(180deg,#0e223f_0%,#14325a_100%)] p-5 shadow-[0_20px_48px_rgba(15,23,42,0.16)] lg:flex lg:flex-col">
         <div className="border-b border-white/10 pb-5">
-          <p className="text-[11px] uppercase tracking-[0.28em] text-[#9ec1ff]">MecaniaOS</p>
-          <h1 className="mt-3 font-heading text-[28px] font-semibold text-white">
-            Operacion de taller
-          </h1>
+          <div className="flex items-center gap-3">
+            <BrandMark
+              className="drop-shadow-[0_8px_14px_rgba(0,119,255,0.28)]"
+              priority
+              size={46}
+            />
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.22em] text-[#9ec1ff]">
+                MecaniaOS
+              </p>
+              <h1 className="mt-1 font-heading text-xl font-semibold text-white">
+                Operacion de taller
+              </h1>
+            </div>
+          </div>
         </div>
 
         <div className="mt-6 flex-1">
@@ -68,10 +80,17 @@ export function AppShell({ children, user, onLogout }: AppShellProps) {
         <div className="rounded-2xl border border-[color:var(--border)] bg-white/[0.88] p-4 shadow-[0_10px_28px_rgba(15,23,42,0.04)] lg:hidden">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-[11px] uppercase tracking-[0.24em] text-[#5f7fa8]">MecaniaOS</p>
-              <h1 className="mt-2 font-heading text-2xl font-semibold text-[color:var(--foreground)]">
-                Operacion del taller
-              </h1>
+              <div className="flex items-center gap-3">
+                <BrandMark priority size={42} />
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-[#5f7fa8]">
+                    MecaniaOS
+                  </p>
+                  <h1 className="mt-1 font-heading text-2xl font-semibold text-[color:var(--foreground)]">
+                    Operacion del taller
+                  </h1>
+                </div>
+              </div>
               <p className="mt-2 text-sm text-[color:var(--muted-strong)]">
                 Navegacion rapida y acciones clave adaptadas para oficina y taller.
               </p>

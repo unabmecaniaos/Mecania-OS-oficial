@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { BrandMark } from "@/components/brand/brand-mark";
 import { getCurrentSession, getDefaultRouteForRole } from "@/modules/auth/auth.service";
 import { LoginForm } from "@/app/login/login-form";
 
@@ -21,9 +22,11 @@ export default async function LoginPage() {
           <div className="mb-6 h-1.5 w-24 rounded-full bg-[linear-gradient(90deg,#17345e_0%,#2563eb_58%,#9ec1ff_100%)]" />
 
           <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[linear-gradient(180deg,#0e223f_0%,#14325a_100%)] text-sm font-semibold uppercase tracking-[0.18em] text-white shadow-[0_14px_30px_rgba(20,50,90,0.22)]">
-              MO
-            </div>
+            <BrandMark
+              className="drop-shadow-[0_10px_16px_rgba(0,119,255,0.22)]"
+              priority
+              size={54}
+            />
             <div>
               <p className="text-sm font-semibold text-[color:var(--foreground)]">MecaniaOS</p>
               <p className="text-xs uppercase tracking-[0.22em] text-[#5f7fa8]">

@@ -705,3 +705,15 @@ model BudgetReferenceCatalog {
   @@index([itemType, active])
   @@index([name])
 }
+
+model DemoLead {
+  id           String   @id @default(cuid())
+  name         String   @db.VarChar(120)
+  email        String   @db.VarChar(255)
+  workshopName String   @db.VarChar(160)
+  source       String   @default("landing") @db.VarChar(40)
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([email])
+}
